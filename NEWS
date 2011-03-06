@@ -1,5 +1,6 @@
 IMAPFilter 2.2.3 - 6 Mar 2011
   - Project moved to GitHub.
+  - Changed file and directory structure.
   - The next UID is returned as an additional return value of check_status().
   - All processing methods now return a boolean based on their success.
   - Bug fix; a lost connection is now handled better by trying to reconnect.

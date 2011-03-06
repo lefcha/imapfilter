@@ -130,6 +130,10 @@ then
 fi
 
 
+# Change to the source directory
+cd src
+
+
 # Backup of original Makefile
 
 if [ ! -f .Makefile ]; then cp -f Makefile .Makefile; fi
@@ -217,11 +221,11 @@ install: \$(BIN)
 		chmod 0644 \$(DESTDIR)\$(SHAREDIR)/\$(DEPRECATED_LUA)
 	if test ! -d \$(DESTDIR)\$(MANDIR)/man1; then \\
 		mkdir -p \$(DESTDIR)\$(MANDIR)/man1; fi
-	cp -f \$(MAN_BIN) \$(DESTDIR)\$(MANDIR)/man1 && \\
+	cp -f ../doc/\$(MAN_BIN) \$(DESTDIR)\$(MANDIR)/man1 && \\
 		chmod 0644 \$(DESTDIR)\$(MANDIR)/man1/\$(MAN_BIN)
 	if test ! -d \$(DESTDIR)\$(MANDIR)/man5; then \\
 		mkdir -p \$(DESTDIR)\$(MANDIR)/man5; fi
-	cp -f \$(MAN_CONFIG) \$(DESTDIR)\$(MANDIR)/man5 && \\
+	cp -f ../doc/\$(MAN_CONFIG) \$(DESTDIR)\$(MANDIR)/man5 && \\
 		chmod 0644 \$(DESTDIR)\$(MANDIR)/man5/\$(MAN_CONFIG)
 
 deinstall:

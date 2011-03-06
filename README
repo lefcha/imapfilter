@@ -45,8 +45,8 @@ Documentation
   imapfilter(1) manual page, and of the configuration file format in the
   imapfilter_config(5) manual page.
   
-  There are also more configuration examples in the sample.config.lua file, and
-  some examples of extensions through Lua in the sample.extend.lua file.
+  There are also more configuration examples in the samples/config.lua file,
+  and some examples of extensions through Lua in the samples/extend.lua file.
 
 
 License
