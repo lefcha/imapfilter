@@ -1,0 +1,60 @@
+				   IMAPFilter
+
+Description
+
+  IMAPFilter is a mail filtering utility. It connects to remote mail servers
+  using the Internet Message Access Protocol (IMAP), sends searching queries to
+  the server and processes mailboxes based on the results. It can be used to
+  delete, copy, move, flag, etc. messages residing in mailboxes at the same or
+  different mail servers. The 4rev1 and 4 versions of the IMAP protocol are
+  supported.
+
+  IMAPFilter uses the Lua programming language as a configuration and extension
+  language.
+
+
+Website
+
+  http://github.com/lefcha/imapfilter
+
+
+Changes
+
+  All the changes in each new release up to the latest are in the NEWS file.
+
+
+Installation
+
+  Compile time requirements are Lua (5.1 or later), the PCRE library, and
+  optionally the OpenSSL library (for SSL/TLS and CRAM-MD5 support).
+
+  Optionally, configure installation options using the supplied shell script.
+  To see usage details:
+  
+    ./configure -h
+
+  Compile and install the program:
+
+    make
+    make install
+
+
+Documentation
+
+  There is detailed description of the command line options in the
+  imapfilter(1) manual page, and of the configuration file format in the
+  imapfilter_config(5) manual page.
+  
+  There are also more configuration examples in the sample.config.lua file, and
+  some examples of extensions through Lua in the sample.extend.lua file.
+
+
+License
+
+  Released under the terms and conditions of the MIT/X11 license, included in
+  the LICENSE file.
+
+
+Authors
+
+  See AUTHORS file.

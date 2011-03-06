@@ -1,0 +1,1112 @@
+.Dd February 28, 2011
+.Dt IMAPFILTER_CONFIG 5
+.Os
+.Sh NAME
+.Nm imapfilter_config
+.Nd imapfilter configuration file
+.Sh SYNOPSIS
+.Pa $HOME/.imapfilter/config.lua
+.Sh DESCRIPTION
+.Xr imapfilter 1
+uses the Lua programming language as a configuration and extension language,
+therefore the configuration file is a Lua script.  
+.Pp
+Although knowledge of Lua is not required to use
+.Xr imapfilter 1 ,
+it is nonetheless recommended, especially if one wants to extend it.
+.Sh CONVENTIONS
+.Pp
+A brief description of the Lua values and types mentioned hereafter in the
+manual page follows:
+.Bl -item -offset 4n
+.It
+The
+.Vt nil
+is the type of the value ``nil'' ,
+whose main property is to be different from any other value; usually it
+represents the absence of a useful value.
+.It
+The
+.Vt boolean
+is the type of the values ``true'' and ``false''.  Both ``nil'' and ``false''
+make a condition false; any other value makes it true.
+.It
+The type
+.Vt number
+represents real numbers.
+.It
+The type
+.Vt string
+represents a sequence of characters and can be defined using single quotes,
+double quotes or double square brackets.
+.It
+The type
+.Vt table
+implements associative arrays, that is, arrays that can be indexed not only
+with numbers, but with any value.
+.It
+A
+.Vt function
+is a first-class value; it can be stored in variables, passed as argument to
+other functions, and returned as a result.
+.El
+.Sh OPTIONS
+Program's options are set using an already initialised
+.Vt table
+named ``options'' ,
+in the following manner:
+.Bd -literal -offset 4n
+options.timeout = 120
+options.namespace = false
+options.charset = 'ISO-8859-1'
+.Ed
+.Pp
+Available options are:
+.Bl -tag -width Ds
+.It Va cache
+When this option is enabled, parts of messages are cached locally in memory to
+avoid being downloaded more than once.  The cache is preserved for the current
+session only. This variable takes a
+.Vt boolean
+as a value. Default is ``true''.
+.It Va certificates
+When this option is enabled, the server certificate can be accepted and stored,
+in order to validate the authenticity of the server in future connections. This
+variable takes a
+.Vt boolean
+as a value. Default is ``true''.
+.It Va charset
+Indicates to the server the character set of the strings for the searching
+methods.  This variable takes a
+.Vt string
+as a value.  By default no character set is set, and thus plain ASCII should be
+assumed by the server.
+.It Va create
+According to the IMAP specification, when trying to write a message to a
+non-existent mailbox, the server must send a hint to the client, whether it
+should create the mailbox and try again or not. However some IMAP servers don't
+follow the specification and don't send the correct response code to the
+client. By enabling this option the client tries to create the mailbox, despite
+of the server's response. This variable takes a
+.Vt boolean
+as a value.  Default is ``false''.
+.It Va close
+This option controls whether the currently selected mailbox is implicitly
+closed at the end of each performed operation, thus removing all messages that
+are marked deleted. This variable takes a
+.Vt boolean
+as a value.  Default is ``false''.
+.It Va crammd5
+When this option is enabled and the server supports the Challenge-Response
+Authentication Mechanism (specifically CRAM-MD5), this method will be used for
+user authentication instead of a plaintext password LOGIN.  This variable
+takes a 
+.Vt boolean
+as a value.  Default is ``true''.
+.It Va expunge
+Normally, messages are marked for deletion and are actually deleted when the
+mailbox is closed.  When this option is enabled, messages are expunged
+immediately after being marked deleted.  This variable takes a
+.Vt boolean
+as a value.  Default is ``true''.
+.It Va info
+When this options is enabled, a summary of the program's actions is printed,
+while processing mailboxes.  This variable takes a
+.Vt boolean
+as a value.  Default is ``true''.
+.It Va keepalive
+The time in minutes before terminating and re-issuing the IDLE command, in
+order to keep alive the connection, by resetting the inactivity timeout of the
+server.  A standards compliant server must have an inactivity timeout of at
+least 30 minutes.  But it may happen that some IMAP servers don't respect that,
+or some intermediary network device has a shorter timeout.  By setting this
+option the above problem can be worked around. This variable takes a
+.Vt number
+as a value. Default is ``29'' minutes.
+.It Va namespace
+When enabled, the program gets the namespace of the user's personal mailboxes,
+and applies automatically the prefix and hierarchy delimiter to any mailboxes
+residing on the mail server; the user must use the `/' character as the
+delimiter and ``'' (ie.  nothing) as the prefix, regardless of the folder
+format of the mail server.  This must be disabled, if the user wants to
+manually specify mailbox names (eg. because they are not part of the user's
+personal namespace mailboxes).  This variable takes
+.Vt boolean
+as a value.  Default is ``true''.
+.It Va starttls
+When this option is enabled and the server supports the IMAP STARTTLS
+extension, a TLS connection will be negotiated with the mail server in the
+beginning of the session.  This variable takes a 
+.Vt boolean
+as value.  Default is ``true''.
+.It Va subscribe
+By enabling this option new mailboxes that were automatically created, get also
+subscribed; they are set active in order for IMAP clients to recognize them.
+This variable takes a
+.Vt boolean
+as a value.  Default is ``false''.
+.It Va timeout
+The time in seconds for the program to wait for a mail server's response.  If
+not set, the client will block indefinitely.  This variable takes a
+.Vt number
+as a value.  By default no value is set.
+.El
+.Sh ACCOUNTS
+Accounts are initialized using the
+.Fn IMAP
+function, and the details of the connection are defined using an account
+.Vt table :
+.Bd -literal -offset 4n
+myaccount = IMAP {
+    server = 'imap.mail.server',
+    username = 'me',
+    password = 'secret',
+    ssl = 'ssl3'
+}
+.Ed
+.Pp
+An account
+.Vt table
+must have the following elements:
+.Bl -tag -width Ds
+.It Va server
+The hostname of the IMAP server to connect to.  It takes a
+.Vt string
+as a value.
+.It Va username
+User's name.  It takes a
+.Vt string
+as a value.
+.El
+.Pp
+An account
+.Vt table
+can also have the following optional elements:
+.Bl -tag -width Ds
+.It Va password
+User's secret keyword.  If a password wasn't supplied the user will be asked to
+enter one interactively the first time it will be needed.  It takes a
+.Vt string
+as a value.
+.It Va port
+The port to connect to.  It takes a
+.Vt number
+as a value.  Default is ``143'' for imap and ``993'' for imaps.
+.It Va ssl
+Forces an imaps connection and specifies the SSL/TLS protocol to be used.  It
+takes a
+.Vt string
+as a value, specifically one of: ``ssl2'' , ``ssl3'' , ``tls1''.
+.El
+.Pp
+.Ss LISTING
+The following methods can be used on an account to list mailboxes in a folder
+of an account:
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn list_all folder
+Lists all the available mailboxes in the
+.Fa folder
+.Pq Vt string ,
+and returns a
+.Vt table
+that contains
+.Vt strings ,
+the available mailboxes,
+and a
+.Vt table
+that contains
+.Vt strings ,
+the available folders.
+.Pp
+.It Fn list_subscribed folder
+Lists all the subscribed mailboxes in the
+.Fa folder
+.Pq Vt string ,
+and returns a
+.Vt table
+that contains
+.Vt strings ,
+the subscribed mailboxes,
+and a
+.Vt table
+that contains
+.Vt strings ,
+the subscribed folders.
+.El
+.Pp
+The following methods can be used on an account to list mailboxes, using
+wildcards, in a folder of an account.  The `*' wildcard, matches any character
+and the `%' matches any character except the folder delimiter, ie.
+non-recursively:
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn list_all folder mailbox
+Lists all the available mailboxes in the
+.Fa folder
+.Pq Vt string 
+with the name
+.Fa mailbox
+.Pq Vt string , 
+and returns a
+.Vt table
+that contains
+.Vt strings ,
+the available mailboxes,
+and a
+.Vt table
+that contains
+.Vt strings ,
+the available folders.  Wildcards may only be used in the
+.Fa mailbox 
+argument.
+.Pp
+.It Fn list_subscribed folder mailbox
+Lists all the subscribed mailboxes in the
+.Fa folder
+.Pq Vt string
+with the name
+.Fa mailbox
+.Pq Vt string ,
+and returns a
+.Vt table
+that contains
+.Vt strings ,
+the subscribed mailboxes,
+and a
+.Vt table
+that contains
+.Vt strings ,
+the subscribed folders.  Wildcards may only be used in the
+.Fa mailbox 
+argument.
+.El
+.Pp
+Examples:
+.Bd -literal -offset 4n
+mailboxes, folders = myaccount:list_subscribed('myfolder')
+mailboxes, folders = myaccount:list_all('myfolder/mysubfolder', '*')
+.Ed
+.Ss MANIPULATING
+The following methods can be used to manipulate mailboxes in an account:
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn create_mailbox name
+Creates the
+.Fa name
+.Pq Vt string
+mailbox.
+.Pp
+.It Fn delete_mailbox name
+Deletes the
+.Fa name
+.Pq Vt string
+mailbox.
+.Pp
+.It Fn rename_mailbox oldname newname
+Renames the
+.Fa oldname
+.Pq Vt string
+mailbox to
+.Fa newname
+.Pq Vt string .
+.Pp
+.It Fn subscribe_mailbox name
+Subscribes the
+.Fa name
+.Pq Vt string
+mailbox.
+.Pp
+.It Fn unsubscribe_mailbox name
+Unsubscribes the
+.Fa name
+.Pq Vt string
+mailbox.
+.El
+.Pp
+Examples:
+.Bd -literal -offset 4n
+myaccount:create_mailbox('mymailbox')
+myaccount:subscribe_mailbox('mymailbox')
+myaccount:unsubscribe_mailbox('myfolder/mymailbox')
+myaccount:delete_mailbox('myfolder/mymailbox')
+.Ed
+.Sh MAILBOXES
+After an IMAP account has been initialized, mailboxes residing in that account
+can be accessed simply as elements of the account
+.Vt table :
+.Bd -literal -offset 4n
+myaccount.mymailbox
+.Ed
+.Pp
+If mailbox names don't only include letters, digits and underscores, or begin
+with a digit, an alternative form must be used:
+.Bd -literal -offset 4n
+myaccount['mymailbox']
+.Ed
+.Pp
+A mailbox inside a folder can be only accessed by using the alternative form:
+.Bd -literal -offset 4n
+myaccount['myfolder/mymailbox']
+.Ed
+.Pp
+The methods that are available for an account (eg.
+.Fn list_all ,
+.Fn create_mailbox ,
+etc.) , are considered keywords and must not be used as mailbox names, and the
+same also applies for any string starting with an underscore, as they are
+considered reserved. 
+.Ss CHECKING
+The following methods can be used to check the status of a mailbox:
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn check_status
+.Pp
+The
+.Fn check_status
+method gets the current status of a mailbox, and returns four values of
+.Vt number
+type: the total number of messages, the number of recent messages, the
+number of unseen messages in the mailbox, and the next UID to be assigned to a
+new message in the mailbox.
+.Pp
+.It Fn enter_idle
+The
+.Fn enter_idle
+method implements the IMAP IDLE (RFC 2177) extension.  By using this extension
+it's not necessary to poll the server for changes to the selected mailbox (ie.
+using the
+.Fn check_status
+method), but instead the server sends an update when there is a change
+in the mailbox (eg. in case of new mail).  When the
+.Fn enter_idle
+method has been called no more commands in the configuration file are executed
+until an update is received, at which point the
+.Fn enter_idle
+method returns.  For the
+.Fn enter_idle
+to work, the IDLE extension has to be supported by the IMAP server.  The
+.Fn enter_idle
+method returns one value of type
+.Vt boolean :
+``true'' if the IDLE extension is supported and there was a update in the
+mailbox, and ``false'' if the IDLE extension is not supported, in which case
+the method returns immediately.
+.El
+.Pp
+Examples:
+.Bd -literal -offset 4n
+exist, unread, unseen, uidnext = myaccount.mymailbox:check_status()
+update = myaccount.mymailbox:enter_idle()
+.Ed
+.Ss SEARCHING
+.Pp
+The searching methods in this subsection can be applied to any mailbox.
+They return a special form of
+.Vt table ,
+that contains the messages that match the searching method.  This
+.Vt table
+can be combined with other
+.Vt tables
+using logic theory. There are three available operations, that implement
+logical ``or'', logical ``and'' and logical ``not''.
+.Pp
+The logical ``or'' is implemented using the `+' operator:
+.Bd -literal -offset 4n
+results = myaccount.mymailbox:is_unseen() +
+          myaccount.mymailbox:is_larger(100000)
+.Ed
+.Pp
+The logical ``and'' is implemented using the `*' operator:
+.Bd -literal -offset 4n
+results = myaccount.mymailbox:is_unseen() *
+          myaccount.mymailbox:is_larger(100000)
+.Ed
+.Pp
+The logical ``not'' is implemented using the `-' operator:
+.Bd -literal -offset 4n
+results = myaccount.mymailbox:is_unseen() -
+          myaccount.mymailbox:is_larger(100000)
+.Ed
+.Pp
+The three logical operators can be combined in the same expression. The logical
+``and'' has higher precedence than the logical ``or'' and the logical ``not'',
+with the latter two having the same precedence, and parentheses may be used to
+change this behaviour:
+.Bd -literal -offset 4n
+results = myaccount.mymailbox:is_unseen() +
+          myaccount.mymailbox:is_larger(100000) *
+          myaccount.mymailbox:contain_subject('test')
+
+results = ( myaccount.mymailbox:is_unseen() +
+            myaccount.mymailbox:is_larger(100000) ) *
+            myaccount.mymailbox:contain_subject('test')
+.Ed
+.Pp
+The returned
+.Vt tables
+of the searching methods can also be stored in variables and then further
+processed:
+.Bd -literal -offset 4n
+unseen = myaccount.myaccount:is_unseen()
+larger = myaccount.mymailbox:is_larger(100000)
+subject = myaccount.mymailbox:contain_subject('test')
+results = unseen + larger * subject
+.Ed
+.Pp
+A composite filter that includes one or more simple rules can be defined:
+.Bd -literal -offset 4n
+myfilter = function ()
+	       return myaccount.mymailbox:is_unseen() +
+	              myaccount.mymailbox:is_larger(100000) *
+                      myaccount.mymailbox:contain_subject('test')
+           end
+
+results = myfilter()
+.Ed
+.Pp
+Composite filters can may be more dynamic by adding arguments:
+.Bd -literal -offset 4n
+myfilter = function (mailbox, size, subject)
+	       return mailbox:is_unseen() +
+                      mailbox:is_larger(size) *
+                      mailbox:contain_subject(subject)
+           end
+
+results = myfilter(myaccount.mailbox, 100000, 'test')
+.Ed
+.Pp
+It is also possible to combine the searching methods in different mailboxes,
+either at the same or different accounts, for example when the same actions
+will be executed on messages residing in different mailboxes or accounts.
+.Bd -literal -offset 4n
+results = myaccount.mymailbox:is_unseen() +
+	  myaccount.othermailbox:is_larger(100000) +
+	  otheraccount.othermailbox:contain_subject('test')
+.Ed
+.Pp
+The following method can be used to get all messages in a mailbox:
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn select_all
+All messages.
+.El
+.Pp
+The following methods can be used to search for messages that are in a specific
+state:
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn is_answered
+Messages that have been answered.
+.Pp
+.It Fn is_deleted
+Messages that are marked for later removal. 
+.Pp
+.It Fn is_draft
+Messages that have not completed composition.
+.Pp
+.It Fn is_flagged
+Messages that are flagged for urgent/special attention.
+.Pp
+.It Fn is_new
+Messages that are recently arrived (this session is the first to have been
+notified about these messages) and have not been read.
+.Pp
+.It Fn is_old
+Messages that are not recently arrived (this session is not the first to have
+been notified about these messages) and have not been read.
+.Pp
+.It Fn is_recent
+Messages that are recently arrived (this session is the first to have been
+notified about these messages).
+.Pp
+.It Fn is_seen
+Messages that have been read.
+.Pp
+.It Fn is_unanswered
+Messages that have not been answered.
+.Pp
+.It Fn is_undeleted
+Messages that are not marked for later removal. 
+.Pp
+.It Fn is_undraft
+Messages that have completed composition.
+.Pp
+.It Fn is_unflagged
+Messages that are not flagged for urgent/special attention.
+.Pp
+.It Fn is_unseen
+Messages that have not been read.
+.El
+.Pp
+The following method can be used to search for messages that have a specific
+flag set:
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn has_flag keyword
+Messages with the specified keyword flag
+.Pq Vt string
+set.
+.El
+.Pp
+The following methods can be used to search for messages based on their size:
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn is_larger size
+Messages that are larger than the size
+.Pq Vt number
+in octets (bytes).
+.Pp
+.It Fn is_smaller size
+Messages that are smaller than the size
+.Pq Vt number
+in octets (bytes).
+.El
+.Pp
+The following methods can be used to search for messages based on their age:
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn is_newer age
+Messages that are newer than the
+.Fa age
+.Pq Vt number
+in days.
+.Pp
+.It Fn is_older age
+Messages that are older than the
+.Fa age
+.Pq Vt number
+in days.
+.El
+.Pp
+The following methods can be used to search for messages based on their arrival
+or sent date, in the ``day-month-year'' form, where day is the day of the month
+as a decimal number (01-31), month is the abbreviated month (``Jan'', ``Feb'',
+``Mar'', ``Apr'', ``May'', ``Jun'', ``Jul'', ``Aug'', ``Sep'', ``Oct'',
+``Nov'', ``Dec'') and year is the year as decimal number including the century
+(eg. 2007):
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn arrived_before date
+messages that have arrived before the 
+.Fa date
+.Pq Vt string ,
+where
+.Fa date
+is in the ``day-month-year'' form.
+.Pp
+.It Fn arrived_on date
+Messages that have arrived on the
+.Fa date
+.Pq Vt string ,
+where
+.Fa date
+is in the ``day-month-year'' form.
+.Pp
+.It Fn arrived_since date 
+Messages that have arrived after the
+.Fa date
+.Pq Vt string ,
+where
+.Fa date
+is in the ``day-month-year'' form.
+.Pp
+.It Fn sent_before date
+Messages that have been sent before the
+.Fa date
+.Pq Vt string ,
+where
+.Fa date
+is in the ``day-month-year'' form.
+.Pp
+.It Fn sent_on date
+Messages that have been sent on the
+.Fa date
+.Pq Vt string ,
+where
+.Fa date
+is in the ``day-month-year'' form.
+.Pp
+.It Fn sent_since date
+Messages that have been sent after the
+.Fa date
+.Pq Vt string ,
+where
+.Fa date
+is in the ``day-month-year'' form.
+.El
+.Pp
+The following methods can be used to search for messages that contain a
+specific word or phrase:
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn contain_bcc string
+Messages that contain the
+.Fa string
+.Pq Vt string
+in the ``Bcc'' header field.
+.Pp
+.It Fn contain_cc string
+Messages that contain the
+.Fa string
+.Pq Vt string
+in the ``Cc'' header field.
+.Pp
+.It Fn contain_from string
+Messages that contain the
+.Fa string
+.Pq Vt string
+in the ``From'' header field.
+.Pp
+.It Fn contain_subject string
+Messages that contain the
+.Fa string
+.Pq Vt string
+in the ``Subject'' header field.
+.Pp
+.It Fn contain_to string
+Messages that contain the
+.Fa string
+.Pq Vt string
+in the ``To'' header field.
+.Pp
+.It Fn contain_field field string
+Messages that contain the
+.Fa string
+.Pq Vt string
+in the 
+.Fa field
+.Pq Vt string
+header field.
+.Pp
+.It Fn contain_body string
+Messages that contain the
+.Fa string
+.Pq Vt string
+in the message body.
+.Pp
+.It Fn contain_message string
+Messages that contain the
+.Fa string
+.Pq Vt string
+in the message.
+.El
+.Pp
+The following methods can be used to search for messages that match a specific
+regular expression pattern.
+.Pp
+This way of searching is not supported by the IMAP protocol, and this means
+that what actually happens under the hood, is that the relevant parts of all
+the messages are downloaded and matched locally.  It is therefore recommended
+to use these methods with meta-searching (see following section), in order to
+narrow down the set of messages that should be searched, and thus minimize what
+will be downloaded.
+.Pp
+Note that due to Lua using backslash `\\' as an escape character for its
+strings, one has to double backslashes in order to insert a single backslash
+inside a regular expression pattern:
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn match_bcc pattern
+Messages that match the regular expression
+.Fa pattern
+.Pq Vt string
+in the ``Bcc'' header field.
+.Pp
+.It Fn match_cc pattern
+Messages that match the regular expression
+.Fa pattern
+.Pq Vt string
+in the ``Cc'' header field.
+.Pp
+.It Fn match_from pattern
+Messages that match the regular expression
+.Fa pattern
+.Pq Vt string
+in the ``From'' header field.
+.Pp
+.It Fn match_subject pattern
+Messages that match the regular expression
+.Fa pattern
+.Pq Vt string
+in the ``Subject'' header field.
+.Pp
+.It Fn match_to pattern
+Messages that match the regular expression
+.Fa pattern
+.Pq Vt string
+in the ``To'' header field.
+.Pp
+.It Fn match_field field pattern
+Messages that match the regular expression
+.Fa pattern
+.Pq Vt string
+in the
+.Fa field
+.Pq Vt string
+header field.
+.Pp
+.It Fn match_header pattern
+Messages that match the regular expression
+.Fa pattern
+.Pq Vt string
+in the message header.
+.Pp
+.It Fn match_body pattern
+Messages that match the regular expression
+.Fa pattern
+.Pq Vt string
+in the message body.
+.Pp
+.It Fn match_message pattern
+Messages that match the regular expression
+.Fa pattern
+.Pq Vt string
+in the message.
+.El
+.Pp
+The following method can be used to search for messages using user queries
+based on the IMAP specification (RFC 3501 Section 6.4.4):
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn send_query criteria
+Searches messages by sending an IMAP search query as described in the
+search
+.Fa criteria
+.Pq Vt string .
+.El
+.Pp
+Examples:
+.Bd -literal -offset 4n
+results = myaccount.mymailbox:select_all()
+results = myaccount.mymailbox:is_new()
+results = myaccount.mymailbox:is_recent()
+results = myaccount.mymailbox:is_larger(100000)
+results = myaccount.mymailbox:is_older(10)
+results = myaccount.mymailbox:has_flag('MyFlag')
+results = myaccount.mymailbox:arrived_before('01-Jan-2007')
+results = myaccount.mymailbox:sent_since('01-Jan-2007')
+results = myaccount.mymailbox:contain_subject('test')
+results = myaccount.mymailbox:contain_field('Sender', 'user@host')
+results = myaccount.mymailbox:contain_body('hello world')
+results = myaccount.mymailbox:match_from('.*(user1|user2)@host')
+results = myaccount.mymailbox:send_query('ALL')
+
+results = myaccount['mymailbox']:is_new()
+results = myaccount['myfolder/mymailbox']:is_recent()
+.Ed
+.Sh RESULTS
+After one of more searching methods have been applied to one or more mailboxes,
+the result contains all the necessary information, such as which messages
+matched in which mailboxes.  Using this result these messages can be either
+searched further or processed in various way.
+.Ss META-SEARCHING
+The results of the searching methods can be searched further on in the same way
+as searching is done in mailboxes.  The difference is that instead of doing the
+search in the whole mailbox, ie. in all the messages, it is instead done only
+to those messages that were returned in a previous search.
+.Pp
+Examples:
+.Bd -literal -offset 4n
+results:match_message('^[Hh]ello world!?$')
+myaccount.mymailbox:is_new():match_body('^[Ww]orld, hello!?$')
+.Ed
+.Ss PROCESSING
+The processing methods are applied to the results that searching returned.
+.Pp
+The following method can be used to delete messages in a mailbox:
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn delete_messages
+Deletes the messages that matched.
+.El
+.Pp
+The following methods can be used to copy and move messages in a mailbox at the
+same or different accounts.  If the destination mailbox is in a different
+account than the source mailbox, then the messages are downloaded and then
+uploaded to the destination:
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn copy_messages destination
+Copies the messages to the
+.Fa destination ,
+which is a mailbox at an account.
+.Pp
+.It Fn move_messages destination
+Moves the messages to the
+.Fa destination ,
+which is a mailbox at an account.
+.El
+.Pp
+The following methods can be used to mark messages in a mailbox:
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn mark_answered
+Marks the messages as answered.
+.Pp
+.It Fn mark_deleted
+Marks the messages for later removal.
+.Pp
+.It Fn mark_draft
+Marks the messages as draft.
+.Pp
+.It Fn mark_flagged
+Marks the messages for urgent/special attention.
+.Pp
+.It Fn mark_seen
+Marks the messages as read.
+.Pp
+.It Fn unmark_answered
+Unmarks the messages that have been marked as answered.
+.Pp
+.It Fn unmark_deleted
+Unmarks the messages that have been marked for later removal.
+.Pp
+.It Fn unmark_draft
+Unmarks the messages that have been marked as draft.
+.Pp
+.It Fn unmark_flagged
+Unmarks the messages that have been marked for urgent/special attention.
+.Pp
+.It Fn unmark_seen
+Unmarks the messages that have been marked as read.
+.Pp
+.El
+.Pp
+The following methods can be used to flag messages in a mailbox. The standard
+system flags are ``\\Answered'', ``\\Deleted'', ``\\Draft'', ``\\Flagged'',
+``\\Seen'', while if the server supports it, new user keywords may be defined:
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn add_flags flags
+Adds the
+.Fa flags
+.Po Vt table
+that contains
+.Vt strings Pc
+to the messages.
+.Pp
+.It Fn remove_flags flags
+Removes the
+.Fa flags
+.Po Vt table
+that contains
+.Vt strings Pc
+from the messages.
+.Pp
+.It Fn replace_flags flags
+Replaces the
+.Fa flags
+.Po Vt table
+that contains
+.Vt strings Pc
+of the messages.
+.El
+.Pp
+Examples:
+.Bd -literal -offset 4n
+results:delete_messages()
+results:copy_messages(myaccount.othermailbox)
+results:move_messages(otheraccount.mymailbox)
+results:mark_seen()
+results:unmark_flagged()
+results:add_flags({ 'MyFlag', '\\\\Seen' })
+results:remove_flags({ '\\\\Seen' })
+
+results:move_messages(otheraccount['myfolder/mymailbox'])
+.Ed
+.Sh MESSAGES
+The messages that are residing in any mailbox can be also accessed, as a whole
+or in parts.  Messages can be accessed using their unique identifier (UID):
+.Bd -literal -offset 4n
+myaccount.mymailbox[22]
+.Ed
+.Pp
+The UIDs of messages the user is interested in, are gained from the results of
+searching:
+.Bd -literal -offset 4n
+results = account.INBOX:is_unread()
+for _, message in ipairs(results) do
+    mailbox, uid = unpack(message)
+    header = mailbox[uid]:fetch_header()
+end
+.Ed
+.Ss FETCHING
+.Pp
+The following methods can be used to fetch parts of messages.  The methods
+return a
+.Vt string .
+The downloaded message parts are cached locally, so they can be reused inside
+the same program session:
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn fetch_message
+Fetches the header and body of the message.
+.Pp
+.It Fn fetch_header
+Fetches the header of the message.
+.Pp
+.It Fn fetch_body
+Fetches the body of the messages.
+.Pp
+.It Fn fetch_field field
+Fetches the specified header
+.Fa field
+.Pq Vt string
+of the message.
+.Pp
+.It Fn fetch_part part
+Fetches the specified
+.Fa part
+.Po
+.Vt string
+.Pc
+of the message.
+.El
+.Pp
+The following methods can be used to fetch details about the state of a
+message:
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn fetch_flags
+Fetches the flags of the message.  Returns a
+.Vt table ,
+of
+.Vt strings .
+.Pp
+.It Fn fetch_date
+Fetches the internal date of the message.  Returns a
+.Vt string .
+.Pp
+.It Fn fetch_size
+Fetches the size of the message.  Returns a
+.Vt number .
+.Pp
+.It Fn fetch_structure
+Fetches the body structure of the message. Returns a
+.Vt table
+that has as keys the parts of the message, and as values a
+.Vt table
+that has one mandatory element, the type
+.Pq Vt string
+of the part, and two
+optional elements,
+the size
+.Pq Vt number
+and name
+.Pq Vt string
+of the part.
+.El
+.Pp
+Examples:
+.Bd -literal -offset 4n
+myaccount.mymailbox[2]:fetch_message()
+myaccount.mymailbox[3]:fetch_field('subject')
+myaccount.mymailbox[5]:fetch_part('1.1')
+
+myaccount['mymailbox'][7]:fetch_message()
+myaccount['myfolder/mymailbox'][11]:fetch_message()
+.Ed
+.Sh FUNCTIONS
+The following auxiliary functions are also available for convenience:
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn form_date days
+Forms a date in ``day-month-year'' format that the system had before the number of
+.Fa days
+.Pq Vt number ,
+and returns it as a
+.Vt string .
+.Pp
+.It Fn get_password prompt
+Displays the specified
+.Fa prompt
+.Pq Vt string ,
+and reads a password, while character echoing is turned off.  Returns
+that password as a
+.Vt string .
+.Pp
+.It Fn become_daemon interval commands
+Detaches the program from the controlling terminal and runs it in the
+background as system daemon. The program will then repeatedly poll at the
+specified
+.Fa interval
+.Pq Vt number
+in seconds. Each time the program wakes up, the
+.Fa commands
+.Pq Vt function
+are executed.
+.Pp
+.It Fn pipe_to command data
+Executes the system's
+.Fa command
+.Pq Vt string
+and sends the
+.Fa data
+.Pq Vt string
+to the standard input channel of the subprocess. Returns a
+.Vt number ,
+the exit status of the child process.
+.Pp
+.It Fn pipe_from command
+Executes the system's
+.Fa command
+.Pq Vt string
+and retrieves the data from the standard output channel of the subprocess.
+Returns a
+.Vt number ,
+the exit status of the child process, and a
+.Vt string ,
+the output of the child process.
+.Pp
+.It Fn regex_search pattern string
+Implements Perl-compatible regular expressions (PCRE). The
+.Fa pattern
+.Pq Vt string
+is a PCRE pattern. The
+.Vt string
+.Pq Vt string
+is the subject string in which the pattern is
+matched against. Returns at least a
+.Vt boolean ,
+that denotes if the match was successful, and any captures which are of
+.Vt string
+type.  Note that due to Lua using backslash `\\' as an escape character for its
+strings, one has to double backslashes in order to insert a single backslash
+inside a regular expression pattern:
+.El
+.Pp
+Examples:
+.Bd -literal -offset 4n
+date = form_date(14)
+password = get_password('Enter password: ')
+become_daemon(600, myfunction)
+status = pipe_to('mycommandline', 'mydata')
+status, data = pipe_from('mycommandline')
+success, capture = regex_search('^[PpCcRrEe]: (\\\\w)$', 'mystring')
+.Ed
+.Sh EXAMPLES
+See
+.Pa sample.config.lua
+and
+.Pa sample.extend.lua .
+.Sh ENVIRONMENT
+.Bl -tag -width Ds
+.It Ev HOME
+User's home directory.
+.El
+.Sh SEE ALSO
+.Xr imapfilter 1
+.Sh BUGS
+.Pp
+Since version 2.2, a different format is used for the returned structures of
+the searching methods, due to the introduction of multiple mailbox searching
+and meta-searching, and thus any configuration files that rely on them should
+be updated.  Consequently, the processing and fetching methods have been also
+enhanced and the relevant documentation modified, and while these changes are
+backwards compatible, an update of the configuration file is still recommended.
+.Pp
+Since version 2.0, the configuration file format has changed.  The new format
+is not backwards compatible, and thus it should not be mixed with the old
+format. Nevertheless, configuration files that employ the old, and now
+deprecated, format can still be read and executed as before.

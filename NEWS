@@ -1,0 +1,192 @@
+IMAPFilter 2.2.3 - 6 Mar 2011
+  - Project moved to GitHub.
+  - The next UID is returned as an additional return value of check_status().
+  - All processing methods now return a boolean based on their success.
+  - Bug fix; a lost connection is now handled better by trying to reconnect.
+  - Bug fix; in some cases in IDLE a message had arrived but was ignored.
+  - Bug fix; in some servers the initial IDLE reply wasn't handled correctly.
+  - Bug fix; typo errors in the documentation.
+
+IMAPFilter 2.2.2 - 23 Jan 2010
+  - Bug fix; a couple of errors in the extending examples file.
+
+IMAPFilter 2.2.1 - 20 Jan 2010
+  - A global option for the IDLE refreshing interval was added.
+  - Bug fix; more detailed reporting when SSL socket errors occur.
+
+IMAPFilter 2.2 - 30 Dec 2009
+  - Support for combining searching methods in multiple mailboxes at the same
+    or different accounts and processing of the results in bulk.
+  - Support for meta-searching that allows searching on the previous searching
+    results.
+  - The processing and fetching methods were enhanced to reflect the new
+    changes and the documentation was updated.
+  - Global options for the message cache and the certificates were added.
+  - Bug fix; questions for certificates are not asked while in daemon mode, but
+    instead an error is printed.
+  * A different format is used for the returned structures of the searching
+    methods, due to the introduction of multiple mailbox searching and
+    meta-searching, and thus any configuration files that rely on them should
+    be updated.  Consequently, the processing and fetching methods have been
+    also enhanced and the relevant documentation updated, and while these
+    changes are backwards compatible, an update of the configuration file is
+    still recommended.
+
+IMAPFilter 2.1.2 - 3 Dec 2009
+  - Bug fix; cache for message parts didn't work correctly.
+  - Bug fix; documentation error.
+
+IMAPFilter 2.1.1 - 24 Nov 2009
+  - Bug fix; global option timeout and enter_idle() didn't play well together.
+
+IMAPFilter 2.1 - 23 Nov 2009
+  - Support for the IMAP IDLE extension (RFC 2177) through the enter_idle()
+    method.
+  - Support for fetching of a message's body structure through the
+    fetch_structure() method, and of a message's specific body part through the
+    fetch_parts() method.
+  - Addition of a global option that controls the character set used for all
+    the searching methods.
+  - Bug fix; fetching of non-existent messages.
+  - Bug fix; no trailing end-of-line characters in the results of
+    fetch_fields().
+
+IMAPFilter 2.0.11 - 20 Sep 2009
+  - Bug fix; fetching of messages with empty body.
+  - Workaround for problematic IMAP server sending non-compliant mailbox status
+    information.
+
+IMAPFilter 2.0.10 - 16 Feb 2008
+  - Bug fix; failed a great number (tens of thousands) of commands were
+    exchanged with an IMAP server.
+  - Bug fix; failed to fetch the body of some messages in some extremely rare
+    occasions.
+  - Bug fix; the description for the contain_header() method was clarified.
+
+IMAPFilter 2.0.9 - 26 Dec 2007
+  - Bug fix; the match_*() methods failed to match messages.
+  - Bug fix; the match_*() methods failed with an error when no messages
+    matched.
+  - Bug fix; note added in the documentation about the need to use double
+    backslashes inside of regular expression patterns.
+
+IMAPFilter 2.0.8 - 23 Dec 2007
+  - Bug fix; on some platforms it is necessary to link against the math library.
+
+IMAPFilter 2.0.7 - 22 Dec 2007
+  - Bug fix; the match_*() methods failed with an error message.
+
+IMAPFilter 2.0.6 - 7 Oct 2007
+  - Bug fix; the search query that was sent with the select_all() method had an
+    incorrect format and this caused an error in some mail servers.
+
+IMAPFilter 2.0.5 - 4 Oct 2007
+  - Bug fix; an error in the sample extensions file.
+  - Bug fix; typo errors in the manual page.
+  - The documentation was updated with details and examples on how to access
+    mailboxes inside folders.
+  - Examples were added on how to define composite filters that include
+    multiple searching rules.
+
+IMAPFilter 2.0.4 - 27 Sep 2007
+  - Bug fix; the send_query() method didn't return the special form of table
+    that the rest of the searching methods did.
+  - An additional searching method has been added to search for keyword flags
+    set.
+  - A new variable that was added to the Makefile makes it possible to set an
+    alternative environment for the installation path.
+
+IMAPFilter 2.0.3 - 27 Jul 2007
+  - Bug fix; part of the program's functionality didn't seem to work at all.
+    (did nothing), due to problem when providing the results from searching
+    methods to processing methods.
+
+IMAPFilter 2.0.2 - 30 Jun 2007
+  - Bug fix; message cache problem due to non-use of message UIDs.
+
+IMAPFilter 2.0.1 - 29 Jun 2007
+  - Bug fix; character set problem with 1.x configuration files.
+  - Bug fix; typo errors in the documentation.
+
+IMAPFilter 2.0 - 27 Jun 2007
+  - New, more powerful, feature rich and yet simpler configuration file.
+  - Easier object oriented view of accounts and mailboxes.
+  - Simpler approach to filters, with infix logical or/and/not operators.
+  - No more need to mess with server search queries.
+  - More and simpler functions instead of few and complicated ones.
+  - More feature complete interface that can now even manipulate mailboxes.
+  - Regular expressions integrated into the searching interface.
+  - Effective caching subsystem when fetching message parts.
+  - Can still read old version 1.x configuration files for compatibility.
+  - Lua 5.1 and the PCRE library are now requirements.
+  * The configuration file format has changed.  The new format is not backwards
+    compatible, and thus it should not be mixed with the old format.
+    Nevertheless, configuration files that employ the old, and now deprecated,
+    format can still be read and executed as before.
+
+IMAPFilter 1.3 - 13 Feb 2007
+  - Perl Compatible Regular Expression (PCRE) support.
+  - Compile against Lua 5.1 by default.
+  - Bug fix; program fault in some cases and when namespace prefix was empty.
+  - Bug fix; program fault on some platforms when running in verbose mode.
+
+IMAPFilter 1.2.2 - 1 Aug 2006
+  - Bug fix; a mix up of connections could happen in certain circumstances,
+    when a hostname and/or username was a prefix of another hostname and/or
+    username respectively, or when the same hostname and username was used to
+    connect to a different port.
+  - Bug fix; the list()/lsub() functions parsed mailboxes/folders whose names
+    contained spaces incorrectly.
+  - The list() function now does not return the folder itself, when listing
+    mailboxes inside a specific folder.
+  - It is now possible to define new user keywords for messages inside a
+    mailbox, apart from the standard system flags.
+
+IMAPFilter 1.2.1 - 9 Mar 2006
+  - Buf fix; program fault when using the fetch*() family of functions.
+
+IMAPFilter 1.2 - 2 Mar 2006
+  - IPv6 support.
+  - Lua 5.1 compatibility.
+  - Bug fix; handle messages containing binary data.
+  - Bug fix; problems with CPU utilisation when the inactivity timeout timer
+    was set.
+
+IMAPFilter 1.1.1 - 11 Nov 2005
+  - Bug fix; minor memory leak.
+  - Bug fix; on some systems, failure resulted while disconnecting from all the
+    servers, during the shutdown phase just before exiting.
+
+IMAPFilter 1.1 - 24 Aug 2005
+  - Addition of the list() and lsub() commands, that make it possible to get a
+    list of the available mailboxes or only of those that are subscribed.
+    Implementation of the IMAP LIST/LSUB commands, with additional support for
+    the IMAP CHILDREN (RFC 3348) and IMAP NAMESPACE (RFC 2342) extensions.
+  - New program option to execute a string from the command line, without
+    loading a configuration file.
+  - New program option to enter interactive mode after executing the
+    configuration file or the command line.
+  - Servers that reply with multiple SEARCH responses are taken into
+    consideration.
+  - Bug fix; failure to parse the response to fetchfast() that some mail
+    servers sent.
+  - Bug fix; in some systems and when in debug mode, an empty namespace caused
+    program fault.
+
+IMAPFilter 1.0.1 - 22 Aug 2004
+  - Bug fix; in some cases processing of messages with an empty body caused
+    failure.
+  - Bug fix; an invalid namespace prefix was inserted in mailbox names of some
+    mail servers.
+  - Unique message identifiers are now used by default, instead of message
+    sequence numbers, when accessing messages in a mailbox.
+  - Sequence set ranges are generated and sent to the mail server instead of
+    enumerations, when this is possible.
+  - The client now limits the length of the command lines it generates to
+    approximately 1000 octets, by splitting the request into multiple commands.
+  - Systems that have no limit on the number of bytes in a pathname are now
+    considered.
+  - Debug files are now written in $HOME/.imapfilter/ instead of /tmp/.
+
+IMAPFilter 1.0 - 23 May 2004
+  - Initial release of IMAPFilter with extension language Lua.
