@@ -38,13 +38,13 @@ function Mailbox._detach_message(self, uid)
 end
 
 
-function Mailbox._cached_select(self, account, mbox)
+function Mailbox._cached_select(self, account_imap, mbox)
     -- Account._login_user sets Account._imap._mailbox to nil to force select
     -- to be re-run after (re)login
-    -- account == Account._imap
-    if (account._mailbox == nil or account._mailbox ~= mbox) then
-        if (ifcore.select(self._account._imap, mbox) == true) then
-            account._mailbox = mbox
+    -- account_imap == Account._imap
+    if (account_imap._mailbox == nil or account_imap._mailbox ~= mbox) then
+        if (ifcore.select(account_imap, mbox) == true) then
+            account_imap._mailbox = mbox
             return true
         else
             return false
@@ -54,8 +54,8 @@ function Mailbox._cached_select(self, account, mbox)
     end
 end
 
-function Mailbox._cached_close(self, account)
-    account._mailbox = nil
+function Mailbox._cached_close(self, account_imap)
+    account_imap._mailbox = nil
     return ifcore.close(self._account._imap)
 end
 
