@@ -39,6 +39,9 @@ end
 
 
 function Mailbox._cached_select(self, account, mbox)
+    -- Account._login_user sets Account._imap._mailbox to nil to force select
+    -- to be re-run after (re)login
+    -- account == Account._imap
     if (account._mailbox == nil or account._mailbox ~= mbox) then
         if (ifcore.select(self._account._imap, mbox) == true) then
             account._mailbox = mbox

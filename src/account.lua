@@ -46,7 +46,9 @@ function Account._login_user(self)
     if (r == nil) then
         return true
     elseif (r == true) then
-        self._mailbox = nil
+	-- Set mailbox cache to nil so we re-issue a SELECT in
+	-- Mailbox._cached_select on reconnecting after disconnect
+        self._imap._mailbox = nil
         return true
     elseif (r == false) then
         return false
