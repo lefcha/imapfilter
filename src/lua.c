@@ -32,6 +32,7 @@ start_lua()
 
 	luaL_openlibs(lua);
 
+	luaopen_iflog(lua);
 	luaopen_ifcore(lua);
 	luaopen_ifsys(lua);
 	luaopen_ifre(lua);

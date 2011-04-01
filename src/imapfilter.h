@@ -138,6 +138,7 @@ void debug(const char *debug,...);
 void debugc(char c);
 void error(const char *errmsg,...);
 void fatal(unsigned int errnum, const char *fatal,...);
+LUALIB_API int luaopen_iflog(lua_State *lua);
 
 int open_debug(void);
 int close_debug(void);

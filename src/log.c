@@ -8,11 +8,14 @@
 #include <sys/stat.h>
 #include <time.h>
 
+#include <lua.h>
+#include <lauxlib.h>
+#include <lualib.h>
+
 #include "imapfilter.h"
 #include "session.h"
 #include "list.h"
 #include "pathnames.h"
-
 
 extern options opts;
 extern environment env;
@@ -237,4 +240,102 @@ log_time(void)
 	*(strchr(ct, '\n')) = '\0';
 
 	return ct;
+}
+
+
+/*
+ * Lua bindings for accessing the logging
+ */
+
+static int iflog_fatal(lua_State *lua);
+static int iflog_error(lua_State *lua);
+static int iflog_verbose(lua_State *lua);
+static int iflog_debug(lua_State *lua);
+
+/* Lua imapfilter log library function mapping */
+static const luaL_reg ifloglib[] = {
+	{ "debug", iflog_debug },
+	{ "verbose", iflog_verbose },
+	{ "error", iflog_error },
+	{ "fatal", iflog_fatal },
+	{ NULL, NULL }
+};
+
+/*
+ * write to debug log
+ */
+
+static int
+iflog_debug(lua_State *lua)
+{
+	if (lua_gettop(lua) != 1)
+		luaL_error(lua, "wrong number of arguments");
+
+	luaL_checktype(lua, 1, LUA_TSTRING);
+
+	debug(lua_tostring(lua, 1));
+
+	return 1;
+}
+
+/*
+ * print message if in verbose mode
+ */
+static int
+iflog_verbose(lua_State *lua)
+{
+	if (lua_gettop(lua) != 1)
+		luaL_error(lua, "wrong number of arguments");
+
+	luaL_checktype(lua, 1, LUA_TSTRING);
+
+	verbose(lua_tostring(lua, 1));
+
+	return 1;
+}
+
+/*
+ * print error AND write into log
+ */
+static int
+iflog_error(lua_State *lua)
+{
+	if (lua_gettop(lua) != 1)
+		luaL_error(lua, "wrong number of arguments");
+
+	luaL_checktype(lua, 1, LUA_TSTRING);
+
+	error(lua_tostring(lua, 1));
+
+	return 1;
+}
+
+/*
+ * print error and write into log then exit
+ */
+static int
+iflog_fatal(lua_State *lua)
+{
+	if (lua_gettop(lua) != 2)
+		luaL_error(lua, "wrong number of arguments");
+
+	luaL_checktype(lua, 1, LUA_TNUMBER);
+	luaL_checktype(lua, 2, LUA_TSTRING);
+
+	fatal(lua_tointeger(lua, 1), lua_tostring(lua, 2));
+
+	return 1;
+}
+
+
+/*
+ * Open imapfilter log library.
+ */
+LUALIB_API int
+luaopen_iflog(lua_State *lua)
+{
+
+	luaL_register(lua, "iflog", ifloglib);
+
+	return 1;
 }
