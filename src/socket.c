@@ -99,7 +99,7 @@ open_secure_connection(session *ssn, const char *server, const char *port,
 {
 	int r, e;
 	SSL_CTX *ctx;
-	SSL_METHOD *method;
+	const SSL_METHOD *method;
 
 	method = NULL;
 
