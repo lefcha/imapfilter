@@ -166,7 +166,7 @@ void
 usage(void)
 {
 
-	fprintf(stderr, "usage: imapfilter [-Vdiv] [-c configfile] "
+	fprintf(stderr, "usage: imapfilter [-diVv] [-c configfile] "
 	    "[-e 'command'] [-l logfile]\n");
 
 	exit(0);

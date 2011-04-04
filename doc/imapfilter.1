@@ -1,4 +1,4 @@
-.Dd February 28, 2011
+.Dd April 4, 2011
 .Dt IMAPFILTER 1
 .Os
 .Sh NAME
@@ -6,7 +6,7 @@
 .Nd mail filter
 .Sh SYNOPSIS
 .Nm
-.Op Fl Vdiv
+.Op Fl diVv
 .Op Fl c Ar configfile
 .Op Fl e Ar 'command'
 .Op Fl l Ar logfile
@@ -22,8 +22,6 @@ The command line options of
 .Xr imapfilter 1
 are as follows:
 .Bl -tag -width Ds
-.It Fl V
-Displays program's version.
 .It Fl c Ar configfile
 Path to the configuration file.  The default is
 .Pa $HOME/.imapfilter/config.lua .
@@ -43,6 +41,8 @@ line.
 File that contains logs of error messages
 .Nm
 produces.
+.It Fl V
+Displays program's version.
 .It Fl v
 Verbose mode; prints detailed information about the program's actions.
 .El
