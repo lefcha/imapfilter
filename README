@@ -25,17 +25,12 @@ Changes
 
 Installation
 
-  Compile time requirements are Lua (5.1 or later), the PCRE library, and
+  Compile time requirements are Lua (version 5.1), the PCRE library, and
   optionally the OpenSSL library (for SSL/TLS and CRAM-MD5 support).
-
-  Optionally, configure installation options using the supplied shell script.
-  To see usage details:
-  
-    ./configure -h
 
   Compile and install the program:
 
-    make
+    make all
     make install
 
 
