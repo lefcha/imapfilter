@@ -38,10 +38,11 @@ function Mailbox._detach_message(self, uid)
 end
 
 
-function Mailbox._cached_select(self, account, mbox)
-    if (account._mailbox == nil or account._mailbox ~= mbox) then
-        if (ifcore.select(self._account._imap, mbox) == true) then
-            account._mailbox = mbox
+function Mailbox._cached_select(self)
+    if (self._account._selected == nil or
+        self._account._selected ~= self._mailbox) then
+        if (ifcore.select(self._account._imap, self._mailbox) == true) then
+            self._account._selected = self._mailbox
             return true
         else
             return false
@@ -51,8 +52,8 @@ function Mailbox._cached_select(self, account, mbox)
     end
 end
 
-function Mailbox._cached_close(self, account)
-    account._mailbox = nil
+function Mailbox._cached_close(self)
+    self._account._selected = nil
     return ifcore.close(self._account._imap)
 end
 
@@ -82,15 +83,14 @@ function Mailbox._send_query(self, criteria, charset)
         return {}
     end
 
-    if (self._cached_select(self, self._account._imap, self._mailbox) ~=
-        true) then
+    if (self._cached_select(self) ~= true) then
         return {}
     end
    
     local _, results = ifcore.search(self._account._imap, query, charset)
 
     if (type(options) == 'table' and options.close == true) then
-        self._cached_close(self, self._account._imap)
+        self._cached_close(self)
     end
 
     if (results == nil) then
@@ -115,8 +115,7 @@ function Mailbox._flag_messages(self, mode, flags, messages)
         return
     end
 
-    if (self._cached_select(self, self._account._imap, self._mailbox) ~=
-        true) then
+    if (self._cached_select(self) ~= true) then
         return
     end
 
@@ -141,7 +140,7 @@ function Mailbox._flag_messages(self, mode, flags, messages)
     end
 
     if (type(options) == 'table' and options.close == true) then
-        self._cached_close(self, self._account._imap)
+        self._cached_close(self)
     end
 
     return r
@@ -159,7 +158,7 @@ function Mailbox._copy_messages(self, dest, messages)
 
     local r = false
     if (self._account._imap == dest._account._imap) then
-        if (self._cached_select(self, self._account._imap, self._mailbox) ~= true) then
+        if (self._cached_select(self) ~= true) then
             return
         end
 
@@ -178,7 +177,7 @@ function Mailbox._copy_messages(self, dest, messages)
         end
 
         if (type(options) == 'table' and options.close == true) then
-            self._cached_close(self, self._account._imap)
+            self._cached_close(self)
         end
     else
         local fast = self._fetch_fast(self, messages)
@@ -213,8 +212,7 @@ function Mailbox._fetch_fast(self, messages)
         return
     end
 
-    if (self._cached_select(self, self._account._imap, self._mailbox) ~=
-        true) then
+    if (self._cached_select(self) ~= true) then
         return
     end
 
@@ -235,7 +233,7 @@ function Mailbox._fetch_fast(self, messages)
     end
 
     if (type(options) == 'table' and options.close == true) then
-        self._cached_close(self, self._account._imap)
+        self._cached_close(self)
     end
 
     return results
@@ -250,8 +248,7 @@ function Mailbox._fetch_flags(self, messages)
         return
     end
 
-    if (self._cached_select(self, self._account._imap, self._mailbox) ~=
-        true) then
+    if (self._cached_select(self) ~= true) then
         return
     end
 
@@ -268,7 +265,7 @@ function Mailbox._fetch_flags(self, messages)
     end
 
     if (type(options) == 'table' and options.close == true) then
-        self._cached_close(self, self._account._imap)
+        self._cached_close(self)
     end
 
     return results
@@ -283,8 +280,7 @@ function Mailbox._fetch_date(self, messages)
         return
     end
 
-    if (self._cached_select(self, self._account._imap, self._mailbox) ~=
-        true) then
+    if (self._cached_select(self) ~= true) then
         return
     end
 
@@ -305,7 +301,7 @@ function Mailbox._fetch_date(self, messages)
     end
 
     if (type(options) == 'table' and options.close == true) then
-        self._cached_close(self, self._account._imap)
+        self._cached_close(self)
     end
 
     return results
@@ -320,8 +316,7 @@ function Mailbox._fetch_size(self, messages)
         return
     end
 
-    if (self._cached_select(self, self._account._imap, self._mailbox) ~=
-        true) then
+    if (self._cached_select(self) ~= true) then
         return
     end
 
@@ -342,7 +337,7 @@ function Mailbox._fetch_size(self, messages)
     end
 
     if (type(options) == 'table' and options.close == true) then
-        self._cached_close(self, self._account._imap)
+        self._cached_close(self)
     end
 
     return results
@@ -357,8 +352,7 @@ function Mailbox._fetch_header(self, messages)
         return
     end
 
-    if (self._cached_select(self, self._account._imap, self._mailbox) ~=
-        true) then
+    if (self._cached_select(self) ~= true) then
         return
     end
 
@@ -380,7 +374,7 @@ function Mailbox._fetch_header(self, messages)
     end
 
     if (type(options) == 'table' and options.close == true) then
-        self._cached_close(self, self._account._imap)
+        self._cached_close(self)
     end
 
     return results
@@ -395,8 +389,7 @@ function Mailbox._fetch_body(self, messages)
         return
     end
 
-    if (self._cached_select(self, self._account._imap, self._mailbox) ~=
-        true) then
+    if (self._cached_select(self) ~= true) then
         return
     end
 
@@ -417,7 +410,7 @@ function Mailbox._fetch_body(self, messages)
     end
 
     if (type(options) == 'table' and options.close == true) then
-        self._cached_close(self, self._account._imap)
+        self._cached_close(self)
     end
 
     return results
@@ -455,8 +448,7 @@ function Mailbox._fetch_fields(self, fields, messages)
         return
     end
 
-    if (self._cached_select(self, self._account._imap, self._mailbox) ~=
-        true) then
+    if (self._cached_select(self) ~= true) then
         return
     end
 
@@ -483,7 +475,7 @@ function Mailbox._fetch_fields(self, fields, messages)
     end
 
     if (type(options) == 'table' and options.close == true) then
-        self._cached_close(self, self._account._imap)
+        self._cached_close(self)
     end
 
     return results
@@ -498,8 +490,7 @@ function Mailbox._fetch_structure(self, messages)
         return
     end
 
-    if (self._cached_select(self, self._account._imap, self._mailbox) ~=
-        true) then
+    if (self._cached_select(self) ~= true) then
         return
     end
 
@@ -522,7 +513,7 @@ function Mailbox._fetch_structure(self, messages)
     end
 
     if (type(options) == 'table' and options.close == true) then
-        self._cached_close(self, self._account._imap)
+        self._cached_close(self)
     end
 
     return results
@@ -533,8 +524,7 @@ function Mailbox._fetch_parts(self, parts, message)
         return
     end
 
-    if (self._cached_select(self, self._account._imap, self._mailbox) ~=
-        true) then
+    if (self._cached_select(self) ~= true) then
         return
     end
 
@@ -555,7 +545,7 @@ function Mailbox._fetch_parts(self, parts, message)
     end
 
     if (type(options) == 'table' and options.close == true) then
-        self._cached_close(self, self._account._imap)
+        self._cached_close(self)
     end
 
     return results
@@ -1231,8 +1221,7 @@ function Mailbox.enter_idle(self)
         return false
     end
 
-    if (self._cached_select(self, self._account._imap, self._mailbox) ~=
-        true) then
+    if (self._cached_select(self) ~= true) then
         return false
     end
    

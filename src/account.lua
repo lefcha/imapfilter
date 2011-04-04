@@ -31,6 +31,8 @@ Account._mt.__call = function (self, arg)
 
     object._imap = arg
 
+    object._selected = nil
+
     return object
 end
 
@@ -46,7 +48,7 @@ function Account._login_user(self)
     if (r == nil) then
         return true
     elseif (r == true) then
-        self._mailbox = nil
+        self._selected = nil
         return true
     elseif (r == false) then
         return false
