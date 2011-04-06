@@ -1,4 +1,4 @@
-.Dd March 6, 2011
+.Dd April 6, 2011
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -22,13 +22,21 @@ manual page follows:
 .It
 The
 .Vt nil
-is the type of the value ``nil'' ,
+is the type of the value
+.Dq nil ,
 whose main property is to be different from any other value; usually it
 represents the absence of a useful value.
 .It
 The
 .Vt boolean
-is the type of the values ``true'' and ``false''.  Both ``nil'' and ``false''
+is the type of the values
+.Dq true
+and
+.Dq false .
+Both
+.Dq nil
+and
+.Dq false
 make a condition false; any other value makes it true.
 .It
 The type
@@ -53,7 +61,8 @@ other functions, and returned as a result.
 .Sh OPTIONS
 Program's options are set using an already initialised
 .Vt table
-named ``options'' ,
+named
+.Dq options ,
 in the following manner:
 .Bd -literal -offset 4n
 options.timeout = 120
@@ -68,13 +77,15 @@ When this option is enabled, parts of messages are cached locally in memory to
 avoid being downloaded more than once.  The cache is preserved for the current
 session only. This variable takes a
 .Vt boolean
-as a value. Default is ``true''.
+as a value. Default is
+.Dq true .
 .It Va certificates
 When this option is enabled, the server certificate can be accepted and stored,
 in order to validate the authenticity of the server in future connections. This
 variable takes a
 .Vt boolean
-as a value. Default is ``true''.
+as a value. Default is
+.Dq true .
 .It Va charset
 Indicates to the server the character set of the strings for the searching
 methods.  This variable takes a
@@ -89,31 +100,36 @@ follow the specification and don't send the correct response code to the
 client. By enabling this option the client tries to create the mailbox, despite
 of the server's response. This variable takes a
 .Vt boolean
-as a value.  Default is ``false''.
+as a value.  Default is
+.Dq false .
 .It Va close
 This option controls whether the currently selected mailbox is implicitly
 closed at the end of each performed operation, thus removing all messages that
 are marked deleted. This variable takes a
 .Vt boolean
-as a value.  Default is ``false''.
+as a value.  Default is
+.Dq false .
 .It Va crammd5
 When this option is enabled and the server supports the Challenge-Response
 Authentication Mechanism (specifically CRAM-MD5), this method will be used for
 user authentication instead of a plaintext password LOGIN.  This variable
 takes a 
 .Vt boolean
-as a value.  Default is ``true''.
+as a value.  Default is
+.Dq true .
 .It Va expunge
 Normally, messages are marked for deletion and are actually deleted when the
 mailbox is closed.  When this option is enabled, messages are expunged
 immediately after being marked deleted.  This variable takes a
 .Vt boolean
-as a value.  Default is ``true''.
+as a value.  Default is
+.Dq true .
 .It Va info
 When this options is enabled, a summary of the program's actions is printed,
 while processing mailboxes.  This variable takes a
 .Vt boolean
-as a value.  Default is ``true''.
+as a value.  Default is
+.Dq true .
 .It Va keepalive
 The time in minutes before terminating and re-issuing the IDLE command, in
 order to keep alive the connection, by resetting the inactivity timeout of the
@@ -122,29 +138,37 @@ least 30 minutes.  But it may happen that some IMAP servers don't respect that,
 or some intermediary network device has a shorter timeout.  By setting this
 option the above problem can be worked around. This variable takes a
 .Vt number
-as a value. Default is ``29'' minutes.
+as a value. Default is
+.Dq 29
+minutes.
 .It Va namespace
 When enabled, the program gets the namespace of the user's personal mailboxes,
 and applies automatically the prefix and hierarchy delimiter to any mailboxes
-residing on the mail server; the user must use the `/' character as the
-delimiter and ``'' (ie.  nothing) as the prefix, regardless of the folder
+residing on the mail server; the user must use the
+.Sq /
+character as the delimiter and
+.Dq
+(ie.  nothing) as the prefix, regardless of the folder
 format of the mail server.  This must be disabled, if the user wants to
 manually specify mailbox names (eg. because they are not part of the user's
 personal namespace mailboxes).  This variable takes
 .Vt boolean
-as a value.  Default is ``true''.
+as a value.  Default is
+.Dq true .
 .It Va starttls
 When this option is enabled and the server supports the IMAP STARTTLS
 extension, a TLS connection will be negotiated with the mail server in the
 beginning of the session.  This variable takes a 
 .Vt boolean
-as value.  Default is ``true''.
+as value.  Default is
+.Dq true .
 .It Va subscribe
 By enabling this option new mailboxes that were automatically created, get also
 subscribed; they are set active in order for IMAP clients to recognize them.
 This variable takes a
 .Vt boolean
-as a value.  Default is ``false''.
+as a value.  Default is
+.Dq false .
 .It Va timeout
 The time in seconds for the program to wait for a mail server's response.  If
 not set, the client will block indefinitely.  This variable takes a
@@ -191,12 +215,19 @@ as a value.
 .It Va port
 The port to connect to.  It takes a
 .Vt number
-as a value.  Default is ``143'' for imap and ``993'' for imaps.
+as a value.  Default is
+.Dq 143
+for imap and
+.Dq 993
+for imaps.
 .It Va ssl
 Forces an imaps connection and specifies the SSL/TLS protocol to be used.  It
 takes a
 .Vt string
-as a value, specifically one of: ``ssl2'' , ``ssl3'' , ``tls1''.
+as a value, specifically one of:
+.Dq ssl2 ,
+.Dq ssl3 ,
+.Dq tls1 .
 .El
 .Pp
 .Ss LISTING
@@ -236,9 +267,11 @@ the subscribed folders.
 .El
 .Pp
 The following methods can be used on an account to list mailboxes, using
-wildcards, in a folder of an account.  The `*' wildcard, matches any character
-and the `%' matches any character except the folder delimiter, ie.
-non-recursively:
+wildcards, in a folder of an account.  The
+.Sq *
+wildcard, matches any character and the
+.Sq %
+matches any character except the folder delimiter, ie.  non-recursively:
 .Pp
 .Bl -tag -width Ds -compact
 .It Fn list_all folder mailbox
@@ -389,9 +422,11 @@ to work, the IDLE extension has to be supported by the IMAP server.  The
 .Fn enter_idle
 method returns one value of type
 .Vt boolean :
-``true'' if the IDLE extension is supported and there was a update in the
-mailbox, and ``false'' if the IDLE extension is not supported, in which case
-the method returns immediately.
+.Dq true
+if the IDLE extension is supported and there was a update in the mailbox, and
+.Dq false
+if the IDLE extension is not supported, in which case the method returns
+immediately.
 .El
 .Pp
 Examples:
@@ -409,28 +444,49 @@ that contains the messages that match the searching method.  This
 can be combined with other
 .Vt tables
 using logic theory. There are three available operations, that implement
-logical ``or'', logical ``and'' and logical ``not''.
+logical
+.Dq or ,
+logical
+.Dq and
+and logical
+.Dq not .
 .Pp
-The logical ``or'' is implemented using the `+' operator:
+The logical
+.Dq or
+is implemented using the
+.Sq +
+operator:
 .Bd -literal -offset 4n
 results = myaccount.mymailbox:is_unseen() +
           myaccount.mymailbox:is_larger(100000)
 .Ed
 .Pp
-The logical ``and'' is implemented using the `*' operator:
+The logical
+.Dq and
+is implemented using the
+.Sq *
+operator:
 .Bd -literal -offset 4n
 results = myaccount.mymailbox:is_unseen() *
           myaccount.mymailbox:is_larger(100000)
 .Ed
 .Pp
-The logical ``not'' is implemented using the `-' operator:
+The logical
+.Dq not
+is implemented using the
+.Sq -
+operator:
 .Bd -literal -offset 4n
 results = myaccount.mymailbox:is_unseen() -
           myaccount.mymailbox:is_larger(100000)
 .Ed
 .Pp
 The three logical operators can be combined in the same expression. The logical
-``and'' has higher precedence than the logical ``or'' and the logical ``not'',
+.Dq and
+has higher precedence than the logical
+.Dq or
+and the logical
+.Dq not ,
 with the latter two having the same precedence, and parentheses may be used to
 change this behaviour:
 .Bd -literal -offset 4n
@@ -580,11 +636,23 @@ in days.
 .El
 .Pp
 The following methods can be used to search for messages based on their arrival
-or sent date, in the ``day-month-year'' form, where day is the day of the month
-as a decimal number (01-31), month is the abbreviated month (``Jan'', ``Feb'',
-``Mar'', ``Apr'', ``May'', ``Jun'', ``Jul'', ``Aug'', ``Sep'', ``Oct'',
-``Nov'', ``Dec'') and year is the year as decimal number including the century
-(eg. 2007):
+or sent date, in the
+.Dq day-month-year
+form, where day is the day of the month as a decimal number (01-31), month is
+the abbreviated month (
+.Dq Jan ,
+.Dq Feb ,
+.Dq Mar ,
+.Dq Apr ,
+.Dq May ,
+.Dq Jun ,
+.Dq Jul ,
+.Dq Aug ,
+.Dq Sep ,
+.Dq Oct ,
+.Dq Nov ,
+.Dq Dec )
+and year is the year as decimal number including the century (eg. 2007):
 .Pp
 .Bl -tag -width Ds -compact
 .It Fn arrived_before date
@@ -593,7 +661,9 @@ messages that have arrived before the
 .Pq Vt string ,
 where
 .Fa date
-is in the ``day-month-year'' form.
+is in the
+.Dq day-month-year
+form.
 .Pp
 .It Fn arrived_on date
 Messages that have arrived on the
@@ -601,7 +671,9 @@ Messages that have arrived on the
 .Pq Vt string ,
 where
 .Fa date
-is in the ``day-month-year'' form.
+is in the
+.Dq day-month-year
+form.
 .Pp
 .It Fn arrived_since date 
 Messages that have arrived after the
@@ -609,7 +681,9 @@ Messages that have arrived after the
 .Pq Vt string ,
 where
 .Fa date
-is in the ``day-month-year'' form.
+is in the
+.Dq day-month-year
+form.
 .Pp
 .It Fn sent_before date
 Messages that have been sent before the
@@ -617,7 +691,9 @@ Messages that have been sent before the
 .Pq Vt string ,
 where
 .Fa date
-is in the ``day-month-year'' form.
+is in the
+.Dq day-month-year
+form.
 .Pp
 .It Fn sent_on date
 Messages that have been sent on the
@@ -625,7 +701,9 @@ Messages that have been sent on the
 .Pq Vt string ,
 where
 .Fa date
-is in the ``day-month-year'' form.
+is in the
+.Dq day-month-year
+form.
 .Pp
 .It Fn sent_since date
 Messages that have been sent after the
@@ -633,7 +711,9 @@ Messages that have been sent after the
 .Pq Vt string ,
 where
 .Fa date
-is in the ``day-month-year'' form.
+is in the
+.Dq day-month-year
+form.
 .El
 .Pp
 The following methods can be used to search for messages that contain a
@@ -644,31 +724,41 @@ specific word or phrase:
 Messages that contain the
 .Fa string
 .Pq Vt string
-in the ``Bcc'' header field.
+in the
+.Dq Bcc
+header field.
 .Pp
 .It Fn contain_cc string
 Messages that contain the
 .Fa string
 .Pq Vt string
-in the ``Cc'' header field.
+in the
+.Dq Cc
+header field.
 .Pp
 .It Fn contain_from string
 Messages that contain the
 .Fa string
 .Pq Vt string
-in the ``From'' header field.
+in the
+.Dq From
+header field.
 .Pp
 .It Fn contain_subject string
 Messages that contain the
 .Fa string
 .Pq Vt string
-in the ``Subject'' header field.
+in the
+.Dq Subject
+header field.
 .Pp
 .It Fn contain_to string
 Messages that contain the
 .Fa string
 .Pq Vt string
-in the ``To'' header field.
+in the
+.Dq To
+header field.
 .Pp
 .It Fn contain_field field string
 Messages that contain the
@@ -702,40 +792,51 @@ to use these methods with meta-searching (see following section), in order to
 narrow down the set of messages that should be searched, and thus minimize what
 will be downloaded.
 .Pp
-Note that due to Lua using backslash `\\' as an escape character for its
-strings, one has to double backslashes in order to insert a single backslash
-inside a regular expression pattern:
+Note that due to Lua using backslash
+.Sq \e
+as an escape character for its strings, one has to double backslashes in order
+to insert a single backslash inside a regular expression pattern:
 .Pp
 .Bl -tag -width Ds -compact
 .It Fn match_bcc pattern
 Messages that match the regular expression
 .Fa pattern
 .Pq Vt string
-in the ``Bcc'' header field.
+in the
+.Dq Bcc
+header field.
 .Pp
 .It Fn match_cc pattern
 Messages that match the regular expression
 .Fa pattern
 .Pq Vt string
-in the ``Cc'' header field.
+in the
+.Dq Cc
+header field.
 .Pp
 .It Fn match_from pattern
 Messages that match the regular expression
 .Fa pattern
 .Pq Vt string
-in the ``From'' header field.
+in the
+.Dq From
+header field.
 .Pp
 .It Fn match_subject pattern
 Messages that match the regular expression
 .Fa pattern
 .Pq Vt string
-in the ``Subject'' header field.
+in the
+.Dq Subject
+header field.
 .Pp
 .It Fn match_to pattern
 Messages that match the regular expression
 .Fa pattern
 .Pq Vt string
-in the ``To'' header field.
+in the
+.Dq To
+header field.
 .Pp
 .It Fn match_field field pattern
 Messages that match the regular expression
@@ -874,8 +975,13 @@ Unmarks the messages that have been marked as read.
 .El
 .Pp
 The following methods can be used to flag messages in a mailbox. The standard
-system flags are ``\\Answered'', ``\\Deleted'', ``\\Draft'', ``\\Flagged'',
-``\\Seen'', while if the server supports it, new user keywords may be defined:
+system flags are
+.Dq \eAnswered ,
+.Dq \eDeleted ,
+.Dq \eDraft ,
+.Dq \eFlagged ,
+.Dq \eSeen ,
+while if the server supports it, new user keywords may be defined:
 .Pp
 .Bl -tag -width Ds -compact
 .It Fn add_flags flags
@@ -910,8 +1016,8 @@ results:copy_messages(myaccount.othermailbox)
 results:move_messages(otheraccount.mymailbox)
 results:mark_seen()
 results:unmark_flagged()
-results:add_flags({ 'MyFlag', '\\\\Seen' })
-results:remove_flags({ '\\\\Seen' })
+results:add_flags({ 'MyFlag', '\e\eSeen' })
+results:remove_flags({ '\e\eSeen' })
 
 results:move_messages(otheraccount['myfolder/mymailbox'])
 .Ed
@@ -1012,7 +1118,9 @@ The following auxiliary functions are also available for convenience:
 .Pp
 .Bl -tag -width Ds -compact
 .It Fn form_date days
-Forms a date in ``day-month-year'' format that the system had before the number of
+Forms a date in
+.Dq day-month-year
+format that the system had before the number of
 .Fa days
 .Pq Vt number ,
 and returns it as a
@@ -1071,9 +1179,10 @@ matched against. Returns at least a
 .Vt boolean ,
 that denotes if the match was successful, and any captures which are of
 .Vt string
-type.  Note that due to Lua using backslash `\\' as an escape character for its
-strings, one has to double backslashes in order to insert a single backslash
-inside a regular expression pattern:
+type.  Note that due to Lua using backslash
+.Sq \e
+as an escape character for its strings, one has to double backslashes in order
+to insert a single backslash inside a regular expression pattern:
 .El
 .Pp
 Examples:
@@ -1083,7 +1192,7 @@ password = get_password('Enter password: ')
 become_daemon(600, myfunction)
 status = pipe_to('mycommandline', 'mydata')
 status, data = pipe_from('mycommandline')
-success, capture = regex_search('^[PpCcRrEe]: (\\\\w)$', 'mystring')
+success, capture = regex_search('^[PpCcRrEe]: (\e\ew)$', 'mystring')
 .Ed
 .Sh EXAMPLES
 See
