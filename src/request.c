@@ -111,6 +111,10 @@ request_login(const char *server, const char *port, const char *ssl,
 	} else {
 		r = STATUS_RESPONSE_PREAUTH;
 	}
+
+	if (response_capability(s, imap_capability(s)) == -1)
+		goto fail;
+
 	if (s->capabilities & CAPABILITY_NAMESPACE &&
 	    get_option_boolean("namespace")) {
 		if (response_namespace(s, imap_namespace(s)) == -1)
