@@ -251,45 +251,45 @@ static int
 ifsys_daemon(lua_State *lua)
 {
 
-	if (lua_gettop(lua) != 0)
+	if (lua_gettop(lua) != 2)
 		luaL_error(lua, "wrong number of arguments");
+
+	luaL_checktype(lua, 1, LUA_TBOOLEAN);
+	luaL_checktype(lua, 2, LUA_TBOOLEAN);
 
 	switch (fork()) {
 	case -1:
 		fprintf(stderr, "forking; %s\n", strerror(errno));
-		exit(1);
+		lua_pushboolean(lua, 0);
+		return 1;
+		/* NOTREACHED */
 		break;
 	case 0:
 		break;
 	default:
 		exit(0);
+		/* NOTREACHED */
 		break;
 	}
 
 	if (setsid() == -1) {
 		fprintf(stderr, "creating session; %s\n", strerror(errno));
-		exit(1);
-	}
-	switch (fork()) {
-	case -1:
-		fprintf(stderr, "creating session; %s\n", strerror(errno));
-		exit(1);
-		break;
-	case 0:
-		break;
-	default:
-		exit(0);
-		break;
 	}
 
-	close(STDIN_FILENO);
-	close(STDOUT_FILENO);
-	close(STDERR_FILENO);
+	if (lua_toboolean(lua, 1) == 0)
+		chdir("/");
 
-	if (open("/dev/null", O_RDWR) == -1 ||
-	    dup(STDIN_FILENO) == -1 ||
-	    dup(STDIN_FILENO) == -1)
-		fprintf(stderr, "creating session; %s\n", strerror(errno));
+	if (lua_toboolean(lua, 2) == 0) {
+		close(STDIN_FILENO);
+		close(STDOUT_FILENO);
+		close(STDERR_FILENO);
+
+		if (open("/dev/null", O_RDWR) == -1 ||
+		    dup(STDIN_FILENO) == -1 ||
+		    dup(STDIN_FILENO) == -1)
+			fprintf(stderr, "duplicating file descriptors; %s\n",
+			    strerror(errno));
+	}
 
 	return 0;
 }

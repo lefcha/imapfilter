@@ -54,11 +54,13 @@ function pipe_from(command)
 end
 
 
-function become_daemon(interval, commands)
+function become_daemon(interval, commands, nochdir, noclose)
     _check_required(interval, 'number')
     _check_required(commands, 'function')
+    _check_optional(nochdir, 'boolean')
+    _check_optional(noclose, 'boolean')
 
-    ifsys.daemon()
+    ifsys.daemon(nochdir, noclose)
 
     repeat
         pcall(commands)
