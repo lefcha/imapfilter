@@ -68,6 +68,6 @@ auth_cram_md5(session *ssn, const char *user, const char *pass)
 	} else
 		return -1;
 
-	return response_authenticate(ssn, t, NULL);
+	return response_generic(ssn, t);
 }
 #endif				/* NO_CRAMMD5 */
