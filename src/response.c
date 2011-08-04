@@ -39,7 +39,7 @@ enum {				/* Server data responses to be parsed;
 };
 regexp responses[] = {		/* Server data responses to be parsed;
 				 * regular expressions patterns. */
-	{ "([[:xdigit:]]{4,4}) (OK|NO|BAD) [[:print:]]*\r\n", NULL, 0, NULL },
+	{ "([[:xdigit:]]{4,4}) (OK|NO|BAD) .*\r\n", NULL, 0, NULL },
 	{ "\\* CAPABILITY ([[:print:]]*)\r\n", NULL, 0, NULL },
 	{ "\\+ ([[:graph:]]*)\r\n", NULL, 0, NULL },
 	{ "\\* NAMESPACE (NIL|\\(\\(\"([[:graph:]]*)\" \"([[:print:]])\"\\)"
