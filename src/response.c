@@ -39,31 +39,29 @@ enum {				/* Server data responses to be parsed;
 };
 regexp responses[] = {		/* Server data responses to be parsed;
 				 * regular expressions patterns. */
-	{ "([[:xdigit:]]{4,4}) (OK|NO|BAD) [[:print:]]*\r\n", NULL, 0, NULL },
-	{ "\\* CAPABILITY ([[:print:]]*)\r\n", NULL, 0, NULL },
-	{ "\\+ ([[:graph:]]*)\r\n", NULL, 0, NULL },
-	{ "\\* NAMESPACE (NIL|\\(\\(\"([[:graph:]]*)\" \"([[:print:]])\"\\)"
-	  "[[:print:]]*\\)) (NIL|\\([[:print:]]*\\)) (NIL|\\([[:print:]]*\\))"
-	  "\r\n", NULL, 0, NULL },
-	{ "\\* STATUS [[:print:]]* \\(([[:alnum:] ]*)\\) *\r\n", NULL, 0, NULL },
-	{ "MESSAGES ([[:digit:]]+)", NULL, 0, NULL },
-	{ "RECENT ([[:digit:]]+)", NULL, 0, NULL },
-	{ "UNSEEN ([[:digit:]]+)", NULL, 0, NULL },
-	{ "UIDNEXT ([[:digit:]]+)", NULL, 0, NULL },
-	{ "\\* ([[:digit:]]+) EXISTS\r\n", NULL, 0, NULL },
-	{ "\\* ([[:digit:]]+) RECENT\r\n", NULL, 0, NULL },
-	{ "\\* (LIST|LSUB) \\(([[:print:]]*)\\) (\"[[:print:]]\"|NIL) "
-	  "(\"([[:print:]]+)\"|([[:print:]]+)|\\{([[:digit:]]+)\\}\r\n"
-	  "([[:print:]]*))\r\n", NULL, 0, NULL },
-	{ "\\* SEARCH ?([[:digit:] ]*)\r\n", NULL, 0, NULL },
-	{ "\\* [[:digit:]]+ FETCH \\(([[:print:]]*)\\)\r\n", NULL, 0, NULL },
-	{ "FLAGS \\(([[:print:]]*)\\)", NULL, 0, NULL },
-	{ "INTERNALDATE \"([[:print:]]*)\"", NULL, 0, NULL },
-	{ "RFC822.SIZE ([[:digit:]]+)", NULL, 0, NULL },
-	{ "BODYSTRUCTURE (\\([[:print:]]+\\))", NULL, 0, NULL },
-	{ "\\* [[:digit:]]+ FETCH \\([[:print:]]*BODY\\[[[:print:]]*\\] "
-	  "(\\{([[:digit:]]+)\\}\r\n|\"([[:print:]]*)\")", NULL, 0, NULL },
-	{ "\\* [[:digit:]]+ (RECENT|EXISTS)\r\n", NULL, 0, NULL },
+	{ "([0-9A-F]{4,4}) (OK|NO|BAD) .*\r\n", NULL, 0, NULL },
+	{ "\\* CAPABILITY (.*)\r\n", NULL, 0, NULL },
+	{ "\\+ ([^ ]*)\r\n", NULL, 0, NULL },
+	{ "\\* NAMESPACE (NIL|\\(\\(\"([^ ]*)\" \"(.)\"\\).*\\)) "
+	  "(NIL|\\(.*\\)) (NIL|\\(.*\\))\r\n", NULL, 0, NULL },
+	{ "\\* STATUS .* \\(([0-9A-Z ]*)\\) *\r\n", NULL, 0, NULL },
+	{ "MESSAGES ([0-9]+)", NULL, 0, NULL },
+	{ "RECENT ([0-9]+)", NULL, 0, NULL },
+	{ "UNSEEN ([0-9]+)", NULL, 0, NULL },
+	{ "UIDNEXT ([0-9]+)", NULL, 0, NULL },
+	{ "\\* ([0-9]+) EXISTS\r\n", NULL, 0, NULL },
+	{ "\\* ([0-9]+) RECENT\r\n", NULL, 0, NULL },
+	{ "\\* (LIST|LSUB) \\((.*)\\) (\".\"|NIL) "
+	  "(\"(.+)\"|(.+)|\\{([0-9]+)\\}\r\n(.*))\r\n", NULL, 0, NULL },
+	{ "\\* SEARCH ?([0-9 ]*)\r\n", NULL, 0, NULL },
+	{ "\\* [0-9]+ FETCH \\((.*)\\)\r\n", NULL, 0, NULL },
+	{ "FLAGS \\((.*)\\)", NULL, 0, NULL },
+	{ "INTERNALDATE \"(.*)\"", NULL, 0, NULL },
+	{ "RFC822.SIZE ([0-9]+)", NULL, 0, NULL },
+	{ "BODYSTRUCTURE (\\(.+\\))", NULL, 0, NULL },
+	{ "\\* [0-9]+ FETCH \\(.*BODY\\[.*\\] (\\{([0-9]+)\\}\r\n|\"(.*)\")",
+	  NULL, 0, NULL },
+	{ "\\* [0-9]+ (RECENT|EXISTS)\r\n", NULL, 0, NULL },
 	{ NULL, NULL, 0, NULL }
 };
 
