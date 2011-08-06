@@ -915,6 +915,20 @@ function Mailbox.fetch_parts(self, parts, message)
 end
 
 
+function Mailbox.append_message(self, message, flags, date)
+    _check_required(message, 'string')
+    _check_optional(flags, { 'string', 'table' })
+    _check_optional(date, 'string')
+
+    if (type(flags) == 'table') then
+        flags = table.concat(flags, ' ')
+    end
+
+    return ifcore.append(self._account._imap, self._mailbox, message, flags,
+    date)
+end
+
+
 function Mailbox.is_answered(self)
     return self.send_query(self, 'ANSWERED')
 end

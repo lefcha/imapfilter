@@ -14,7 +14,7 @@
 
 function forever()
     results = myaccount.mymailbox:is_old()
-    results:move_messages(myaccount.archive)
+    results:move_messages(myaccount.myothermailbox)
 end
 
 become_daemon(600, forever)
@@ -66,6 +66,24 @@ for _, mesg in ipairs(all) do
 end
 
 results:delete_messages()
+
+
+-- Messages can be appended to a mailbox.  One can fetch a message from a
+-- mailbox, optionally process it, and then upload it to the same or different
+-- mailbox, at the same or different mail servers.  In the following example a
+-- header field is added to all messages, and the processed messages are then
+-- appended to a different mailbox.
+
+all = myaccount.mymailbox:select_all()
+
+for _, mesg in ipairs(all) do
+    mbox, uid = unpack(all)
+    header = mbox[uid]:fetch_header()
+    body = mbox[uid]:fetch_body()
+    message = header:gsub('[\r\n]+$', '\r\n') ..
+              'My-Header: My-Content\r\n' .. '\r\n' .. body
+    myaccount.myothermaibox:append_message(message)
+end
 
 
 -- Passwords could be extracted during execution time from an encrypted

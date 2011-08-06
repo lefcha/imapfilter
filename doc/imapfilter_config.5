@@ -1,4 +1,4 @@
-.Dd April 6, 2011
+.Dd August 5, 2011
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -537,8 +537,8 @@ either at the same or different accounts, for example when the same actions
 will be executed on messages residing in different mailboxes or accounts.
 .Bd -literal -offset 4n
 results = myaccount.mymailbox:is_unseen() +
-	  myaccount.othermailbox:is_larger(100000) +
-	  otheraccount.othermailbox:contain_subject('test')
+	  myaccount.myothermailbox:is_larger(100000) +
+	  myotheraccount.myothermailbox:contain_subject('test')
 .Ed
 .Pp
 The following method can be used to get all messages in a mailbox:
@@ -987,39 +987,45 @@ while if the server supports it, new user keywords may be defined:
 .It Fn add_flags flags
 Adds the
 .Fa flags
-.Po Vt table
+.Po
+.Vt table
 that contains
-.Vt strings Pc
+.Vt strings
+.Pc
 to the messages.
 .Pp
 .It Fn remove_flags flags
 Removes the
 .Fa flags
-.Po Vt table
+.Po
+.Vt table
 that contains
-.Vt strings Pc
+.Vt strings
+.Pc
 from the messages.
 .Pp
 .It Fn replace_flags flags
 Replaces the
 .Fa flags
-.Po Vt table
+.Po
+.Vt table
 that contains
-.Vt strings Pc
+.Vt strings
+.Pc
 of the messages.
 .El
 .Pp
 Examples:
 .Bd -literal -offset 4n
 results:delete_messages()
-results:copy_messages(myaccount.othermailbox)
-results:move_messages(otheraccount.mymailbox)
+results:copy_messages(myaccount.myothermailbox)
+results:move_messages(myotheraccount.mymailbox)
 results:mark_seen()
 results:unmark_flagged()
 results:add_flags({ 'MyFlag', '\e\eSeen' })
 results:remove_flags({ '\e\eSeen' })
 
-results:move_messages(otheraccount['myfolder/mymailbox'])
+results:move_messages(myotheraccount['myfolder/mymailbox'])
 .Ed
 .Sh MESSAGES
 The messages that are residing in any mailbox can be also accessed, as a whole
@@ -1064,9 +1070,7 @@ of the message.
 .It Fn fetch_part part
 Fetches the specified
 .Fa part
-.Po
-.Vt string
-.Pc
+.Pq Vt string
 of the message.
 .El
 .Pp
@@ -1076,7 +1080,7 @@ message:
 .Bl -tag -width Ds -compact
 .It Fn fetch_flags
 Fetches the flags of the message.  Returns a
-.Vt table ,
+.Vt table
 of
 .Vt strings .
 .Pp
@@ -1095,13 +1099,41 @@ that has as keys the parts of the message, and as values a
 .Vt table
 that has one mandatory element, the type
 .Pq Vt string
-of the part, and two
-optional elements,
-the size
+of the part, and two optional elements, the size
 .Pq Vt number
 and name
 .Pq Vt string
 of the part.
+.El
+.Ss APPENDING
+.Pp
+The following methods can be used to append a message to a mailbox:
+.Pp
+.Bl -tag -width Ds -compact
+.It Fn append_message message
+Appends the
+.Fa message
+.Pq Vt string
+to the mailbox.
+.Pp
+.It Fn append_message message message flags date
+Appends the
+.Fa message
+.Pq Vt string
+to the mailbox, setting the specified
+.Fa flags
+.Po
+.Vt table
+of
+.Vt strings
+.Pc ,
+as returned by
+.Fn fetch_flags ,
+and
+.Fa date
+.Pq Vt string ,
+as returned by
+.Fn fetch_date .
 .El
 .Pp
 Examples:
@@ -1112,6 +1144,8 @@ myaccount.mymailbox[5]:fetch_part('1.1')
 
 myaccount['mymailbox'][7]:fetch_message()
 myaccount['myfolder/mymailbox'][11]:fetch_message()
+
+myaccount.mymailbox:append_message(message)
 .Ed
 .Sh FUNCTIONS
 The following auxiliary functions are also available for convenience:

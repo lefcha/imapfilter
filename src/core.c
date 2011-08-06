@@ -924,22 +924,16 @@ ifcore_append(lua_State *lua)
 	const char *s, *u, *p;
 	int r;
 
-	switch (lua_gettop(lua)) {
-	case 5:
-		luaL_checktype(lua, 5, LUA_TSTRING);
-		/* FALLTHROUGH */
-	case 4:
-		luaL_checktype(lua, 4, LUA_TSTRING);
-		/* FALLTHROUGH */
-	case 3:
-		luaL_checktype(lua, 3, LUA_TSTRING);
-		luaL_checktype(lua, 2, LUA_TSTRING);
-		luaL_checktype(lua, 1, LUA_TTABLE);
-		break;
-	default:
+	if (lua_gettop(lua) != 5)
 		luaL_error(lua, "wrong number of arguments");
-		break;
-	}
+
+	luaL_checktype(lua, 1, LUA_TTABLE);
+	luaL_checktype(lua, 2, LUA_TSTRING);
+	luaL_checktype(lua, 3, LUA_TSTRING);
+	if (lua_type(lua, 4) != LUA_TNIL)
+		luaL_checktype(lua, 4, LUA_TSTRING);
+	if (lua_type(lua, 5) != LUA_TNIL)
+		luaL_checktype(lua, 5, LUA_TSTRING);
 
 	lua_pushvalue(lua, 1);
 	if (!(s = get_table_string("server")))
@@ -950,7 +944,9 @@ ifcore_append(lua_State *lua)
 	lua_pop(lua, 1);
 
 	r = request_append(s, p, u, lua_tostring(lua, 2), lua_tostring(lua, 3),
-	    lua_strlen(lua, 3), lua_tostring(lua, 4), lua_tostring(lua, 5));
+	    lua_strlen(lua, 3), lua_type(lua, 4) == LUA_TSTRING ?
+	    lua_tostring(lua, 4) : NULL, lua_type(lua, 5) == LUA_TSTRING ?
+	    lua_tostring(lua, 5) : NULL);
 
 	lua_pop(lua, lua_gettop(lua));
 
