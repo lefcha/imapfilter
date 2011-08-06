@@ -67,7 +67,7 @@ request_login(const char *server, const char *port, const char *ssl,
 	if ((rg = response_greeting(s)) == -1)
 		goto fail;
 
-	if (opts.debug > 0)
+	if (opts.debug)
 		if (response_generic(s, imap_noop(s)) == -1)
 			goto fail;
 

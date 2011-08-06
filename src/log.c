@@ -139,32 +139,17 @@ fatal(unsigned int errnum, const char *fmt,...)
 int
 open_debug(void)
 {
-	int n;
-	char b;
-	char *dt;
-	int fd;
 
 	if (!opts.debug)
 		return 0;
 
-	n = snprintf(&b, 1, "%s/%s", env.home, PATHNAME_DEBUG);
+	if (create_file(opts.debug, S_IRUSR | S_IWUSR))
+		return 1;
 
-	if (env.pathmax != -1 && n > env.pathmax)
-		fatal(ERROR_PATHNAME,
-		    "pathname limit %ld exceeded: %d\n", env.pathmax, n);
-
-	dt = (char *)xmalloc((n + 1) * sizeof(char));
-	snprintf(dt, n + 1, "%s/%s", env.home, PATHNAME_DEBUG);
-
-	fd = mkstemp(dt);
-
-	if (fd != -1) {
-		debugfp = fdopen(fd, "w");
-		if (debugfp == NULL) {
-			error("opening debug file %s: %s\n", dt,
-			    strerror(errno));
-			return -1;
-		}
+	debugfp = fopen(opts.debug, "w");
+	if (logfp == NULL) {
+		error("opening debug file %s: %s\n", opts.debug, strerror(errno));
+		return 1;
 	}
 	return 0;
 }

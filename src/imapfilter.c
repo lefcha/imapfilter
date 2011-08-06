@@ -43,17 +43,17 @@ main(int argc, char *argv[])
 
 	setlocale(LC_CTYPE, "");
 
-	opts.debug = 0;
 	opts.verbose = 0;
 	opts.interactive = 0;
 	opts.log = NULL;
 	opts.config = NULL;
 	opts.oneline = NULL;
+	opts.debug = NULL;
 
 	env.home = getenv("HOME");
 	env.pathmax = -1;
 
-	while ((c = getopt(argc, argv, "Vc:de:il:v?")) != -1) {
+	while ((c = getopt(argc, argv, "Vc:d:e:il:v?")) != -1) {
 		switch (c) {
 		case 'V':
 			version();
@@ -63,8 +63,7 @@ main(int argc, char *argv[])
 			opts.config = optarg;
 			break;
 		case 'd':
-			if (opts.debug < 2)
-				opts.debug++;
+			opts.debug = optarg;
 			break;
 		case 'e':
 			opts.oneline = optarg;
@@ -166,8 +165,8 @@ void
 usage(void)
 {
 
-	fprintf(stderr, "usage: imapfilter [-diVv] [-c configfile] "
-	    "[-e 'command'] [-l logfile]\n");
+	fprintf(stderr, "usage: imapfilter [-iVv] [-c configfile] "
+	    "[-e 'command'] [-l logfile] [-d debugfile]\n");
 
 	exit(0);
 }

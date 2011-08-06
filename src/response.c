@@ -87,7 +87,7 @@ receive_response(session *ssn, char *buf, long timeout, int timeoutfail)
 		return -1;
 
 
-	if (opts.debug > 0) {
+	if (opts.debug) {
 		int i;
 		
 		debug("getting response (%d):\n\n", ssn->socket);

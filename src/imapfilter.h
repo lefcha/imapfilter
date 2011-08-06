@@ -63,12 +63,12 @@
 
 /* Program's options. */
 typedef struct options {
-	int debug;		/* Debugging level (0..2). */
 	int verbose;		/* Verbose mode. */
 	int interactive;	/* Act as an interpreter. */
 	char *log;		/* Log file for error messages. */
 	char *config;		/* Configuration file. */
 	char *oneline;		/* One line of program/configuration. */
+	char *debug;		/* Debug file. */
 } options;
 
 /* Environment variables. */

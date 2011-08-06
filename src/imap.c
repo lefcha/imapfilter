@@ -32,8 +32,7 @@ send_command(session *ssn, char *cmd, char *alt)
 	if (ssn->socket == -1)
 		return -1;
 
-	debug("sending command (%d):\n\n%s\n", ssn->socket,
-	    (opts.debug == 1 && alt ? alt : cmd));
+	debug("sending command (%d):\n\n%s\n", ssn->socket, alt ? alt : cmd);
 
 	verbose("C (%d): %s", ssn->socket, (alt ? alt : cmd));
 
@@ -85,7 +84,7 @@ imap_continuation(session *ssn, const char *cont, size_t len)
 	    socket_write(ssn, "\r\n", strlen("\r\n")) == -1)
 		return -1;
 
-	if (opts.debug > 0) {
+	if (opts.debug) {
 		unsigned int i;
 
 		debug("sending continuation data (%d):\n\n", ssn->socket);
