@@ -1,3 +1,12 @@
+IMAPFilter 2.3 - 6 Aug 2011
+  - Support for appending/uploading messages to mailboxes.
+  - Debug file option now takes filename argument.
+  - New simplified configuration and building procedure.
+  - Bug fix; in some cases a mailbox was incorrectly assumed selected.
+  - Bug fix; in some cases server capabilities needed update after login.
+  - Bug fix; timeout problem with CRAM-MD5 authentication.
+  - Bug fix; some servers send non-ASCII characters in their responses.
+
 IMAPFilter 2.2.3 - 6 Mar 2011
   - Project moved to GitHub.
   - Changed file and directory structure.
