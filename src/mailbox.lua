@@ -1123,7 +1123,7 @@ function Mailbox.match_field(self, field, pattern, messages)
  
     local results = {}
     for m, f in pairs(fields) do
-        if (regex_search(pattern, f)) then
+        if (regex_search(pattern, (string.gsub(f, "^[^:]*: ?(.*)$", "%1")))) then
             table.insert(results, {self, m})
         end
     end
