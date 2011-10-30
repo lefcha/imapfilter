@@ -1,4 +1,4 @@
-.Dd August 5, 2011
+.Dd October 30, 2011
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -1037,7 +1037,7 @@ myaccount.mymailbox[22]
 The UIDs of messages the user is interested in, are gained from the results of
 searching:
 .Bd -literal -offset 4n
-results = account.INBOX:is_unread()
+results = account.INBOX:is_unseen()
 for _, message in ipairs(results) do
     mailbox, uid = unpack(message)
     header = mailbox[uid]:fetch_header()
