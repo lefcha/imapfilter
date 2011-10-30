@@ -9,7 +9,6 @@
 
 #include "imapfilter.h"
 #include "session.h"
-#include "pathnames.h"
 
 #include <openssl/x509.h>
 #include <openssl/ssl.h>
@@ -81,9 +80,8 @@ fail:
 int
 check_cert(X509 *pcert, unsigned char *pmd, unsigned int *pmdlen)
 {
-	int n, r;
+	int r;
 	FILE *fd;
-	char b;
 	char *certf;
 	X509 *cert;
 	unsigned char md[EVP_MAX_MD_SIZE];
@@ -92,24 +90,13 @@ check_cert(X509 *pcert, unsigned char *pmd, unsigned int *pmdlen)
 	r = 0;
 	cert = NULL;
 
-	n = snprintf(&b, 1, "%s/%s", env.home, PATHNAME_CERTS);
-
-	if (env.pathmax != -1 && n > env.pathmax)
-		fatal(ERROR_PATHNAME,
-		    "pathname limit %ld exceeded: %d\n", env.pathmax, n);
-
-	certf = (char *)xmalloc((n + 1) * sizeof(char));
-	snprintf(certf, n + 1, "%s/%s", env.home, PATHNAME_CERTS);
-
+	certf = get_filepath("certificates");
 	if (!exists_file(certf)) {
 		xfree(certf);
 		return 0;
 	}
-
 	fd = fopen(certf, "r");
-
 	xfree(certf);
-
 	if (fd == NULL)
 		return -1;
 
@@ -166,9 +153,8 @@ print_cert(X509 *cert, unsigned char *md, unsigned int *mdlen)
 int
 write_cert(X509 *cert)
 {
-	int n;
 	FILE *fd;
-	char b, c, buf[64];
+	char c, buf[64];
 	char *certf;
 
 	do {
@@ -184,21 +170,10 @@ write_cert(X509 *cert)
 	else if (c == 't')
 		return 0;
 
-	n = snprintf(&b, 1, "%s/%s", env.home, PATHNAME_CERTS);
-
-	if (env.pathmax != -1 && n > env.pathmax)
-		fatal(ERROR_PATHNAME,
-		    "pathname limit %ld exceeded: %d\n", env.pathmax, n);
-
-	certf = (char *)xmalloc((n + 1) * sizeof(char));
-	snprintf(certf, n + 1, "%s/%s", env.home, PATHNAME_CERTS);
-
+	certf = get_filepath("certificates");
 	create_file(certf, S_IRUSR | S_IWUSR);
-
 	fd = fopen(certf, "a");
-
 	xfree(certf);
-
 	if (fd == NULL)
 		return -1;
 

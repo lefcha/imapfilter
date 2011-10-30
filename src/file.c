@@ -17,30 +17,37 @@ extern environment env;
 /*
  * Create imapfilter's home directory.
  */
-int
+void
 create_homedir(void)
 {
 	int n;
-	char b;
-	char *hd;
+	char *h, *i;
 
-	n = snprintf(&b, 1, "%s/%s", env.home, PATHNAME_HOME);
+	h = getenv("HOME");
+	i = getenv("IMAPFILTER_HOME");
+
+	if (i == NULL)
+		n = strlen(h ? h : "") + strlen(h ? "/" : "") +
+		    strlen(".imapfilter");
+	else
+		n = strlen(i);
 
 	if (env.pathmax != -1 && n > env.pathmax)
 		fatal(ERROR_PATHNAME,
 		    "pathname limit %ld exceeded: %d\n", env.pathmax, n);
 
-	hd = (char *)xmalloc((n + 1) * sizeof(char));
-	snprintf(hd, n + 1, "%s/%s", env.home, PATHNAME_HOME);
+	env.home = (char *)xmalloc((n + 1) * sizeof(char));
+	if (i == NULL)
+		snprintf(env.home, n + 1, "%s%s%s", h ? h : "", h ? "/" : "",
+		    ".imapfilter");
+	else
+		snprintf(env.home, n + 1, "%s", i);
 
-	if (!exists_dir(hd)) {
-		if (mkdir(hd, S_IRUSR | S_IWUSR | S_IXUSR))
-			error("could not create directory %s; %s\n", hd,
+	if (!exists_dir(env.home)) {
+		if (mkdir(env.home, S_IRUSR | S_IWUSR | S_IXUSR))
+			error("could not create directory %s; %s\n", env.home,
 			    strerror(errno));
 	}
-	xfree(hd);
-
-	return 0;
 }
 
 
@@ -129,4 +136,25 @@ get_pathmax(void)
 	env.pathmax = n;
 
 	return 0;
+}
+
+
+/*
+ * Get the path of a file inside the configuration directory.
+ */
+char *
+get_filepath(char *fname)
+{
+	int n;
+	char *fp;
+
+	n = strlen(env.home) + strlen("/") + strlen(fname);
+	if (env.pathmax != -1 && n > env.pathmax)
+		fatal(ERROR_PATHNAME,
+		    "pathname limit %ld exceeded: %d\n", env.pathmax, n);
+
+	fp = (char *)xmalloc((n + 1) * sizeof(char));
+	snprintf(fp, n + 1, "%s/%s", env.home, fname);
+
+	return fp;
 }

@@ -73,7 +73,7 @@ typedef struct options {
 
 /* Environment variables. */
 typedef struct environment {
-	char *home;		/* User's home directory. */
+	char *home;		/* Program's home directory. */
 	long pathmax;		/* Maximum pathname. */
 } environment;
 
@@ -92,11 +92,12 @@ int get_cert(session *ssn);
 LUALIB_API int luaopen_ifcore(lua_State *lua);
 
 /*	file.c		*/
-int create_homedir(void);
+void create_homedir(void);
 int exists_file(char *fname);
 int exists_dir(char *fname);
 int create_file(char *fname, mode_t mode);
 int get_pathmax(void);
+char *get_filepath(char *fname);
 
 /*	imap.c		*/
 int imap_continuation(session *ssn, const char *cont, size_t len);

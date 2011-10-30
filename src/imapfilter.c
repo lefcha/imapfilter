@@ -50,7 +50,7 @@ main(int argc, char *argv[])
 	opts.oneline = NULL;
 	opts.debug = NULL;
 
-	env.home = getenv("HOME");
+	env.home = NULL;
 	env.pathmax = -1;
 
 	while ((c = getopt(argc, argv, "Vc:d:e:il:v?")) != -1) {
@@ -99,21 +99,8 @@ main(int argc, char *argv[])
 	buffer_init(&obuf, OUTPUT_BUF);
 	buffer_init(&nbuf, NAMESPACE_BUF);
 
-	if (opts.config == NULL) {
-		int n;
-		char b;
-
-		n = snprintf(&b, 1, "%s/%s", env.home, PATHNAME_CONFIG);
-
-		if (env.pathmax != -1 && n > env.pathmax)
-			fatal(ERROR_PATHNAME,
-			    "pathname limit %ld exceeded: %d\n", env.pathmax,
-			    n);
-
-		opts.config = (char *)xmalloc((n + 1) * sizeof(char));
-		snprintf(opts.config, n + 1, "%s/%s", env.home,
-		    PATHNAME_CONFIG);
-	}
+	if (opts.config == NULL)
+		opts.config = get_filepath("config.lua");
 
 	regexp_compile(responses);
 
@@ -150,6 +137,8 @@ main(int argc, char *argv[])
 	buffer_free(&ibuf);
 	buffer_free(&obuf);
 	buffer_free(&nbuf);
+
+	xfree(env.home);
 
 	close_log();
 	close_debug();
