@@ -97,13 +97,13 @@ end
 -- ... is encrypted and saved to a file named "passwords.enc" with the
 -- command:
 --
---   $ openssl bf -salt -in passwords.txt -out passwords.enc
+--   $ openssl bf -in passwords.txt -out passwords.enc
 --
 -- The auxiliary function pipe_from() is supplied for conveniency.  The
 -- user is prompted to enter the decryption password, the file is
 -- decrypted and the account passwords are set accordingly:
 
-status, output = pipe_from('openssl bf -d -salt -in ~/passwords.enc')
+status, output = pipe_from('openssl bf -d -in ~/passwords.enc')
 
 _, _, password1, password2 = string.find(output, '([%w%p]+)\n([%w%p]+)\n')
 
