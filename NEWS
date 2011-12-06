@@ -1,3 +1,13 @@
+IMAPFilter 2.4 - 6 Dec 2011
+  - Support for non-ASCII mailbox names.
+  - New environment variable to set the configuration directory.
+  - Bug fix; parsing of some server responses was broken since the previous
+    release.
+  - Bug fix; the match_field() method matched on the whole header field,
+    instead of only the header field body.
+  - Bug fix; debug file check caused printing of a misleading error message.
+  - Bug fix; typo error in a configuration man page example.
+
 IMAPFilter 2.3 - 6 Aug 2011
   - Support for appending/uploading messages to mailboxes.
   - Debug file option now takes filename argument.
