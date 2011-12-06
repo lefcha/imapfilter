@@ -21,7 +21,7 @@
 #endif
 
 
-extern buffer ibuf, obuf, nbuf;
+extern buffer ibuf, obuf, nbuf, cbuf;
 extern regexp responses[];
 
 options opts;			/* Program options. */
@@ -98,6 +98,7 @@ main(int argc, char *argv[])
 	buffer_init(&ibuf, INPUT_BUF);
 	buffer_init(&obuf, OUTPUT_BUF);
 	buffer_init(&nbuf, NAMESPACE_BUF);
+	buffer_init(&cbuf, CONVERSION_BUF);
 
 	if (opts.config == NULL)
 		opts.config = get_filepath("config.lua");
@@ -137,6 +138,7 @@ main(int argc, char *argv[])
 	buffer_free(&ibuf);
 	buffer_free(&obuf);
 	buffer_free(&nbuf);
+	buffer_free(&cbuf);
 
 	xfree(env.home);
 

@@ -53,7 +53,8 @@
 /* Initial buffer size for input, output and namespace buffers. */
 #define INPUT_BUF			4096
 #define OUTPUT_BUF			1024
-#define NAMESPACE_BUF			128
+#define NAMESPACE_BUF			512
+#define CONVERSION_BUF			512
 
 /* Maximum length, in bytes, of a utility's input line. */
 #ifndef LINE_MAX
