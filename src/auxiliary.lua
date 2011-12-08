@@ -60,6 +60,14 @@ function become_daemon(interval, commands, nochdir, noclose)
     _check_optional(nochdir, 'boolean')
     _check_optional(noclose, 'boolean')
 
+    if (nochdir == nil) then
+        nochdir = false
+    end
+
+    if (noclose == nil) then
+        noclose = false
+    end
+
     ifsys.daemon(nochdir, noclose)
 
     repeat
