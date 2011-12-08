@@ -1,3 +1,6 @@
+IMAPFilter 2.4.1 - 8 Dec 2011
+  - Bug fix; become_daemon() failure.
+
 IMAPFilter 2.4 - 6 Dec 2011
   - Support for non-ASCII mailbox names.
   - New environment variable to set the configuration directory.
