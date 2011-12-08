@@ -174,7 +174,8 @@ apply_conversion(const char *mbox)
  * Convert a mailbox name from the modified UTF-7 encoding, according to RFC
  * 3501 Section 5.1.3.
  */
-const char *reverse_conversion(const char *mbox)
+const char *
+reverse_conversion(const char *mbox)
 {
 	iconv_t cd;
 	char *inbuf, *outbuf;
