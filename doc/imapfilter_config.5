@@ -1,4 +1,4 @@
-.Dd October 30, 2011
+.Dd December 8, 2011
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -1178,6 +1178,32 @@ in seconds. Each time the program wakes up, the
 .Fa commands
 .Pq Vt function
 are executed.
+.Pp
+.It Fn become_daemon interval commands nochdir noclose
+Detaches the program from the controlling terminal and runs it in the
+background as system daemon. The program will then repeatedly poll at the
+specified
+.Fa interval
+.Pq Vt number
+in seconds. Each time the program wakes up, the
+.Fa commands
+.Pq Vt function
+are executed.
+.Pp
+If
+.Fa nochdir
+.Pq Vt boolean
+is
+.Dq true ,
+the current working directory is not changed to the root directory
+.Pq Pa / .
+If
+.Fa noclose
+.Pq Vt boolean
+is
+.Dq true ,
+the standard input, standard output and standard error are not redirected to
+.Pa /dev/null .
 .Pp
 .It Fn pipe_to command data
 Executes the system's
