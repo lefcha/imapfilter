@@ -92,7 +92,8 @@ end
 -- The file is encrypted using the openssl(1) command line tool.  For
 -- example the "passwords.txt" file:
 --
---   secret1 secret2
+--   secret1
+--   secret2
 --
 -- ... is encrypted and saved to a file named "passwords.enc" with the
 -- command:
@@ -105,7 +106,7 @@ end
 
 status, output = pipe_from('openssl bf -d -in ~/passwords.enc')
 
-_, _, password1, password2 = string.find(output, '([%w%p]+)\n([%w%p]+)\n')
+_, _, password1, password2 = string.find(output, '([%w%p]+)\n([%w%p]+)')
 
 account1 = IMAP {
     server = 'imap1.mail.server',
