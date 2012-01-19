@@ -95,53 +95,95 @@ reverse_namespace(const char *mbox, char *prefix, char delim)
 const char *
 apply_conversion(const char *mbox)
 {
-	size_t n;
 	iconv_t cd;
 	char *inbuf, *outbuf;
 	size_t inlen, outlen;
 	char *c, *shift;
+	unsigned char *r, *w;
 
-	n = strlen(mbox);
-	buffer_check(&nbuf, n); 
+	buffer_check(&nbuf, strlen(mbox)); 
 	buffer_reset(&nbuf);
-	xstrncpy(nbuf.data, mbox, *(mbox + n - 1) == '*' ||
-	    *(mbox + n - 1) == '%' ? n - 1 : n);
-	for (c = nbuf.data; (c = strchr(c, '&')) != NULL; *c = '+');
+	xstrncpy(nbuf.data, mbox, nbuf.size);
+	nbuf.len = strlen(nbuf.data);
+	buffer_check(&cbuf, nbuf.len * 5);
+	buffer_reset(&cbuf);
 
-	do {
-		inbuf = nbuf.data;
-		inlen = strlen(nbuf.data);
-
-		buffer_check(&cbuf, inlen);
-		buffer_reset(&cbuf);
-
-		outbuf = cbuf.data;
-		outlen = cbuf.size;
-
-		cd = iconv_open("UTF-7", "");
-		if (cd == (iconv_t)-1) {
-			error("converting mailbox name; %s\n", strerror(errno));
-			return mbox;
+	r = (unsigned char *)nbuf.data;
+	w = (unsigned char *)cbuf.data;
+	inbuf = outbuf = NULL;
+	inlen = outlen = 0;
+	while (*r != '\0') {
+		/* Skip non-printable ASCII characters. */
+		if (*r < 0x20 || *r == 0x7F) {
+			r++;
+			continue;
 		}
-		while (inlen > 0) {
-			if (iconv(cd, &inbuf, &inlen, &outbuf, &outlen) == -1) {
-				if (errno == E2BIG) {
-					buffer_check(&cbuf, cbuf.size * 2);
-					break;
-				} else {
-					error("converting mailbox name; %s\n",
-					    strerror(errno));
-					return mbox;
-				}
-			} else {
-				iconv(cd, NULL, NULL, &outbuf, &outlen);
+		/* Escape shift character for modified UTF-7. */
+		if (*r == '&') {
+			*w++ = '&';
+			*w++ = '-';
+			r++;
+			continue;
+		}
+		/* Copy ASCII printable characters. */
+		if (*r >= 0x20 && *r <= 0x7E) {
+			*w++ = *r++;
+			continue;
+		}
+		/* UTF-8 sequence will follow. */
+		if (inbuf == NULL) {
+			inbuf = (char *)r;
+			inlen = 0;
+		}
+		if ((*r & 0xE0) == 0xC0) {	/* Two byte UTF-8. */
+			inlen += 2;
+			r += 2;
+		} else if ((*r & 0xF0) == 0xE0) {	/* Three byte UTF-8. */
+			inlen += 3;
+			r += 3;
+		} else if ((*r & 0xF8) == 0xF0) {	/* Four byte UTF-8. */
+			inlen += 4;
+			r += 4;
+		}
+		/* UTF-8 sequence has ended, convert it to UTF-7. */
+		if (inbuf != NULL && (*r <= 0x7F || *r == '\0')) {
+			outbuf = (char *)w;
+			outlen = cbuf.size - (outbuf - cbuf.data);
+
+			cd = iconv_open("UTF-7", "");
+			if (cd == (iconv_t)-1) {
+				error("converting mailbox name; %s\n",
+				    strerror(errno));
+				return mbox;
 			}
-		}
-		iconv_close(cd);
-	} while (inlen > 0);
+			while (inlen > 0) {
+				if (iconv(cd, &inbuf, &inlen, &outbuf, &outlen)
+				    == -1) {
+					if (errno == E2BIG) {
+						buffer_check(&cbuf, cbuf.size *
+						    2);
+						break;
+					} else {
+						error("converting mailbox name;"
+						    "%s\n", strerror(errno));
+						return mbox;
+					}
+				} else {
+					iconv(cd, NULL, NULL, &outbuf, &outlen);
+				}
+			}
+			iconv_close(cd);
 
-	if (*outbuf != '\0')
-		*outbuf = '\0';
+			w = (unsigned char *)outbuf;
+			inbuf = outbuf = NULL;
+			inlen = outlen = 0;
+		}
+	}
+
+	if (*w != '\0')
+		*w = '\0';
+
+	/* Convert UTF-7 sequences to IMAP modified UTF-7. */
 	for (c = cbuf.data, shift = NULL; *c != '\0'; c++)
 		switch (*c) {
 		case '+':
@@ -157,15 +199,11 @@ apply_conversion(const char *mbox)
 			break;
 		}
 	if (shift != NULL) {
-		*outbuf++ = '-';
-		*outbuf = '\0';
-	}
-	if (*(mbox + n - 1) == '*' || *(mbox + n - 1) == '%') {
-		*outbuf++ = *(mbox + n - 1);
-		*outbuf = '\0';
+		*w++ = '-';
+		*w = '\0';
 	}
 
-	debug("conversion: '%s' -> '%s'\n", mbox, cbuf.data);
+	debug("conversion: '%s' -> '%s'\n", nbuf.data, cbuf.data);
 
 	return cbuf.data;
 }
@@ -185,6 +223,8 @@ reverse_conversion(const char *mbox)
 	buffer_check(&cbuf, strlen(mbox));
 	buffer_reset(&cbuf);
 	xstrncpy(cbuf.data, mbox, cbuf.size);
+
+	/* Convert IMAP modified UTF-7 sequences to UTF-7. */
 	for (c = cbuf.data, shift = NULL; *c != '\0'; c++)
 		switch (*c) {
 		case '&':
@@ -235,7 +275,23 @@ reverse_conversion(const char *mbox)
 	*outbuf = '\0';
 	for (c = nbuf.data; (c = strchr(c,'+')) != NULL; *c = '&');
 
-	debug("conversion: '%s' <- '%s'\n", mbox, nbuf.data);
+	/* Convert UTF-7 sequences to IMAP modified UTF-7. */
+	for (c = cbuf.data, shift = NULL; *c != '\0'; c++)
+		switch (*c) {
+		case '+':
+			*c = '&';
+			shift = c;
+			break;
+		case '-':
+			shift = NULL;
+			break;
+		case '/':
+			if (shift != NULL)
+				*c = ',';
+			break;
+		}
+
+	debug("conversion: '%s' <- '%s'\n", nbuf.data, cbuf.data);
 
 	return nbuf.data;
 }
