@@ -1,3 +1,7 @@
+IMAPFilter 2.4.2 - 19 Jan 2012
+  - Bug fix; some ASCII characters in mailbox names were incorrectly converted
+    to UTF-7.
+
 IMAPFilter 2.4.1 - 8 Dec 2011
   - Bug fix; become_daemon() failure.
 
