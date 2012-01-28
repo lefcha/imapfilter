@@ -117,6 +117,12 @@ takes a
 .Vt boolean
 as a value.  Default is
 .Dq true .
+.It Va exit_on_error
+When this option is enabled, a login failure will stop the rest of the 
+script from running. This variable takes a
+.Vt boolean
+as a value.  Default is
+.Dq false .
 .It Va expunge
 Normally, messages are marked for deletion and are actually deleted when the
 mailbox is closed.  When this option is enabled, messages are expunged
