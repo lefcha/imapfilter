@@ -51,7 +51,7 @@ function Account._login_user(self)
         self._selected = nil
         return true
     elseif (r == false) then
-        return false
+        error("login failure", 3)
     end
 end
 
