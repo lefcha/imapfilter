@@ -137,6 +137,11 @@ ifcore_login(lua_State *lua)
 
 	r = request_login(s, p, get_table_string("ssl"), u, w);
 
+	/* If the login has failed, and exit_on_error is set, throw an exception */
+	if (-1 == r && get_option_boolean("exit_on_error")) {
+		luaL_error(lua, "Login has failed, stopping");		
+	}
+
 	lua_pop(lua, 1);
 
 	if (r == STATUS_RESPONSE_NONE)
