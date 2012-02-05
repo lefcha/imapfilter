@@ -24,7 +24,7 @@ static int ifsys_sleep(lua_State *lua);
 static int ifsys_daemon(lua_State *lua);
 
 /* Lua imapfilter library of system's functions. */
-static const luaL_reg ifsyslib[] = {
+static const luaL_Reg ifsyslib[] = {
 	{ "echo", ifsys_echo },
 	{ "noecho", ifsys_noecho },
 	{ "popen", ifsys_popen },
@@ -182,7 +182,13 @@ ifsys_read(lua_State *lua)
 		if (fgets(c, LUAL_BUFFERSIZE, fp) == NULL && feof(fp)) {
 			luaL_pushresult(&b);
 
-			return (lua_strlen(lua, -1) > 0);
+			return (
+#if LUA_VERSION_NUM < 502
+			    lua_objlen(lua, -1)
+#else
+			    lua_rawlen(lua, -1)
+#endif
+			    > 0);
 		}
 		n = strlen(c);
 
@@ -302,7 +308,13 @@ LUALIB_API int
 luaopen_ifsys(lua_State *lua)
 {
 
+#if LUA_VERSION_NUM < 502
 	luaL_register(lua, "ifsys", ifsyslib);
+#else
+	luaL_newlib(lua, ifsyslib);
+	lua_setglobal(lua, "ifsys");
+
+#endif
 
 	return 1;
 }

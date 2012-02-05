@@ -38,7 +38,7 @@ static int ifcore_idle(lua_State *lua);
 
 
 /* Lua imapfilter core library functions. */
-static const luaL_reg ifcorelib[] = {
+static const luaL_Reg ifcorelib[] = {
 	{ "noop", ifcore_noop },
 	{ "logout", ifcore_logout },
 	{ "login", ifcore_login },
@@ -944,7 +944,12 @@ ifcore_append(lua_State *lua)
 	lua_pop(lua, 1);
 
 	r = request_append(s, p, u, lua_tostring(lua, 2), lua_tostring(lua, 3),
-	    lua_strlen(lua, 3), lua_type(lua, 4) == LUA_TSTRING ?
+#if LUA_VERSION_NUM < 502
+	    lua_objlen(lua, 3),
+#else
+	    lua_rawlen(lua, 3),
+#endif
+	    lua_type(lua, 4) == LUA_TSTRING ?
 	    lua_tostring(lua, 4) : NULL, lua_type(lua, 5) == LUA_TSTRING ?
 	    lua_tostring(lua, 5) : NULL);
 
@@ -1159,7 +1164,12 @@ LUALIB_API int
 luaopen_ifcore(lua_State *lua)
 {
 
+#if LUA_VERSION_NUM < 502
 	luaL_register(lua, "ifcore", ifcorelib);
+#else
+	luaL_newlib(lua, ifcorelib);
+	lua_setglobal(lua, "ifcore");
+#endif
 
 	return 1;
 }

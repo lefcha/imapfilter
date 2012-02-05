@@ -7,7 +7,9 @@ setmetatable(_regex_cache, _regex_cache.mt)
 
 
 _regex_cache.mt.__index = function (self, key)
-    local _, _, pattern, cflags = string.find(key, '^(.*)%z(.*)$')
+    local zero
+    if (_VERSION == 'Lua 5.1') then zero = '%z' else zero = '\0' end
+    local _, _, pattern, cflags = string.find(key, '^(.*)' .. zero .. '(.*)$')
 
     local _, compiled = ifre.compile(pattern, tonumber(cflags))
 

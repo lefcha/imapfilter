@@ -34,7 +34,7 @@ all = myaccount.mymailbox:select_all()
 
 results = Set {}
 for _, mesg in ipairs(all) do
-    mbox, uid = unpack(mesg)
+    mbox, uid = table.unpack(mesg)
     text = mbox[uid]:fetch_message()
     if (pipe_to('bayesian-spam-filter', text) == 1) then
         table.insert(results, mesg)
@@ -52,7 +52,7 @@ all = myaccount.mymailbox:select_all()
 
 results = Set {}
 for _, mesg in ipairs(all) do
-    mbox, uid = unpack(mesg)
+    mbox, uid = table.unpack(mesg)
     structure = mbox[uid]:fetch_structure()
     for partid, partinf in pairs(structure) do
         if partinf.type:lower() == 'text/plain' and partinf.size < 1024 then
@@ -77,7 +77,7 @@ results:delete_messages()
 all = myaccount.mymailbox:select_all()
 
 for _, mesg in ipairs(all) do
-    mbox, uid = unpack(all)
+    mbox, uid = table.unpack(all)
     header = mbox[uid]:fetch_header()
     body = mbox[uid]:fetch_body()
     message = header:gsub('[\r\n]+$', '\r\n') ..

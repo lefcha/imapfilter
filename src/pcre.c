@@ -15,7 +15,7 @@ static int ifre_exec(lua_State *lua);
 static int ifre_free(lua_State *lua);
 
 /* Lua imapfilter library of PCRE related functions. */
-static const luaL_reg ifrelib[] = {
+static const luaL_Reg ifrelib[] = {
 	{ "flags", ifre_flags },
 	{ "compile", ifre_compile },
 	{ "exec", ifre_exec },
@@ -207,8 +207,13 @@ ifre_exec(lua_State *lua)
 	for (i = 0; i <= ovecsize; i++)
 		ovector[2 * i] = ovector[2 * i + 1] = -1;
 
-	n = pcre_exec(re, NULL, lua_tostring(lua, 2), lua_strlen(lua, 2), 0,
-	    lua_tonumber(lua, 3), ovector, (ovecsize + 1) * 3);
+	n = pcre_exec(re, NULL, lua_tostring(lua, 2),
+#if LUA_VERSION_NUM < 502
+	    lua_objlen(lua, 2),
+#else
+	    lua_rawlen(lua, 2),
+#endif
+	    0, lua_tonumber(lua, 3), ovector, (ovecsize + 1) * 3);
 
 	if (n > 0)
 		for (i = 1; i < n; i++)
@@ -262,7 +267,12 @@ LUALIB_API int
 luaopen_ifre(lua_State *lua)
 {
 
+#if LUA_VERSION_NUM < 502
 	luaL_register(lua, "ifre", ifrelib);
+#else
+	luaL_newlib(lua, ifrelib);
+	lua_setglobal(lua, "ifre");
+#endif
 
 	return 1;
 }

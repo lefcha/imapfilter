@@ -33,13 +33,13 @@ function Set._union(seta, setb)
     local t = {}
 
     for _, v in ipairs(seta) do
-        b, m = unpack(v)
+        b, m = table.unpack(v)
         if not t[b] then t[b] = {} end
         t[b][m] = true
     end
 
     for _, v in ipairs(setb) do
-        b, m = unpack(v)
+        b, m = table.unpack(v)
         if not t[b] then t[b] = {} end
         t[b][m] = true
     end
@@ -59,13 +59,13 @@ function Set._intersection(seta, setb)
     local tb = {}
 
     for _, v in ipairs(seta) do
-        b, m = unpack(v)
+        b, m = table.unpack(v)
         if not ta[b] then ta[b] = {} end
         ta[b][m] = true
     end
 
     for _, v in ipairs(setb) do
-        b, m = unpack(v)
+        b, m = table.unpack(v)
         if not tb[b] then tb[b] = {} end
         tb[b][m] = true
     end
@@ -88,13 +88,13 @@ function Set._difference(seta, setb)
     local t = {}
 
     for _, v in ipairs(seta) do
-        b, m = unpack(v)
+        b, m = table.unpack(v)
         if not t[b] then t[b] = {} end
         t[b][m] = true
     end
 
     for _, v in ipairs(setb) do
-        b, m = unpack(v)
+        b, m = table.unpack(v)
         if t[b] then
             t[b][m] = nil
         end

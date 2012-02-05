@@ -32,7 +32,7 @@ end
 function _extract_mailboxes(messages)
     local t = {}
     for _, v in ipairs(messages) do
-        b, _ = unpack(v)
+        b, _ = table.unpack(v)
         t[b] = true
     end
     return t
@@ -41,7 +41,7 @@ end
 function _extract_messages(mailbox, messages)
     local t = {}
     for _, v in ipairs(messages) do
-        b, m = unpack(v)
+        b, m = table.unpack(v)
         if mailbox == b then
             table.insert(t, m)
         end

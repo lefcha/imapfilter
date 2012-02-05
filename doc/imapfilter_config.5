@@ -1039,7 +1039,7 @@ searching:
 .Bd -literal -offset 4n
 results = account.INBOX:is_unseen()
 for _, message in ipairs(results) do
-    mailbox, uid = unpack(message)
+    mailbox, uid = table.unpack(message)
     header = mailbox[uid]:fetch_header()
 end
 .Ed

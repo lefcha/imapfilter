@@ -1,4 +1,11 @@
--- The old and deprecated interface, provided for compatibility.
+-- Compatibility workarounds and the old obsolete interface
+
+if (_VERSION == 'Lua 5.1') then
+    table.unpack = unpack
+else
+    unpack = table.unpack
+end
+
 
 function check(account, mbox)
     _check_required(account, 'table')

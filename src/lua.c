@@ -159,17 +159,9 @@ get_option_boolean(const char *opt)
 {
 	int b;
 
-	lua_pushstring(lua, "options");
-	lua_gettable(lua, LUA_GLOBALSINDEX);
-	if (!lua_istable(lua, -1)) {
-		lua_pop(lua, 1);
-		return 0;
-	}
-	lua_pushstring(lua, opt);
-	lua_gettable(lua, -2);
-
+	lua_getglobal(lua, "options");
+	lua_getfield(lua, -1, opt);
 	b = lua_toboolean(lua, -1);
-
 	lua_pop(lua, 2);
 
 	return b;
@@ -184,17 +176,9 @@ get_option_number(const char *opt)
 {
 	lua_Number n;
 
-	lua_pushstring(lua, "options");
-	lua_gettable(lua, LUA_GLOBALSINDEX);
-	if (!lua_istable(lua, -1)) {
-		lua_pop(lua, 1);
-		return 0;
-	}
-	lua_pushstring(lua, opt);
-	lua_gettable(lua, -2);
-
+	lua_getglobal(lua, "options");
+	lua_getfield(lua, -1, opt);
 	n = lua_tonumber(lua, -1);
-
 	lua_pop(lua, 2);
 
 	return n;
@@ -209,17 +193,9 @@ get_option_string(const char *opt)
 {
 	const char *s;
 
-	lua_pushstring(lua, "options");
-	lua_gettable(lua, LUA_GLOBALSINDEX);
-	if (!lua_istable(lua, -1)) {
-		lua_pop(lua, 1);
-		return NULL;
-	}
-	lua_pushstring(lua, opt);
-	lua_gettable(lua, -2);
-
+	lua_getglobal(lua, "options");
+	lua_getfield(lua, -1, opt);
 	s = lua_tostring(lua, -1);
-
 	lua_pop(lua, 2);
 
 	return s;
@@ -236,9 +212,7 @@ get_table_type(const char *key)
 
 	lua_pushstring(lua, key);
 	lua_gettable(lua, -2);
-
 	t = lua_type(lua, -1);
-
 	lua_pop(lua, 1);
 
 	return t;
@@ -255,9 +229,7 @@ get_table_number(const char *key)
 
 	lua_pushstring(lua, key);
 	lua_gettable(lua, -2);
-
 	n = lua_tonumber(lua, -1);
-
 	lua_pop(lua, 1);
 
 	return n;
@@ -274,9 +246,7 @@ get_table_string(const char *key)
 
 	lua_pushstring(lua, key);
 	lua_gettable(lua, -2);
-
 	s = lua_tostring(lua, -1);
-
 	lua_pop(lua, 1);
 
 	return s;
