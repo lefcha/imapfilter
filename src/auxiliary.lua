@@ -10,7 +10,7 @@ end
 function get_password(prompt)
     _check_optional(prompt, 'string')
 
-    if (prompt ~= nil) then
+    if prompt ~= nil then
         io.write(prompt)
     else
         io.write('Enter password: ')
@@ -41,9 +41,9 @@ function pipe_from(command)
     f = ifsys.popen(command, "r")
 
     local string = ''
-    while (true) do
+    while true do
         s = ifsys.read(f)
-        if (s ~= nil) then
+        if s ~= nil then
             string = string .. s
         else
             break
@@ -60,11 +60,11 @@ function become_daemon(interval, commands, nochdir, noclose)
     _check_optional(nochdir, 'boolean')
     _check_optional(noclose, 'boolean')
 
-    if (nochdir == nil) then
+    if nochdir == nil then
         nochdir = false
     end
 
-    if (noclose == nil) then
+    if noclose == nil then
         noclose = false
     end
 
@@ -72,5 +72,5 @@ function become_daemon(interval, commands, nochdir, noclose)
 
     repeat
         pcall(commands)
-    until (ifsys.sleep(interval) ~= 0)
+    until ifsys.sleep(interval) ~= 0
 end

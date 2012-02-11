@@ -12,7 +12,7 @@ Mailbox._mt.__call = function (self, account, mailbox)
     object._type = 'mailbox'
 
     for key, value in pairs(Mailbox) do
-        if (type(value) == 'function') then
+        if type(value) == 'function' then
             object[key] = value
         end
     end
@@ -39,15 +39,15 @@ end
 
 
 function Mailbox._cached_select(self)
-    if (self._account._selected == nil or
-        self._account._selected ~= self._mailbox) then
+    if self._account._selected == nil or
+        self._account._selected ~= self._mailbox then
         local r = ifcore.select(self._account._imap, self._mailbox)
-        if (r == true) then
+        if r == true then
             self._account._selected = self._mailbox
             return true
-        elseif (r == false) then
+        elseif r == false then
             return false
-        elseif (r == nil) then
+        elseif r == nil then
             error("select request failed", 3)
         end
     else
@@ -58,7 +58,7 @@ end
 function Mailbox._cached_close(self)
     self._account._selected = nil
     local r = ifcore.close(self._account._imap)
-    if (r == nil) then error("close request failed", 3) end
+    if r == nil then error("close request failed", 3) end
     return r
 end
 
@@ -68,43 +68,43 @@ function Mailbox._send_query(self, criteria, charset)
     _check_optional(charset, 'string')
 
     local query
-    if (criteria == nil) then
+    if criteria == nil then
         query = 'ALL'
-    elseif (type(criteria) == 'string') then
+    elseif type(criteria) == 'string' then
         query = 'ALL ' .. criteria
     else 
         query = _make_query(criteria)
     end
 
-    if (charset == nil) then
-        if (type(options) == 'table' and type(options.charset) == 'string') then
+    if charset == nil then
+        if type(options) == 'table' and type(options.charset) == 'string' then
             charset = options.charset
         else
             charset = ''
         end
     end
 
-    if (self._account._login_user(self._account) ~= true) then
+    if self._account._login_user(self._account) ~= true then
         return {}
     end
 
-    if (self._cached_select(self) ~= true) then
+    if self._cached_select(self) ~= true then
         return {}
     end
    
     local r, results = ifcore.search(self._account._imap, query, charset)
 
-    if (r == false) then 
+    if r == false then 
         return false
-    elseif (r == nil) then
+    elseif r == nil then
         error("search request failed", 3)
     end
 
-    if (type(options) == 'table' and options.close == true) then
+    if type(options) == 'table' and options.close == true then
         self._cached_close(self)
     end
 
-    if (results == nil) then
+    if results == nil then
         return {}
     end
 
@@ -118,20 +118,20 @@ end
 
 
 function Mailbox._flag_messages(self, mode, flags, messages)
-    if (not messages or #messages == 0) then
+    if not messages or #messages == 0 then
         return
     end
 
-    if (self._account._login_user(self._account) ~= true) then
+    if self._account._login_user(self._account) ~= true then
         return
     end
 
-    if (self._cached_select(self) ~= true) then
+    if self._cached_select(self) ~= true then
         return
     end
 
     local f = ''
-    if (#flags ~= 0) then
+    if #flags ~= 0 then
         f = table.concat(flags, ' ')
     end
 
@@ -140,19 +140,19 @@ function Mailbox._flag_messages(self, mode, flags, messages)
     local r = false
     for i = 1, n, 50 do
         j = i + 49
-        if (n < j) then
+        if n < j then
             j = n
         end
         r = ifcore.store(self._account._imap, table.concat(m, ',', i, j),
             mode, f)
-        if (r == false) then
+        if r == false then
             break
-        elseif (r == nil) then
+        elseif r == nil then
             error("store request failed", 3)
         end
     end
 
-    if (type(options) == 'table' and options.close == true) then
+    if type(options) == 'table' and options.close == true then
         self._cached_close(self)
     end
 
@@ -161,17 +161,17 @@ end
 
 
 function Mailbox._copy_messages(self, dest, messages)
-    if (not messages or #messages == 0) then
+    if not messages or #messages == 0 then
         return
     end
 
-    if (self._account._login_user(self._account) ~= true) then
+    if self._account._login_user(self._account) ~= true then
         return
     end
 
     local r = false
-    if (self._account._imap == dest._account._imap) then
-        if (self._cached_select(self) ~= true) then
+    if self._account._imap == dest._account._imap then
+        if self._cached_select(self) ~= true then
             return
         end
 
@@ -179,39 +179,39 @@ function Mailbox._copy_messages(self, dest, messages)
         local n = #m
         for i = 1, n, 50 do
             j = i + 49
-            if (n < j) then
+            if n < j then
                 j = n
             end
             r = ifcore.copy(self._account._imap, table.concat(m, ',', i, j),
                 dest._mailbox)
-            if (r == false) then
+            if r == false then
                 break
-            elseif (r == nil) then
+            elseif r == nil then
                 error("copy request failed", 3)
             end
         end
 
-        if (type(options) == 'table' and options.close == true) then
+        if type(options) == 'table' and options.close == true then
             self._cached_close(self)
         end
     else
         local fast = self._fetch_fast(self, messages)
         local mesgs = self._fetch_message(self, messages)
 
-        if (dest._account._login_user(dest._account) ~= true) then
+        if dest._account._login_user(dest._account) ~= true then
             return
         end
 
         for i in pairs(fast) do
             for k, v in ipairs(fast[i]['flags']) do
-                if (string.lower(v) == '\\recent') then
+                if string.lower(v) == '\\recent' then
                     table.remove(fast[i]['flags'], k)
                 end
             end
 
             r = ifcore.append(dest._account._imap, dest._mailbox, mesgs[i],
                 table.concat(fast[i]['flags'], ' '), fast[i]['date'])
-            if (r == nil) then error("append request failed", 3) end
+            if r == nil then error("append request failed", 3) end
         end
     end
 
@@ -220,15 +220,15 @@ end
 
 
 function Mailbox._fetch_fast(self, messages)
-    if (not messages or #messages == 0) then
+    if not messages or #messages == 0 then
         return
     end
 
-    if (self._account._login_user(self._account) ~= true) then
+    if self._account._login_user(self._account) ~= true then
         return
     end
 
-    if (self._cached_select(self) ~= true) then
+    if self._cached_select(self) ~= true then
         return
     end
 
@@ -236,12 +236,12 @@ function Mailbox._fetch_fast(self, messages)
     for _, m in ipairs(messages) do
         local r, flags, date, size = ifcore.fetchfast(self._account._imap,
             tostring(m))
-        if (r == false) then
+        if r == false then
             return false
-        elseif (r == nil) then
+        elseif r == nil then
             error("fetchfast request failed", 3)
         end
-        if (flags ~= nil and date ~= nil and size ~= nil ) then
+        if flags ~= nil and date ~= nil and size ~= nil  then
             local f = {}
             for s in string.gmatch(flags, '%S+') do
                 table.insert(f, s)
@@ -253,7 +253,7 @@ function Mailbox._fetch_fast(self, messages)
         end
     end
 
-    if (type(options) == 'table' and options.close == true) then
+    if type(options) == 'table' and options.close == true then
         self._cached_close(self)
     end
 
@@ -261,27 +261,27 @@ function Mailbox._fetch_fast(self, messages)
 end
 
 function Mailbox._fetch_flags(self, messages)
-    if (not messages or #messages == 0) then
+    if not messages or #messages == 0 then
         return
     end
 
-    if (self._account._login_user(self._account) ~= true) then
+    if self._account._login_user(self._account) ~= true then
         return
     end
 
-    if (self._cached_select(self) ~= true) then
+    if self._cached_select(self) ~= true then
         return
     end
 
     local results = {}
     for _, m in ipairs(messages) do
         local r, flags = ifcore.fetchflags(self._account._imap, tostring(m))
-        if (r == false) then
+        if r == false then
             return false
-        elseif (r == nil) then
+        elseif r == nil then
             error("fetchflags request failed", 3)
         end
-        if (flags ~= nil) then
+        if flags ~= nil then
             local f = {}
             for s in string.gmatch(flags, '%S+') do
                 table.insert(f, s)
@@ -290,7 +290,7 @@ function Mailbox._fetch_flags(self, messages)
         end
     end
 
-    if (type(options) == 'table' and options.close == true) then
+    if type(options) == 'table' and options.close == true then
         self._cached_close(self)
     end
 
@@ -298,40 +298,40 @@ function Mailbox._fetch_flags(self, messages)
 end
 
 function Mailbox._fetch_date(self, messages)
-    if (not messages or #messages == 0) then
+    if not messages or #messages == 0 then
         return
     end
 
-    if (self._account._login_user(self._account) ~= true) then
+    if self._account._login_user(self._account) ~= true then
         return
     end
 
-    if (self._cached_select(self) ~= true) then
+    if self._cached_select(self) ~= true then
         return
     end
 
     local results = {}
     for _, m in ipairs(messages) do
-        if (type(options) == 'table' and options.cache == true and
-            self[m]._date) then
+        if type(options) == 'table' and options.cache == true and
+            self[m]._date then
             results[m] = self[m]._date
         else
             local r, date = ifcore.fetchdate(self._account._imap, tostring(m))
-            if (r == false) then
+            if r == false then
                 return false
-            elseif (r == nil) then
+            elseif r == nil then
                 error("fetchdate request failed", 3)
             end
-            if (date ~= nil) then
+            if date ~= nil then
                 results[m] = date
-                if (type(options) == 'table' and options.cache == true) then
+                if type(options) == 'table' and options.cache == true then
                     self[m]._date = date
                 end
             end
         end
     end
 
-    if (type(options) == 'table' and options.close == true) then
+    if type(options) == 'table' and options.close == true then
         self._cached_close(self)
     end
 
@@ -339,40 +339,40 @@ function Mailbox._fetch_date(self, messages)
 end
 
 function Mailbox._fetch_size(self, messages)
-    if (not messages or #messages == 0) then
+    if not messages or #messages == 0 then
         return
     end
 
-    if (self._account._login_user(self._account) ~= true) then
+    if self._account._login_user(self._account) ~= true then
         return
     end
 
-    if (self._cached_select(self) ~= true) then
+    if self._cached_select(self) ~= true then
         return
     end
 
     local results = {}
     for _, m in ipairs(messages) do
-        if (type(options) == 'table' and options.cache == true and
-            self[m]._size) then
+        if type(options) == 'table' and options.cache == true and
+            self[m]._size then
             results[m] = self[m]._size
         else
             local r, size = ifcore.fetchsize(self._account._imap, tostring(m))
-            if (r == false) then
+            if r == false then
                 return false
-            elseif (r == nil) then
+            elseif r == nil then
                 error("fetchsize request failed", 3)
             end
-            if (size ~= nil) then
+            if size ~= nil then
                 results[m] = tonumber(size)
-                if (type(options) == 'table' and options.cache == true) then
+                if type(options) == 'table' and options.cache == true then
                     self[m]._size = tonumber(size)
                 end
             end
         end
     end
 
-    if (type(options) == 'table' and options.close == true) then
+    if type(options) == 'table' and options.close == true then
         self._cached_close(self)
     end
 
@@ -380,41 +380,41 @@ function Mailbox._fetch_size(self, messages)
 end
 
 function Mailbox._fetch_header(self, messages)
-    if (not messages or #messages == 0) then
+    if not messages or #messages == 0 then
         return
     end
 
-    if (self._account._login_user(self._account) ~= true) then
+    if self._account._login_user(self._account) ~= true then
         return
     end
 
-    if (self._cached_select(self) ~= true) then
+    if self._cached_select(self) ~= true then
         return
     end
 
     local results = {}
     for _, m in ipairs(messages) do
-        if (type(options) == 'table' and options.cache == true and
-            self[m]._header) then
+        if type(options) == 'table' and options.cache == true and
+            self[m]._header then
             results[m] = self[m]._header
         else
             local r, header = ifcore.fetchheader(self._account._imap,
                 tostring(m))
-            if (r == false) then
+            if r == false then
                 return false
-            elseif (r == nil) then
+            elseif r == nil then
                 error("fetchheader request failed", 3)
             end
-            if (header ~= nil) then
+            if header ~= nil then
                 results[m] = header
-                if (type(options) == 'table' and options.cache == true) then
+                if type(options) == 'table' and options.cache == true then
                     self[m]._header = header
                 end
             end
         end
     end
 
-    if (type(options) == 'table' and options.close == true) then
+    if type(options) == 'table' and options.close == true then
         self._cached_close(self)
     end
 
@@ -422,40 +422,40 @@ function Mailbox._fetch_header(self, messages)
 end
 
 function Mailbox._fetch_body(self, messages)
-    if (not messages or #messages == 0) then
+    if not messages or #messages == 0 then
         return
     end
 
-    if (self._account._login_user(self._account) ~= true) then
+    if self._account._login_user(self._account) ~= true then
         return
     end
 
-    if (self._cached_select(self) ~= true) then
+    if self._cached_select(self) ~= true then
         return
     end
 
     local results = {}
     for _, m in ipairs(messages) do
-        if (type(options) == 'table' and options.cache == true and
-            self[m]._body) then
+        if type(options) == 'table' and options.cache == true and
+            self[m]._body then
             results[m] = self[m]._body
         else
             local r, body = ifcore.fetchbody(self._account._imap, tostring(m))
-            if (r == false) then
+            if r == false then
                 return false
-            elseif (r == nil) then
+            elseif r == nil then
                 error("fetchbody request failed", 3)
             end
-            if (body ~= nil) then
+            if body ~= nil then
                 results[m] = body
-                if (type(options) == 'table' and options.cache == true) then
+                if type(options) == 'table' and options.cache == true then
                     self[m]._body = body
                 end
             end
         end
     end
 
-    if (type(options) == 'table' and options.close == true) then
+    if type(options) == 'table' and options.close == true then
         self._cached_close(self)
     end
 
@@ -463,7 +463,7 @@ function Mailbox._fetch_body(self, messages)
 end
 
 function Mailbox._fetch_message(self, messages)
-    if (not messages or #messages == 0) then
+    if not messages or #messages == 0 then
         return
     end
 
@@ -472,9 +472,9 @@ function Mailbox._fetch_message(self, messages)
 
     local results = {}
     for _, m in ipairs(messages) do
-        if (header[m] == nil) then
+        if header[m] == nil then
             results[m] = nil
-        elseif (body[m] == nil) then
+        elseif body[m] == nil then
             results[m] = header[m]
         else
             results[m] = header[m] .. body[m]
@@ -486,15 +486,15 @@ end
 
 
 function Mailbox._fetch_fields(self, fields, messages)
-    if (not messages or #messages == 0) then
+    if not messages or #messages == 0 then
         return
     end
 
-    if (self._account._login_user(self._account) ~= true) then
+    if self._account._login_user(self._account) ~= true then
         return
     end
 
-    if (self._cached_select(self) ~= true) then
+    if self._cached_select(self) ~= true then
         return
     end
 
@@ -502,21 +502,21 @@ function Mailbox._fetch_fields(self, fields, messages)
     for _, m in ipairs(messages) do
         results[m] = ''
         for _, f in ipairs(fields) do
-            if (type(options) == 'table' and options.cache == true and
-                self[m]._fields[f]) then
+            if type(options) == 'table' and options.cache == true and
+                self[m]._fields[f] then
                 results[m] = results[m] .. self[m]._fields[f]
             else
                 local r, field = ifcore.fetchfields(self._account._imap,
                     tostring(m), f)
-                if (r == false) then
+                if r == false then
                     return false
-                elseif (r == nil) then
+                elseif r == nil then
                     error("fetchfields request failed", 3)
                 end
-                if (field ~= nil) then
+                if field ~= nil then
                     field = string.gsub(field, "\r\n\r\n$", "\n")
                     results[m] = results[m] .. field
-                    if (type(options) == 'table' and options.cache == true) then
+                    if type(options) == 'table' and options.cache == true then
                         self[m]._fields[f] = field
                     end
                 end
@@ -525,7 +525,7 @@ function Mailbox._fetch_fields(self, fields, messages)
         results[m] = string.gsub(results[m], "\n$", "")
     end
 
-    if (type(options) == 'table' and options.close == true) then
+    if type(options) == 'table' and options.close == true then
         self._cached_close(self)
     end
 
@@ -533,42 +533,42 @@ function Mailbox._fetch_fields(self, fields, messages)
 end
 
 function Mailbox._fetch_structure(self, messages)
-    if (not messages or #messages == 0) then
+    if not messages or #messages == 0 then
         return
     end
 
-    if (self._account._login_user(self._account) ~= true) then
+    if self._account._login_user(self._account) ~= true then
         return
     end
 
-    if (self._cached_select(self) ~= true) then
+    if self._cached_select(self) ~= true then
         return
     end
 
     local results = {}
     for _, m in ipairs(messages) do
-        if (type(options) == 'table' and options.cache == true and
-            self[m]._structure) then
+        if type(options) == 'table' and options.cache == true and
+            self[m]._structure then
             results[m] = self[m]._structure
         else
             local r, structure = ifcore.fetchstructure(self._account._imap,
                 tostring(m))
-            if (r == false) then
+            if r == false then
                 return false
-            elseif (r == nil) then
+            elseif r == nil then
                 error("fetchstructure request failed", 3)
             end
-            if (structure ~= nil) then
+            if structure ~= nil then
                 local parsed = _parse_structure({ ['s'] = structure, ['i'] = 1 })
                 results[m] = parsed
-                if (type(options) == 'table' and options.cache == true) then
+                if type(options) == 'table' and options.cache == true then
                     self[m]._structure = parsed
                 end
             end
         end
     end
 
-    if (type(options) == 'table' and options.close == true) then
+    if type(options) == 'table' and options.close == true then
         self._cached_close(self)
     end
 
@@ -576,36 +576,36 @@ function Mailbox._fetch_structure(self, messages)
 end
 
 function Mailbox._fetch_parts(self, parts, message)
-    if (self._account._login_user(self._account) ~= true) then
+    if self._account._login_user(self._account) ~= true then
         return
     end
 
-    if (self._cached_select(self) ~= true) then
+    if self._cached_select(self) ~= true then
         return
     end
 
     local results = {}
     for _, part in ipairs(parts) do
         results[part] = ''
-        if (type(options) == 'table' and options.cache == true and
-            self[message]._parts[part]) then
+        if type(options) == 'table' and options.cache == true and
+            self[message]._parts[part] then
             results[part] = self[message]._parts[part]
         else
             local r, bodypart = ifcore.fetchpart(self._account._imap,
                 tostring(message), part)
-            if (r == false) then
+            if r == false then
                 return false
-            elseif (r == nil) then
+            elseif r == nil then
                 error("fetchparts request failed", 3)
             end
-            if (bodypart ~= nil) then
+            if bodypart ~= nil then
                 results[part] = bodypart
                 self[message]._parts[part] = bodypart
             end
         end
     end
 
-    if (type(options) == 'table' and options.close == true) then
+    if type(options) == 'table' and options.close == true then
         self._cached_close(self)
     end
 
@@ -614,19 +614,19 @@ end
 
 
 function Mailbox.check_status(self)
-    if (self._account._login_user(self._account) ~= true) then
+    if self._account._login_user(self._account) ~= true then
         return
     end
 
     local r, exist, recent, unseen, uidnext = ifcore.status(self._account._imap,
         self._mailbox)
-    if (r == false) then
+    if r == false then
         return false
-    elseif (r == nil) then
+    elseif r == nil then
         error("status request failed", 2)
     end
 
-    if (type(options) == 'table' and options.info == true) then
+    if type(options) == 'table' and options.info == true then
         print(string.format("%d messages, %d recent, %d unseen, in %s@%s/%s.",
                             exist, recent, unseen,
                             self._account._imap.username,
@@ -654,7 +654,7 @@ function Mailbox.add_flags(self, flags, messages)
 
     local r = self._flag_messages(self, 'add', flags, mesgs)
 
-    if (type(options) == 'table' and options.info == true and r == true) then
+    if type(options) == 'table' and options.info == true and r == true then
         print(string.format("%d messages flagged in %s@%s/%s.",
                             #mesgs, self._account._imap.username,
                             self._account._imap.server, self._mailbox))
@@ -671,7 +671,7 @@ function Mailbox.remove_flags(self, flags, messages)
 
     local r = self._flag_messages(self, 'remove', flags, mesgs)
 
-    if (type(options) == 'table' and options.info == true and r == true) then
+    if type(options) == 'table' and options.info == true and r == true then
         print(string.format("%d messages flagged in %s@%s/%s.",
                             #mesgs, self._account._imap.username,
                             self._account._imap.server, self._mailbox))
@@ -688,7 +688,7 @@ function Mailbox.replace_flags(self, flags, messages)
 
     local r = self._flag_messages(self, 'replace', flags, mesgs)
 
-    if (type(options) == 'table' and options.info == true and r == true) then
+    if type(options) == 'table' and options.info == true and r == true then
         print(string.format("%d messages flagged in %s@%s/%s.",
                             #mesgs, self._account._imap.username,
                             self._account._imap.server, self._mailbox))
@@ -705,7 +705,7 @@ function Mailbox.mark_answered(self, messages)
 
     local r = self._flag_messages(self, 'add', { '\\Answered' }, mesgs)
 
-    if (type(options) == 'table' and options.info == true and r == true) then
+    if type(options) == 'table' and options.info == true and r == true then
         print(string.format("%d messages marked answered in %s@%s/%s.",
                             #mesgs, self._account._imap.username,
                             self._account._imap.server, self._mailbox))
@@ -722,7 +722,7 @@ function Mailbox.mark_deleted(self, messages)
 
     local r = self._flag_messages(self, 'add', { '\\Deleted' }, mesgs)
 
-    if (type(options) == 'table' and options.info == true and r == true) then
+    if type(options) == 'table' and options.info == true and r == true then
         print(string.format("%d messages marked deleted in %s@%s/%s.",
                             #mesgs, self._account._imap.username,
                             self._account._imap.server, self._mailbox))
@@ -738,7 +738,7 @@ function Mailbox.mark_draft(self, messages)
 
     local r = self._flag_messages(self, 'add', { '\\Draft' }, mesgs)
 
-    if (type(options) == 'table' and options.info == true and r == true) then
+    if type(options) == 'table' and options.info == true and r == true then
         print(string.format("%d messages marked draft in %s@%s/%s.",
                             #mesgs, self._account._imap.username,
                             self._account._imap.server, self._mailbox))
@@ -754,7 +754,7 @@ function Mailbox.mark_flagged(self, messages)
 
     local r = self._flag_messages(self, 'add', { '\\Flagged' }, mesgs)
 
-    if (type(options) == 'table' and options.info == true and r == true) then
+    if type(options) == 'table' and options.info == true and r == true then
         print(string.format("%d messages marked flagged in %s@%s/%s.",
                             #mesgs, self._account._imap.username,
                             self._account._imap.server, self._mailbox))
@@ -770,7 +770,7 @@ function Mailbox.mark_seen(self, messages)
 
     local r = self._flag_messages(self, 'add', { '\\Seen' }, mesgs)
 
-    if (type(options) == 'table' and options.info == true and r == true) then
+    if type(options) == 'table' and options.info == true and r == true then
         print(string.format("%d messages marked seen in %s@%s/%s.",
                             #mesgs, self._account._imap.username,
                             self._account._imap.server, self._mailbox))
@@ -786,7 +786,7 @@ function Mailbox.unmark_answered(self, messages)
 
     local r = self._flag_messages(self, 'remove', { '\\Answered' }, mesgs)
 
-    if (type(options) == 'table' and options.info == true and r == true) then
+    if type(options) == 'table' and options.info == true and r == true then
         print(string.format("%d messages unmarked answered in %s@%s/%s.",
                             #mesgs, self._account._imap.username,
                             self._account._imap.server, self._mailbox))
@@ -802,7 +802,7 @@ function Mailbox.unmark_deleted(self, messages)
 
     local r = self._flag_messages(self, 'remove', { '\\Deleted' }, mesgs)
 
-    if (type(options) == 'table' and options.info == true and r == true) then
+    if type(options) == 'table' and options.info == true and r == true then
         print(string.format("%d messages unmarked deleted in %s@%s/%s.",
                             #mesgs, self._account._imap.username,
                             self._account._imap.server, self._mailbox))
@@ -818,7 +818,7 @@ function Mailbox.unmark_draft(self, messages)
 
     local r = self._flag_messages(self, 'remove', { '\\Draft' }, mesgs)
 
-    if (type(options) == 'table' and options.info == true and r == true) then
+    if type(options) == 'table' and options.info == true and r == true then
         print(string.format("%d messages unmarked draft in %s@%s/%s.",
                             #mesgs, self._account._imap.username,
                             self._account._imap.server, self._mailbox))
@@ -834,7 +834,7 @@ function Mailbox.unmark_flagged(self, messages)
 
     local r = self._flag_messages(self, 'remove', { '\\Flagged' }, mesgs)
 
-    if (type(options) == 'table' and options.info == true and r == true) then
+    if type(options) == 'table' and options.info == true and r == true then
         print(string.format("%d messages unmarked flagged in %s@%s/%s.",
                             #mesgs, self._account._imap.username,
                             self._account._imap.server, self._mailbox))
@@ -850,7 +850,7 @@ function Mailbox.unmark_seen(self, messages)
 
     local r = self._flag_messages(self, 'remove', { '\\Seen' }, mesgs)
 
-    if (type(options) == 'table' and options.info == true and r == true) then
+    if type(options) == 'table' and options.info == true and r == true then
         print(string.format("%d messages unmarked seen in %s@%s/%s.",
                             #mesgs, self._account._imap.username,
                             self._account._imap.server, self._mailbox))
@@ -867,7 +867,7 @@ function Mailbox.delete_messages(self, messages)
 
     local r = self._flag_messages(self, 'add', { '\\Deleted' }, mesgs)
 
-    if (type(options) == 'table' and options.info == true and r == true) then
+    if type(options) == 'table' and options.info == true and r == true then
         print(string.format("%d messages deleted in %s@%s/%s.",
                             #mesgs, self._account._imap.username,
                             self._account._imap.server, self._mailbox))
@@ -885,7 +885,7 @@ function Mailbox.copy_messages(self, dest, messages)
 
     local r = self._copy_messages(self, dest, mesgs)
 
-    if (type(options) == 'table' and options.info == true and r == true) then
+    if type(options) == 'table' and options.info == true and r == true then
         print(string.format("%d messages copied from %s@%s/%s to %s@%s/%s.",
                             #mesgs, self._account._imap.username,
                             self._account._imap.server, self._mailbox,
@@ -906,12 +906,12 @@ function Mailbox.move_messages(self, dest, messages)
 
     local rc = self._copy_messages(self, dest, mesgs)
     local rf = false
-    if (rc == true) then
+    if rc == true then
         rf = self._flag_messages(self, 'add', { '\\Deleted' }, mesgs)
     end
 
-    if (type(options) == 'table' and options.info == true and
-        rc == true and rf == true) then
+    if type(options) == 'table' and options.info == true and
+        rc == true and rf == true then
         print(string.format("%d messages moved from %s@%s/%s to %s@%s/%s.",
                             #mesgs, self._account._imap.username,
                             self._account._imap.server, self._mailbox,
@@ -986,13 +986,13 @@ function Mailbox.append_message(self, message, flags, date)
     _check_optional(flags, { 'string', 'table' })
     _check_optional(date, 'string')
 
-    if (type(flags) == 'table') then
+    if type(flags) == 'table' then
         flags = table.concat(flags, ' ')
     end
 
     r = ifcore.append(self._account._imap, self._mailbox, message, flags,
     date)
-    if (r == nil) then error("append request failed", 2) end
+    if r == nil then error("append request failed", 2) end
     
     return r
 end
@@ -1186,13 +1186,13 @@ function Mailbox.match_field(self, field, pattern, messages)
     local mesgs = _extract_messages(self, messages)
     local fields = self._fetch_fields(self, { field }, mesgs)
 
-    if (#mesgs == 0 or fields == nil) then
+    if #mesgs == 0 or fields == nil then
         return Set({})
     end
  
     local results = {}
     for m, f in pairs(fields) do
-        if (regex_search(pattern, (string.gsub(f, "^[^:]*: ?(.*)$", "%1")))) then
+        if regex_search(pattern, (string.gsub(f, "^[^:]*: ?(.*)$", "%1"))) then
             table.insert(results, {self, m})
         end
     end
@@ -1239,13 +1239,13 @@ function Mailbox.match_header(self, pattern, messages)
     local mesgs = _extract_messages(self, messages)
     local header = self._fetch_header(self, mesgs)
 
-    if (#mesgs == 0 or header == nil) then
+    if #mesgs == 0 or header == nil then
         return Set({})
     end
 
     local results = {}
     for m, h in pairs(header) do
-        if (regex_search(pattern, h)) then
+        if regex_search(pattern, h) then
             table.insert(results, {self, m})
         end
     end
@@ -1262,13 +1262,13 @@ function Mailbox.match_body(self, pattern, messages)
     local mesgs = _extract_messages(self, messages)
     local body = self._fetch_body(self, mesgs)
 
-    if (#mesgs == 0 or body == nil) then
+    if #mesgs == 0 or body == nil then
         return Set({})
     end
 
     local results = {}
     for m, b in pairs(body) do
-        if (regex_search(pattern, b)) then
+        if regex_search(pattern, b) then
             table.insert(results, {self, m})
         end
     end
@@ -1285,13 +1285,13 @@ function Mailbox.match_message(self, pattern, messages)
     local mesgs = _extract_messages(self, messages)
     local full = self._fetch_message(self, mesgs)
 
-    if (#mesgs == 0 or full == nil) then
+    if #mesgs == 0 or full == nil then
         return Set({})
     end
 
     local results = {}
     for m, f in pairs(full) do
-        if (regex_search(pattern, f)) then
+        if regex_search(pattern, f) then
             table.insert(results, {self, m})
         end
     end
@@ -1300,16 +1300,16 @@ function Mailbox.match_message(self, pattern, messages)
 end
 
 function Mailbox.enter_idle(self)
-    if (self._account._login_user(self._account) ~= true) then
+    if self._account._login_user(self._account) ~= true then
         return false
     end
 
-    if (self._cached_select(self) ~= true) then
+    if self._cached_select(self) ~= true then
         return false
     end
    
     local r = ifcore.idle(self._account._imap)
-    if (r == nil) then error("idle request failed", 2) end
+    if r == nil then error("idle request failed", 2) end
 
     return r
 end

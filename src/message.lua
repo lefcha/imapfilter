@@ -12,7 +12,7 @@ Message._mt.__call = function (self, account, mailbox, uid)
     object._type = 'message'
 
     for key, value in pairs(Message) do
-        if (type(value) == 'function') then
+        if type(value) == 'function' then
             object[key] = value
         end
     end

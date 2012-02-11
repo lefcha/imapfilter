@@ -8,7 +8,7 @@ setmetatable(_regex_cache, _regex_cache.mt)
 
 _regex_cache.mt.__index = function (self, key)
     local zero
-    if (_VERSION == 'Lua 5.1') then zero = '%z' else zero = '\0' end
+    if _VERSION == 'Lua 5.1' then zero = '%z' else zero = '\0' end
     local _, _, pattern, cflags = string.find(key, '^(.*)' .. zero .. '(.*)$')
 
     local _, compiled = ifre.compile(pattern, tonumber(cflags))
@@ -25,11 +25,11 @@ function regex_search(pattern, subject, cflags, eflags)
     _check_optional(cflags, 'table')
     _check_optional(eflags, 'table')
 
-    if (cflags == nil) then
+    if cflags == nil then
         cflags = {}
     end
 
-    if (eflags == nil) then
+    if eflags == nil then
         eflags = {}
     end
 
@@ -47,7 +47,7 @@ function regex_search(pattern, subject, cflags, eflags)
 
     local compiled = _regex_cache[pattern .. '\0' .. cf]
 
-    if (compiled == nil) then
+    if compiled == nil then
         return nil
     end
 

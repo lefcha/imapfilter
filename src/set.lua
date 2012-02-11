@@ -12,7 +12,7 @@ function Set._new(self, values)
     object = values or {}
 
     for key, value in pairs(Set) do
-        if (type(value) == 'function') then
+        if type(value) == 'function' then
             object[key] = value
         end
     end

@@ -1,7 +1,7 @@
 -- Common functions for all classes.
 
 function _check_required(arg, argtype)
-    if (type(arg) == 'nil') then
+    if type(arg) == 'nil' then
         error('required argument left out', 3)
     else
         _check_optional(arg, argtype)
@@ -9,19 +9,19 @@ function _check_required(arg, argtype)
 end
 
 function _check_optional(arg, argtype)
-    if (type(arg) ~= 'nil') then
-        if (type(argtype) == 'string') then
-            if (type(arg) ~= argtype) then
+    if type(arg) ~= 'nil' then
+        if type(argtype) == 'string' then
+            if type(arg) ~= argtype then
                 error(argtype .. ' argument expected, got ' .. type(arg), 3)
             end
-        elseif (type(argtype) == 'table') then
+        elseif type(argtype) == 'table' then
             local b = false
             for _, t in ipairs(argtype) do
-                if (type(arg) == t) then
+                if type(arg) == t then
                     b = true
                 end
             end
-            if (b == false) then
+            if b == false then
                 error(argtype .. ' argument expected, got ' .. type(arg), 3)
             end
         end
@@ -93,16 +93,16 @@ end
 function _make_query(criteria)
     local s = 'ALL '
 
-    if (criteria.invert ~= true) then
+    if criteria.invert ~= true then
         for ka, va in ipairs(criteria) do
-            if (type(va) == 'string') then
+            if type(va) == 'string' then
                 s = s .. '' .. '(' .. va .. ')' .. ' '
-            elseif (type(va) == 'table') then
+            elseif type(va) == 'table' then
                 for i = 1, #va - 1 do
                     s = s .. 'OR '
                 end
                 for ko, vo in ipairs(va) do
-                    if (type(vo) ~= 'string') then
+                    if type(vo) ~= 'string' then
                         error('filter rule not a string', 2)
                     end
                     s = s .. '(' .. vo .. ') '
@@ -116,12 +116,12 @@ function _make_query(criteria)
             s = s .. 'OR '
         end
         for ko, vo in ipairs(criteria) do
-            if (type(vo) == 'string') then
+            if type(vo) == 'string' then
                 s = s .. '' .. '(' .. vo .. ')' .. ' '
-            elseif (type(vo) == 'table') then
+            elseif type(vo) == 'table' then
                 s = s .. '('
                 for ka, va in ipairs(vo) do
-                    if (type(va) ~= 'string') then
+                    if type(va) ~= 'string' then
                         error('filter rule not a string', 2)
                     end
                     s = s .. va .. ' '
