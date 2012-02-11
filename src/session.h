@@ -11,10 +11,12 @@
 typedef struct session {
 	char *server;		/* Server hostname. */
 	char *port;		/* Server port. */ 
+	char *ssl;		/* SSL protocol. */
 	char *username;		/* User name. */
+	char *password;		/* User password. */
 	int socket;		/* Socket. */
 #ifndef NO_SSLTLS
-	SSL *ssl;		/* SSL socket. */
+	SSL *sslsocket;		/* SSL socket. */
 #endif
 	unsigned int protocol;	/* IMAP protocol.  Currently IMAP4rev1 and
 				 * IMAP4 are supported. */
@@ -23,6 +25,7 @@ typedef struct session {
 		char *prefix;	/* Namespace prefix. */
 		char delim;	/* Namespace delimiter. */
 	} ns;
+	char *selected;
 } session;
 
 
@@ -30,7 +33,6 @@ typedef struct session {
 session *session_new(void);
 void session_init(session *ssn);
 void session_destroy(session *ssn);
-void session_free(session *ssn);
 session *session_find(const char *server, const char *port, const char *user);
 
 

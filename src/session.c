@@ -36,47 +36,50 @@ session_init(session *ssn)
 
 	ssn->server = NULL;
 	ssn->port = NULL;
+	ssn->ssl = NULL;
 	ssn->username = NULL;
+	ssn->password = NULL;
 	ssn->socket = -1;
 #ifndef NO_SSLTLS
-	ssn->ssl = NULL;
+	ssn->sslsocket = NULL;
 #endif
 	ssn->protocol = PROTOCOL_NONE;
 	ssn->capabilities = CAPABILITY_NONE;
 	ssn->ns.prefix = NULL;
 	ssn->ns.delim = '\0';
+	ssn->selected = NULL;
 }
 
 
 /*
- * Remove session from sessions linked list.
+ * Remove session from sessions linked list and free allocated memory.
  */
 void
 session_destroy(session *ssn)
 {
+	
+	if (!ssn)
+		return;
 
 	sessions = list_remove(sessions, ssn);
-
-	session_free(ssn);
-}
-
-
-/*
- * Free session allocated memory.
- */
-void
-session_free(session *ssn)
-{
 
 	if (ssn->server)
 		xfree(ssn->server);
 	if (ssn->port)
 		xfree(ssn->port);
+	if (ssn->ssl)
+		xfree(ssn->ssl);
 	if (ssn->username)
 		xfree(ssn->username);
+	if (ssn->password)
+		xfree(ssn->password);
 	if (ssn->ns.prefix)
 		xfree(ssn->ns.prefix);
+	if (ssn->selected)
+		xfree(ssn->selected);
 	xfree(ssn);
+
+	ssn = NULL;
 }
 
 

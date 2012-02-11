@@ -10,7 +10,24 @@
 extern options opts;
 
 
-int create_mailbox(session *ssn, const char *mbox);
+#define TRY(F)					\
+	switch ((F)) {				\
+	case -1:				\
+		if (request_login(s->server,	\
+		    s->port,			\
+		    s->ssl,			\
+		    s->username,		\
+		    s->password) != -1)		\
+			F;			\
+		else				\
+			return -1;		\
+		break;				\
+	case STATUS_RESPONSE_BYE:		\
+		close_connection(s);		\
+		session_destroy(s);		\
+		return -1;			\
+		break;				\
+	}
 
 
 /*
@@ -19,21 +36,16 @@ int create_mailbox(session *ssn, const char *mbox);
 int
 request_noop(const char *server, const char *port, const char *user)
 {
-	int r;
+	int t, r;
 	session *s;
 
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	if ((r = response_generic(s, imap_noop(s))) == -1)
-		goto fail;
+	TRY(t = imap_noop(s));
+	TRY(r = response_generic(s, t));
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -46,22 +58,26 @@ request_login(const char *server, const char *port, const char *ssl,
     const char *user, const char *pass)
 {
 	int r = -1, rg = -1;
-	session *s;
+	session *s = NULL;
 
-	if ((s = session_find(server, port, user)))
+	if ((s = session_find(server, port, user)) && s->socket != -1)
 		return STATUS_RESPONSE_NONE;
 
-	s = session_new();
+	if (!s) {
+		s = session_new();
 
-	s->server = xstrdup(server);
-	s->port = xstrdup(port);
-	s->username = xstrdup(user);
+		s->server = xstrdup(server);
+		s->port = xstrdup(port);
+		s->username = xstrdup(user);
+		s->password = xstrdup(pass);
 
-	if (ssl && strncasecmp(ssl, "tls1", 4) &&
-	    strncasecmp(ssl, "ssl3", 4) && strncasecmp(ssl, "ssl2", 4))
-		ssl = NULL;
+		if (ssl && (!strncasecmp(ssl, "tls1", 4) ||
+		    !strncasecmp(ssl, "ssl3", 4) ||
+		    strncasecmp(ssl, "ssl2", 4)))
+			s->ssl = xstrdup(ssl);
+	}
 
-	if (open_connection(s, server, port, ssl) == -1)
+	if (open_connection(s) == -1)
 		goto fail;
 
 	if ((rg = response_greeting(s)) == -1)
@@ -79,8 +95,7 @@ request_login(const char *server, const char *port, const char *ssl,
 	    get_option_boolean("starttls"))
 		switch (response_generic(s, imap_starttls(s))) {
 		case STATUS_RESPONSE_OK:
-			if (open_secure_connection(s, server, port, "tls1")
-			    == -1)
+			if (open_secure_connection(s) == -1)
 				goto fail;
 			if (response_capability(s, imap_capability(s)) == -1)
 				goto fail;
@@ -94,10 +109,9 @@ request_login(const char *server, const char *port, const char *ssl,
 	if (rg != STATUS_RESPONSE_PREAUTH) {
 #ifndef NO_CRAMMD5
 		if (s->capabilities & CAPABILITY_CRAMMD5 &&
-		    get_option_boolean("crammd5")) {
+		    get_option_boolean("crammd5"))
 			if ((r = auth_cram_md5(s, user, pass)) == -1)
 				goto fail;
-		}
 #endif
 		if (r != STATUS_RESPONSE_OK &&
 		    (r = response_generic(s, imap_login(s, user, pass))) == -1)
@@ -116,10 +130,13 @@ request_login(const char *server, const char *port, const char *ssl,
 		goto fail;
 
 	if (s->capabilities & CAPABILITY_NAMESPACE &&
-	    get_option_boolean("namespace")) {
+	    get_option_boolean("namespace"))
 		if (response_namespace(s, imap_namespace(s)) == -1)
 			goto fail;
-	}
+
+	if (s->selected)
+		if (response_select(s, imap_select(s, s->selected)) == -1)
+			goto fail;
 
 	return r;
 fail:
@@ -169,21 +186,14 @@ request_status(const char *server, const char *port, const char *user,
 	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
 
 	if (s->protocol == PROTOCOL_IMAP4REV1) {
-		t = imap_status(s, m, "MESSAGES RECENT UNSEEN UIDNEXT");
-		if ((r = response_status(s, t, exists, recent, unseen, uidnext)) == -1)
-			goto fail;
+		TRY(t = imap_status(s, m, "MESSAGES RECENT UNSEEN UIDNEXT"));
+		TRY(r = response_status(s, t, exists, recent, unseen, uidnext));
 	} else {
-		t = imap_examine(s, m);
-		if ((r = response_examine(s, t, exists, recent)) == -1)
-			goto fail;
+		TRY(t = imap_examine(s, m));
+		TRY(r = response_examine(s, t, exists, recent));
 	}
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -194,7 +204,7 @@ int
 request_select(const char *server, const char *port, const char *user,
     const char *mbox)
 {
-	int r;
+	int t, r;
 	session *s;
 	const char *m;
 
@@ -203,15 +213,16 @@ request_select(const char *server, const char *port, const char *user,
 
 	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
 
-	if ((r = response_select(s, imap_select(s, m))) == -1)
-		goto fail;
+	TRY(t = imap_select(s, m));
+	TRY(r = response_select(s, t));
 
+	if (r == STATUS_RESPONSE_OK) {
+		if (s && s->selected)
+			xfree(s->selected);
+		s->selected = xstrdup(m);
+	}
+	
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -221,21 +232,21 @@ fail:
 int
 request_close(const char *server, const char *port, const char *user)
 {
-	int r;
+	int t, r;
 	session *s;
 
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	if ((r = response_generic(s, imap_close(s))) == -1)
-		goto fail;
+	TRY(t = imap_close(s));
+	TRY(r = response_generic(s, t));
+
+	if (r == STATUS_RESPONSE_OK && s->selected) {
+		xfree(s->selected);
+		s->selected = NULL;
+	}
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -245,21 +256,16 @@ fail:
 int
 request_expunge(const char *server, const char *port, const char *user)
 {
-	int r;
+	int t, r;
 	session *s;
 
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	if ((r = response_generic(s, imap_expunge(s))) == -1)
-		goto fail;
+	TRY(t = imap_expunge(s));
+	TRY(r = response_generic(s, t));
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -279,16 +285,10 @@ request_list(const char *server, const char *port, const char *user,
 
 	n = apply_namespace(name, s->ns.prefix, s->ns.delim);
 	
-	t = imap_list(s, refer, n);
-	if ((r = response_list(s, t, mboxs, folders)) == -1)
-		goto fail;
+	TRY(t = imap_list(s, refer, n));
+	TRY(r = response_list(s, t, mboxs, folders));
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -308,16 +308,10 @@ request_lsub(const char *server, const char *port, const char *user,
 
 	n = apply_namespace(name, s->ns.prefix, s->ns.delim);
 
-	t = imap_lsub(s, refer, n);
-	if ((r = response_list(s, t, mboxs, folders)) == -1)
-		goto fail;
+	TRY(t = imap_lsub(s, refer, n));
+	TRY(r = response_list(s, t, mboxs, folders));
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -334,16 +328,10 @@ request_search(const char *server, const char *port, const char *user,
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	t = imap_search(s, charset, criteria);
-	if ((r = response_search(s, t, mesgs)) == -1)
-		goto fail;
+	TRY(t = imap_search(s, charset, criteria));
+	TRY(r = response_search(s, t, mesgs));
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -360,16 +348,10 @@ request_fetchfast(const char *server, const char *port, const char *user,
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	t = imap_fetch(s, mesg, "FAST");
-	if ((r = response_fetchfast(s, t, flags, date, size)) == -1)
-		goto fail;
+	TRY(t = imap_fetch(s, mesg, "FAST"));
+	TRY(r = response_fetchfast(s, t, flags, date, size));
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -386,16 +368,10 @@ request_fetchflags(const char *server, const char *port, const char *user,
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	t = imap_fetch(s, mesg, "FLAGS");
-	if ((r = response_fetchflags(s, t, flags)) == -1)
-		goto fail;
+	TRY(t = imap_fetch(s, mesg, "FLAGS"));
+	TRY(r = response_fetchflags(s, t, flags));
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -412,16 +388,10 @@ request_fetchdate(const char *server, const char *port, const char *user,
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	t = imap_fetch(s, mesg, "INTERNALDATE");
-	if ((r = response_fetchdate(s, t, date)) == -1)
-		goto fail;
+	TRY(t = imap_fetch(s, mesg, "INTERNALDATE"));
+	TRY(r = response_fetchdate(s, t, date));
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 /*
  * Fetch the RFC822.SIZE of the messages.
@@ -436,16 +406,10 @@ request_fetchsize(const char *server, const char *port, const char *user,
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	t = imap_fetch(s, mesg, "RFC822.SIZE");
-	if ((r = response_fetchsize(s, t, size)) == -1)
-		goto fail;
+	TRY(t = imap_fetch(s, mesg, "RFC822.SIZE"));
+	TRY(r = response_fetchsize(s, t, size));
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -462,16 +426,10 @@ request_fetchstructure(const char *server, const char *port, const char *user,
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	t = imap_fetch(s, mesg, "BODYSTRUCTURE");
-	if ((r = response_fetchstructure(s, t, structure)) == -1)
-		goto fail;
+	TRY(t = imap_fetch(s, mesg, "BODYSTRUCTURE"));
+	TRY(r = response_fetchstructure(s, t, structure));
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -488,16 +446,10 @@ request_fetchheader(const char *server, const char *port, const char *user,
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	t = imap_fetch(s, mesg, "BODY.PEEK[HEADER]");
-	if ((r = response_fetchbody(s, t, header, len)) == -1)
-		goto fail;
+	TRY(t = imap_fetch(s, mesg, "BODY.PEEK[HEADER]"));
+	TRY(r = response_fetchbody(s, t, header, len));
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -514,16 +466,10 @@ request_fetchtext(const char *server, const char *port, const char *user,
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	t = imap_fetch(s, mesg, "BODY.PEEK[TEXT]");
-	if ((r = response_fetchbody(s, t, text, len)) == -1)
-		goto fail;
+	TRY(t = imap_fetch(s, mesg, "BODY.PEEK[TEXT]"));
+	TRY(r = response_fetchbody(s, t, text, len));
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -535,29 +481,24 @@ int
 request_fetchfields(const char *server, const char *port, const char *user,
     const char *mesg, const char *headerfields, char **fields, size_t *len)
 {
-	int t, r, n;
+	int t, r;
 	session *s;
-	char *f;
-
-	n = strlen("BODY.PEEK[HEADER.FIELDS ()]") + strlen(headerfields) + 1;
-	f = (char *)xmalloc(n * sizeof(char));
-	snprintf(f, n, "%s%s%s", "BODY.PEEK[HEADER.FIELDS (", headerfields, ")]");
 
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	t = imap_fetch(s, mesg, f);
-	if ((r = response_fetchbody(s, t, fields, len)) == -1)
-		goto fail;
+	{
+		int n = strlen("BODY.PEEK[HEADER.FIELDS ()]") +
+		    strlen(headerfields) + 1;
+		char f[n];
 
-	xfree(f);
+		snprintf(f, n, "%s%s%s", "BODY.PEEK[HEADER.FIELDS (",
+		    headerfields, ")]");
+		TRY(t = imap_fetch(s, mesg, f));
+	}
+	TRY(r = response_fetchbody(s, t, fields, len));
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -569,29 +510,22 @@ int
 request_fetchpart(const char *server, const char *port, const char *user,
     const char *mesg, const char *part, char **bodypart, size_t *len)
 {
-	int t, r, n;
+	int t, r;
 	session *s;
-	char *f;
-
-	n = strlen("BODY.PEEK[]") + strlen(part) + 1;
-	f = (char *)xmalloc(n * sizeof(char));
-	snprintf(f, n, "%s%s%s", "BODY.PEEK[", part, "]");
 
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	t = imap_fetch(s, mesg, f);
-	if ((r = response_fetchbody(s, t, bodypart, len)) == -1)
-		goto fail;
+	{
+		int n = strlen("BODY.PEEK[]") + strlen(part) + 1;
+		char f[n];
 
-	xfree(f);
+		snprintf(f, n, "%s%s%s", "BODY.PEEK[", part, "]");
+		TRY(t = imap_fetch(s, mesg, f));
+	}
+	TRY(r = response_fetchbody(s, t, bodypart, len));
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -608,20 +542,15 @@ request_store(const char *server, const char *port, const char *user,
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	t = imap_store(s, mesg, mode, flags);
-	if ((r = response_generic(s, t)) == -1)
-		goto fail;
+	TRY(t = imap_store(s, mesg, mode, flags));
+	TRY(r = response_generic(s, t));
 
-	if (xstrcasestr(flags, "\\Deleted") && get_option_boolean("expunge"))
-		if (response_generic(s, imap_expunge(s)) == -1)
-			goto fail;
+	if (xstrcasestr(flags, "\\Deleted") && get_option_boolean("expunge")) {
+		TRY(t = imap_expunge(s));
+		TRY(response_generic(s, t));
+	}
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -642,24 +571,25 @@ request_copy(const char *server, const char *port, const char *user,
 	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
 
 	do {
-		t = imap_copy(s, mesg, m);
-		switch (r = response_generic(s, t)) {
+		TRY(t = imap_copy(s, mesg, m));
+		TRY(r = response_generic(s, t));
+		switch (r) {
 		case STATUS_RESPONSE_TRYCREATE:
-			if (create_mailbox(s, mbox) == -1)
-				goto fail;
+			TRY(t = imap_create(s, m));
+			TRY(response_generic(s, t));
+
+			if (get_option_boolean("subscribe")) {
+				TRY(t = imap_subscribe(s, m));
+				TRY(response_generic(s, t));
+			}
 			break;
 		case -1:
-			goto fail;
+			return -1;
 			break;
 		}
 	} while (r == STATUS_RESPONSE_TRYCREATE);
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -681,34 +611,30 @@ request_append(const char *server, const char *port, const char *user,
 	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
 
 	do {
-		if ((t = imap_append(s, m, flags, date, mesglen)) == -1)
-			goto fail;
-		if ((r = response_continuation(s)) == -1)
-			goto fail;
+		TRY(t = imap_append(s, m, flags, date, mesglen));
+		TRY(r = response_continuation(s));
 
 		switch (r) {
 		case STATUS_RESPONSE_CONTINUE:
-			if (imap_continuation(s, mesg, mesglen) == -1)
-				goto fail;
-			if ((r = response_generic(s, t)) == -1)
-				goto fail;
+			TRY(imap_continuation(s, mesg, mesglen)); 
+			TRY(r = response_generic(s, t));
 			break;
 		case STATUS_RESPONSE_TRYCREATE:
-			if (create_mailbox(s, mbox) == -1)
-				goto fail;
+			TRY(t = imap_create(s, m));
+			TRY(response_generic(s, t));
+
+			if (get_option_boolean("subscribe")) {
+				TRY(t = imap_subscribe(s, m));
+				TRY(response_generic(s, t));
+			}
 			break;
 		case -1:
-			goto fail;
+			return -1;
 			break;
 		}
 	} while (r == STATUS_RESPONSE_TRYCREATE);
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -719,7 +645,7 @@ int
 request_create(const char *server, const char *port, const char *user,
     const char *mbox)
 {
-	int r;
+	int t, r;
 	session *s;
 	const char *m;
 
@@ -728,15 +654,10 @@ request_create(const char *server, const char *port, const char *user,
 
 	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
 
-	if ((r = response_generic(s, imap_create(s, m))) == -1)
-		goto fail;
+	TRY(t = imap_create(s, m));
+	TRY(r = response_generic(s, t));
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -747,7 +668,7 @@ int
 request_delete(const char *server, const char *port, const char *user,
     const char *mbox)
 {
-	int r;
+	int t, r;
 	session *s;
 	const char *m;
 
@@ -756,15 +677,10 @@ request_delete(const char *server, const char *port, const char *user,
 
 	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
 
-	if ((r = response_generic(s, imap_delete(s, m))) == -1)
-		goto fail;
+	TRY(t = imap_delete(s, m));
+	TRY(r = response_generic(s, t));
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -775,7 +691,7 @@ int
 request_rename(const char *server, const char *port, const char *user,
     const char *oldmbox, const char *newmbox)
 {
-	int r;
+	int t, r;
 	session *s;
 	char *o, *n;
 
@@ -785,20 +701,10 @@ request_rename(const char *server, const char *port, const char *user,
 	o = xstrdup(apply_namespace(oldmbox, s->ns.prefix, s->ns.delim));
 	n = xstrdup(apply_namespace(newmbox, s->ns.prefix, s->ns.delim));
 
-	r = response_generic(s, imap_rename(s, o, n));
-
-	xfree(o);
-	xfree(n);
-
-	if (r == -1)
-		goto fail;
+	TRY(t = imap_rename(s, o, n));
+	TRY(r = response_generic(s, t));
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -809,7 +715,7 @@ int
 request_subscribe(const char *server, const char *port, const char *user,
     const char *mbox)
 {
-	int r;
+	int t, r;
 	session *s;
 	const char *m;
 
@@ -818,15 +724,10 @@ request_subscribe(const char *server, const char *port, const char *user,
 
 	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
 
-	if ((r = response_generic(s, imap_subscribe(s, m))) == -1)
-		goto fail;
+	TRY(t = imap_subscribe(s, m));
+	TRY(r = response_generic(s, t));
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
@@ -837,7 +738,7 @@ int
 request_unsubscribe(const char *server, const char *port, const char *user,
     const char *mbox)
 {
-	int r;
+	int t, r;
 	session *s;
 	const char *m;
 
@@ -846,22 +747,17 @@ request_unsubscribe(const char *server, const char *port, const char *user,
 
 	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
 
-	if ((r = response_generic(s, imap_unsubscribe(s, m))) == -1)
-		goto fail;
+	TRY(t = imap_unsubscribe(s, m));
+	TRY(r = response_generic(s, t));
 
 	return r;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
 }
 
 
 int
 request_idle(const char *server, const char *port, const char *user)
 {
-	int t, rg, ri;
+	int t, r, ri;
 	session *s;
 
 	if (!(s = session_find(server, port, user)))
@@ -874,49 +770,14 @@ request_idle(const char *server, const char *port, const char *user)
 	do {
 		ri = 0;
 
-		t = imap_idle(s);
-
-		if ((rg = response_continuation(s)) == -1)
-			goto fail;
-
-		if (rg == STATUS_RESPONSE_CONTINUE) {
-			if ((ri = response_idle(s, t)) == -1)
-				goto fail;
-
-			imap_done(s);
-
-			if ((rg = response_generic(s, t)) == -1)
-				goto fail;
+		TRY(t = imap_idle(s));
+		TRY(r = response_continuation(s));
+		if (r == STATUS_RESPONSE_CONTINUE) {
+			TRY(ri = response_idle(s, t));
+			TRY(imap_done(s));
+			TRY(r = response_generic(s, t));
 		}
 	} while (ri == STATUS_RESPONSE_TIMEOUT);
 
-	return rg;
-fail:
-	close_connection(s);
-	session_destroy(s);
-
-	return -1;
-}
-
-
-/*
- * Auxiliary function to create a mailbox.
- */
-int
-create_mailbox(session *ssn, const char *mbox)
-{
-	int r;
-	const char *m;
-
-	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
-
-	if ((r = response_generic(ssn, imap_create(ssn, m))) == -1)
-		return -1;
-
-	if (get_option_boolean("subscribe"))
-		if (response_generic(ssn, imap_subscribe(ssn, m)) == -1)
-			return -1;
-
 	return r;
 }
-

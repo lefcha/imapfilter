@@ -23,14 +23,13 @@
  * Connect to mail server.
  */
 int
-open_connection(session *ssn, const char *server, const char *port,
-    const char *protocol)
+open_connection(session *ssn)
 {
 	struct addrinfo hints, *res, *ressave;
 	int n, sockfd;
 
 #ifdef NO_SSLTLS
-	if (protocol) {
+	if (ssn->ssl) {
 		error("SSL not supported by this build\n");
 		return -1;
 	}
@@ -41,7 +40,7 @@ open_connection(session *ssn, const char *server, const char *port,
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 
-	n = getaddrinfo(server, port, &hints, &res);
+	n = getaddrinfo(ssn->server, ssn->port, &hints, &res);
 
 	if (n < 0) {
 		error("gettaddrinfo; %s\n", gai_strerror(n));
@@ -70,15 +69,15 @@ open_connection(session *ssn, const char *server, const char *port,
 
 	if (sockfd == -1) {
 		error("error while initiating connection to %s at port %s\n",
-		    server, port);
+		    ssn->server, ssn->port);
 		return -1;
 	}
 
 	ssn->socket = sockfd;
 
 #ifndef NO_SSLTLS
-	if (protocol) {
-		if (open_secure_connection(ssn, server, port, protocol) == -1) {
+	if (ssn->ssl) {
+		if (open_secure_connection(ssn) == -1) {
 			close_connection(ssn);
 			return -1;
 		}
@@ -94,8 +93,7 @@ open_connection(session *ssn, const char *server, const char *port,
  * Initialize SSL/TLS connection.
  */
 int
-open_secure_connection(session *ssn, const char *server, const char *port,
-    const char *protocol)
+open_secure_connection(session *ssn)
 {
 	int r, e;
 	SSL_CTX *ctx;
@@ -103,28 +101,28 @@ open_secure_connection(session *ssn, const char *server, const char *port,
 
 	method = NULL;
 
-	if (!strncasecmp(protocol, "tls1", 4))
-		method = TLSv1_client_method();
-	else if (!strncasecmp(protocol, "ssl3", 4) ||
-	    !strncasecmp(protocol, "ssl2", 4))
+	if (!strncasecmp(ssn->ssl, "ssl3", 4) ||
+	    !strncasecmp(ssn->ssl, "ssl2", 4))
 		method = SSLv23_client_method();
+	else
+		method = TLSv1_client_method();
 
 	if (!(ctx = SSL_CTX_new(method)))
 		goto fail;
 
-	if (!(ssn->ssl = SSL_new(ctx)))
+	if (!(ssn->sslsocket = SSL_new(ctx)))
 		goto fail;
 
-	SSL_set_fd(ssn->ssl, ssn->socket);
+	SSL_set_fd(ssn->sslsocket, ssn->socket);
 
 	for (;;) {
-		if ((r = SSL_connect(ssn->ssl)) > 0)
+		if ((r = SSL_connect(ssn->sslsocket)) > 0)
 			break;
 
-		switch (SSL_get_error(ssn->ssl, r)) {
+		switch (SSL_get_error(ssn->sslsocket, r)) {
 		case SSL_ERROR_ZERO_RETURN:
 			error("initiating SSL connection to %s; the "
-			    "connection has been closed cleanly\n", server);
+			    "connection has been closed cleanly\n", ssn->server);
 			goto fail;
 		case SSL_ERROR_WANT_CONNECT:
 		case SSL_ERROR_WANT_ACCEPT:
@@ -136,13 +134,13 @@ open_secure_connection(session *ssn, const char *server, const char *port,
 			e = ERR_get_error();
 			if (e == 0)
 				error("initiating SSL connection to %s; EOF "
-				    "in violation of the protocol\n", server);
+				    "in violation of the protocol\n", ssn->server);
 			else if (e == -1)
 				error("initiating SSL connection to %s; %s\n",
-				    server, strerror(errno));
+				    ssn->server, strerror(errno));
 			goto fail;
 		case SSL_ERROR_SSL:
-			error("initiating SSL connection to %s; %s\n", server,
+			error("initiating SSL connection to %s; %s\n", ssn->server,
 			    ERR_error_string(ERR_get_error(), NULL));
 			goto fail;
 		default:
@@ -157,7 +155,7 @@ open_secure_connection(session *ssn, const char *server, const char *port,
 	return 0;
 
 fail:
-	ssn->ssl = NULL;
+	ssn->sslsocket = NULL;
 	SSL_CTX_free(ctx);
 
 	return -1;
@@ -198,10 +196,10 @@ int
 close_secure_connection(session *ssn)
 {
 
-	if (ssn->ssl) {
-		SSL_shutdown(ssn->ssl);
-		SSL_free(ssn->ssl);
-		ssn->ssl = NULL;
+	if (ssn->sslsocket) {
+		SSL_shutdown(ssn->sslsocket);
+		SSL_free(ssn->sslsocket);
+		ssn->sslsocket = NULL;
 	}
 
 	return 0;
@@ -239,8 +237,8 @@ socket_read(session *ssn, char *buf, size_t len, long timeout, int timeoutfail)
 	FD_SET(ssn->socket, &fds);
  
 #ifndef NO_SSLTLS
-	if (ssn->ssl) {
-		if (SSL_pending(ssn->ssl) > 0 ||
+	if (ssn->sslsocket) {
+		if (SSL_pending(ssn->sslsocket) > 0 ||
 		    ((s = select(ssn->socket + 1, &fds, NULL, NULL, tvp)) > 0 &&
 		    FD_ISSET(ssn->socket, &fds))) {
 			r = socket_secure_read(ssn, buf, len);
@@ -291,12 +289,12 @@ socket_secure_read(session *ssn, char *buf, size_t len)
 	int r, e;
 
 	for (;;) {
-		r = (ssize_t) SSL_read(ssn->ssl, buf, len);
+		r = (ssize_t) SSL_read(ssn->sslsocket, buf, len);
 
 		if (r > 0)
 			break;
 
-		switch (SSL_get_error(ssn->ssl, r)) {
+		switch (SSL_get_error(ssn->sslsocket, r)) {
 		case SSL_ERROR_ZERO_RETURN:
 			error("reading data; the connection has been closed "
 			    "cleanly\n");
@@ -349,7 +347,7 @@ socket_write(session *ssn, const char *buf, size_t len)
 		if ((s = select(ssn->socket + 1, NULL, &fds, NULL, NULL) > 0 &&
 		    FD_ISSET(ssn->socket, &fds))) {
 #ifndef NO_SSLTLS
-			if (ssn->ssl) {
+			if (ssn->sslsocket) {
 				w = socket_secure_write(ssn, buf, len);
 
 				if (w <= 0)
@@ -402,12 +400,12 @@ socket_secure_write(session *ssn, const char *buf, size_t len)
 	int w, e;
 
 	for (;;) {
-		w = (ssize_t) SSL_write(ssn->ssl, buf, len);
+		w = (ssize_t) SSL_write(ssn->sslsocket, buf, len);
 
 		if (w > 0)
 			break;
 
-		switch (SSL_get_error(ssn->ssl, w)) {
+		switch (SSL_get_error(ssn->sslsocket, w)) {
 		case SSL_ERROR_ZERO_RETURN:
 			error("writing data; the connection has been closed "
 			    "cleanly\n");

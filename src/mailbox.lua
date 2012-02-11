@@ -41,11 +41,14 @@ end
 function Mailbox._cached_select(self)
     if (self._account._selected == nil or
         self._account._selected ~= self._mailbox) then
-        if (ifcore.select(self._account._imap, self._mailbox) == true) then
+        local r = ifcore.select(self._account._imap, self._mailbox)
+        if (r == true) then
             self._account._selected = self._mailbox
             return true
-        else
+        elseif (r == false) then
             return false
+        elseif (r == nil) then
+            error("select request failed", 3)
         end
     else
         return true
@@ -54,7 +57,9 @@ end
 
 function Mailbox._cached_close(self)
     self._account._selected = nil
-    return ifcore.close(self._account._imap)
+    local r = ifcore.close(self._account._imap)
+    if (r == nil) then error("close request failed", 3) end
+    return r
 end
 
 
@@ -87,7 +92,13 @@ function Mailbox._send_query(self, criteria, charset)
         return {}
     end
    
-    local _, results = ifcore.search(self._account._imap, query, charset)
+    local r, results = ifcore.search(self._account._imap, query, charset)
+
+    if (r == false) then 
+        return false
+    elseif (r == nil) then
+        error("search request failed", 3)
+    end
 
     if (type(options) == 'table' and options.close == true) then
         self._cached_close(self)
@@ -134,8 +145,10 @@ function Mailbox._flag_messages(self, mode, flags, messages)
         end
         r = ifcore.store(self._account._imap, table.concat(m, ',', i, j),
             mode, f)
-        if r == false then
+        if (r == false) then
             break
+        elseif (r == nil) then
+            error("store request failed", 3)
         end
     end
 
@@ -171,8 +184,10 @@ function Mailbox._copy_messages(self, dest, messages)
             end
             r = ifcore.copy(self._account._imap, table.concat(m, ',', i, j),
                 dest._mailbox)
-            if r == false then
+            if (r == false) then
                 break
+            elseif (r == nil) then
+                error("copy request failed", 3)
             end
         end
 
@@ -196,6 +211,7 @@ function Mailbox._copy_messages(self, dest, messages)
 
             r = ifcore.append(dest._account._imap, dest._mailbox, mesgs[i],
                 table.concat(fast[i]['flags'], ' '), fast[i]['date'])
+            if (r == nil) then error("append request failed", 3) end
         end
     end
 
@@ -218,8 +234,13 @@ function Mailbox._fetch_fast(self, messages)
 
     local results = {}
     for _, m in ipairs(messages) do
-        local _, flags, date, size = ifcore.fetchfast(self._account._imap,
+        local r, flags, date, size = ifcore.fetchfast(self._account._imap,
             tostring(m))
+        if (r == false) then
+            return false
+        elseif (r == nil) then
+            error("fetchfast request failed", 3)
+        end
         if (flags ~= nil and date ~= nil and size ~= nil ) then
             local f = {}
             for s in string.gmatch(flags, '%S+') do
@@ -254,7 +275,12 @@ function Mailbox._fetch_flags(self, messages)
 
     local results = {}
     for _, m in ipairs(messages) do
-        local _, flags = ifcore.fetchflags(self._account._imap, tostring(m))
+        local r, flags = ifcore.fetchflags(self._account._imap, tostring(m))
+        if (r == false) then
+            return false
+        elseif (r == nil) then
+            error("fetchflags request failed", 3)
+        end
         if (flags ~= nil) then
             local f = {}
             for s in string.gmatch(flags, '%S+') do
@@ -290,7 +316,12 @@ function Mailbox._fetch_date(self, messages)
             self[m]._date) then
             results[m] = self[m]._date
         else
-            local _, date = ifcore.fetchdate(self._account._imap, tostring(m))
+            local r, date = ifcore.fetchdate(self._account._imap, tostring(m))
+            if (r == false) then
+                return false
+            elseif (r == nil) then
+                error("fetchdate request failed", 3)
+            end
             if (date ~= nil) then
                 results[m] = date
                 if (type(options) == 'table' and options.cache == true) then
@@ -326,7 +357,12 @@ function Mailbox._fetch_size(self, messages)
             self[m]._size) then
             results[m] = self[m]._size
         else
-            local _, size = ifcore.fetchsize(self._account._imap, tostring(m))
+            local r, size = ifcore.fetchsize(self._account._imap, tostring(m))
+            if (r == false) then
+                return false
+            elseif (r == nil) then
+                error("fetchsize request failed", 3)
+            end
             if (size ~= nil) then
                 results[m] = tonumber(size)
                 if (type(options) == 'table' and options.cache == true) then
@@ -362,8 +398,13 @@ function Mailbox._fetch_header(self, messages)
             self[m]._header) then
             results[m] = self[m]._header
         else
-            local _, header = ifcore.fetchheader(self._account._imap,
+            local r, header = ifcore.fetchheader(self._account._imap,
                 tostring(m))
+            if (r == false) then
+                return false
+            elseif (r == nil) then
+                error("fetchheader request failed", 3)
+            end
             if (header ~= nil) then
                 results[m] = header
                 if (type(options) == 'table' and options.cache == true) then
@@ -399,7 +440,12 @@ function Mailbox._fetch_body(self, messages)
             self[m]._body) then
             results[m] = self[m]._body
         else
-            local _, body = ifcore.fetchbody(self._account._imap, tostring(m))
+            local r, body = ifcore.fetchbody(self._account._imap, tostring(m))
+            if (r == false) then
+                return false
+            elseif (r == nil) then
+                error("fetchbody request failed", 3)
+            end
             if (body ~= nil) then
                 results[m] = body
                 if (type(options) == 'table' and options.cache == true) then
@@ -460,8 +506,13 @@ function Mailbox._fetch_fields(self, fields, messages)
                 self[m]._fields[f]) then
                 results[m] = results[m] .. self[m]._fields[f]
             else
-                local _, field = ifcore.fetchfields(self._account._imap,
+                local r, field = ifcore.fetchfields(self._account._imap,
                     tostring(m), f)
+                if (r == false) then
+                    return false
+                elseif (r == nil) then
+                    error("fetchfields request failed", 3)
+                end
                 if (field ~= nil) then
                     field = string.gsub(field, "\r\n\r\n$", "\n")
                     results[m] = results[m] .. field
@@ -500,8 +551,13 @@ function Mailbox._fetch_structure(self, messages)
             self[m]._structure) then
             results[m] = self[m]._structure
         else
-            local _, structure = ifcore.fetchstructure(self._account._imap,
+            local r, structure = ifcore.fetchstructure(self._account._imap,
                 tostring(m))
+            if (r == false) then
+                return false
+            elseif (r == nil) then
+                error("fetchstructure request failed", 3)
+            end
             if (structure ~= nil) then
                 local parsed = _parse_structure({ ['s'] = structure, ['i'] = 1 })
                 results[m] = parsed
@@ -535,8 +591,13 @@ function Mailbox._fetch_parts(self, parts, message)
             self[message]._parts[part]) then
             results[part] = self[message]._parts[part]
         else
-            local _, bodypart = ifcore.fetchpart(self._account._imap,
+            local r, bodypart = ifcore.fetchpart(self._account._imap,
                 tostring(message), part)
+            if (r == false) then
+                return false
+            elseif (r == nil) then
+                error("fetchparts request failed", 3)
+            end
             if (bodypart ~= nil) then
                 results[part] = bodypart
                 self[message]._parts[part] = bodypart
@@ -557,8 +618,13 @@ function Mailbox.check_status(self)
         return
     end
 
-    local _, exist, recent, unseen, uidnext = ifcore.status(self._account._imap,
+    local r, exist, recent, unseen, uidnext = ifcore.status(self._account._imap,
         self._mailbox)
+    if (r == false) then
+        return false
+    elseif (r == nil) then
+        error("status request failed", 2)
+    end
 
     if (type(options) == 'table' and options.info == true) then
         print(string.format("%d messages, %d recent, %d unseen, in %s@%s/%s.",
@@ -924,8 +990,11 @@ function Mailbox.append_message(self, message, flags, date)
         flags = table.concat(flags, ' ')
     end
 
-    return ifcore.append(self._account._imap, self._mailbox, message, flags,
+    r = ifcore.append(self._account._imap, self._mailbox, message, flags,
     date)
+    if (r == nil) then error("append request failed", 2) end
+    
+    return r
 end
 
 
@@ -1239,7 +1308,10 @@ function Mailbox.enter_idle(self)
         return false
     end
    
-    return ifcore.idle(self._account._imap)
+    local r = ifcore.idle(self._account._imap)
+    if (r == nil) then error("idle request failed", 2) end
+
+    return r
 end
 
 Mailbox._mt.__index = function () end

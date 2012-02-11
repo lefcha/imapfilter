@@ -224,7 +224,7 @@ response_generic(session *ssn, int tag)
 		ibuf.len += n;
 
 		if (check_bye(ibuf.data))
-			return -1;
+			return STATUS_RESPONSE_BYE;
 	} while ((r = check_tag(ibuf.data, ssn, tag)) == STATUS_RESPONSE_NONE);
 
 	if (r == STATUS_RESPONSE_NO &&
@@ -252,7 +252,7 @@ response_continuation(session *ssn)
 		ibuf.len += n;
 
 		if (check_bye(ibuf.data))
-			return -1;
+			return STATUS_RESPONSE_BYE;
 	} while (!check_continuation(ibuf.data));
 
 	return STATUS_RESPONSE_CONTINUE;
@@ -274,7 +274,7 @@ response_greeting(session *ssn)
 	verbose("S (%d): %s", ssn->socket, ibuf.data);
 
 	if (check_bye(ibuf.data))
-		return -1;
+		return STATUS_RESPONSE_BYE;
 
 	if (check_preauth(ibuf.data))
 		return STATUS_RESPONSE_PREAUTH;
@@ -793,7 +793,7 @@ response_fetchbody(session *ssn, int tag, char **body, size_t *len)
 
 		if (offset != 0 && ibuf.len >= offset) {
 			if (check_bye(ibuf.data + offset))
-				return -1;
+				return STATUS_RESPONSE_BYE;
 		}
 	} while (ibuf.len < offset || (r = check_tag(ibuf.data + offset, ssn,
 	    tag)) == STATUS_RESPONSE_NONE);
@@ -820,6 +820,9 @@ response_idle(session *ssn, int tag)
 {
 	regexp *re;
 
+	if (tag == -1)
+		return -1;
+
 	re = &responses[DATA_RESPONSE_IDLE];
 
 	do {
@@ -838,7 +841,7 @@ response_idle(session *ssn, int tag)
 		verbose("S (%d): %s", ssn->socket, ibuf.data);
 
 		if (check_bye(ibuf.data))
-			return -1;
+			return STATUS_RESPONSE_BYE;
 
 	} while (regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0));
 

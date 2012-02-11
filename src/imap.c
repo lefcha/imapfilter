@@ -250,10 +250,12 @@ imap_delete(session *ssn, const char *mbox)
  * IMAP RENAME: renames mailbox.
  */
 int
-imap_rename(session *ssn, const char *oldmbox, const char *newmbox)
+imap_rename(session *ssn, char *oldmbox, char *newmbox)
 {
 
 	prepare_command("%04X RENAME \"%s\" \"%s\"\r\n", tag, oldmbox, newmbox);
+	xfree(oldmbox);
+	xfree(newmbox);
 
 	return send_command(ssn, obuf.data, NULL);
 }

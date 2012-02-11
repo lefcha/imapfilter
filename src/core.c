@@ -106,6 +106,9 @@ ifcore_noop(lua_State *lua)
 	r = request_noop(s, p, u);
 
 	lua_pop(lua, 1);
+	
+	if (r == -1)
+		return 0;
 
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
@@ -139,7 +142,7 @@ ifcore_login(lua_State *lua)
 
 	lua_pop(lua, 1);
 
-	if (r == STATUS_RESPONSE_NONE)
+	if (r == -1)
 		return 0;
 
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK ||
@@ -172,6 +175,9 @@ ifcore_logout(lua_State *lua)
 	r = request_logout(s, p, u);
 
 	lua_pop(lua, 1);
+
+	if (r == -1)
+		return 0;
 
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
@@ -210,6 +216,9 @@ ifcore_status(lua_State *lua)
 
 	lua_pop(lua, 2);
 
+	if (r == -1)
+		return 0;
+
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 	lua_pushnumber(lua, (lua_Number) (exists));
 	lua_pushnumber(lua, (lua_Number) (recent));
@@ -247,6 +256,9 @@ ifcore_select(lua_State *lua)
 
 	lua_pop(lua, 2);
 
+	if (r == -1)
+		return 0;
+
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
 	return 1;
@@ -277,6 +289,9 @@ ifcore_close(lua_State *lua)
 
 	lua_pop(lua, 1);
 
+	if (r == -1)
+		return 0;
+
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
 	return 1;
@@ -306,6 +321,9 @@ ifcore_expunge(lua_State *lua)
 	r = request_expunge(s, p, u);
 
 	lua_pop(lua, 1);
+
+	if (r == -1)
+		return 0;
 
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
@@ -344,6 +362,9 @@ ifcore_list(lua_State *lua)
 	    &mboxs, &folders);
 
 	lua_pop(lua, 3);
+
+	if (r == -1)
+		return 0;
 
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
@@ -391,6 +412,9 @@ ifcore_lsub(lua_State *lua)
 	    &mboxs, &folders);
 
 	lua_pop(lua, 3);
+
+	if (r == -1)
+		return 0;
 
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
@@ -482,6 +506,9 @@ ifcore_fetchfast(lua_State *lua)
 
 	lua_pop(lua, 2);
 
+	if (r == -1)
+		return 0;
+
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
 	if (!flags || !date || !size)
@@ -529,6 +556,9 @@ ifcore_fetchflags(lua_State *lua)
 
 	lua_pop(lua, 2);
 
+	if (r == -1)
+		return 0;
+
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
 	if (!flags)
@@ -571,6 +601,9 @@ ifcore_fetchdate(lua_State *lua)
 	r = request_fetchdate(s, p, u, lua_tostring(lua, 2), &date);
 
 	lua_pop(lua, 2);
+
+	if (r == -1)
+		return 0;
 
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
@@ -658,6 +691,9 @@ ifcore_fetchstructure(lua_State *lua)
 
 	lua_pop(lua, 3);
 
+	if (r == -1)
+		return 0;
+
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
 	if (!structure)
@@ -701,6 +737,9 @@ ifcore_fetchheader(lua_State *lua)
 
 	lua_pop(lua, 2);
 
+	if (r == -1)
+		return 0;
+
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
 	if (!header)
@@ -743,6 +782,9 @@ ifcore_fetchtext(lua_State *lua)
 	r = request_fetchtext(s, p, u, lua_tostring(lua, 2), &text, &len);
 
 	lua_pop(lua, 2);
+
+	if (r == -1)
+		return 0;
 
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
@@ -789,6 +831,9 @@ ifcore_fetchfields(lua_State *lua)
 
 	lua_pop(lua, 3);
 
+	if (r == -1)
+		return 0;
+
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
 	if (!fields)
@@ -834,6 +879,9 @@ ifcore_fetchpart(lua_State *lua)
 
 	lua_pop(lua, 3);
 
+	if (r == -1)
+		return 0;
+
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
 	if (!part)
@@ -875,6 +923,9 @@ ifcore_store(lua_State *lua)
 
 	lua_pop(lua, 4);
 
+	if (r == -1)
+		return 0;
+
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
 	return 1;
@@ -908,6 +959,9 @@ ifcore_copy(lua_State *lua)
 	r = request_copy(s, p, u, lua_tostring(lua, 2), lua_tostring(lua, 3));
 
 	lua_pop(lua, 3);
+
+	if (r == -1)
+		return 0;
 
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
@@ -955,6 +1009,9 @@ ifcore_append(lua_State *lua)
 
 	lua_pop(lua, lua_gettop(lua));
 
+	if (r == -1)
+		return 0;
+
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
 	return 1;
@@ -988,6 +1045,9 @@ ifcore_create(lua_State *lua)
 
 	lua_pop(lua, 2);
 
+	if (r == -1)
+		return 0;
+
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
 	return 1;
@@ -1020,6 +1080,9 @@ ifcore_delete(lua_State *lua)
 	r = request_delete(s, p, u, lua_tostring(lua, 2));
 
 	lua_pop(lua, 2);
+
+	if (r == -1)
+		return 0;
 
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
@@ -1055,6 +1118,9 @@ ifcore_rename(lua_State *lua)
 
 	lua_pop(lua, 3);
 
+	if (r == -1)
+		return 0;
+
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
 	return 1;
@@ -1087,6 +1153,9 @@ ifcore_subscribe(lua_State *lua)
 	r = request_subscribe(s, p, u, lua_tostring(lua, 2));
 
 	lua_pop(lua, 2);
+
+	if (r == -1)
+		return 0;
 
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
@@ -1121,6 +1190,9 @@ ifcore_unsubscribe(lua_State *lua)
 
 	lua_pop(lua, 2);
 
+	if (r == -1)
+		return 0;
+
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 
 	return 1;
@@ -1150,6 +1222,9 @@ ifcore_idle(lua_State *lua)
 	r = request_idle(s, p, u);
 
 	lua_pop(lua, 1);
+
+	if (r == -1)
+		return 0;
 
 	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
 

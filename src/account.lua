@@ -45,13 +45,13 @@ function Account._login_user(self)
 
     local r = ifcore.login(self._imap)
 
-    if (r == nil) then
-        return true
-    elseif (r == true) then
+    if (r == true) then
         self._selected = nil
         return true
     elseif (r == false) then
-        error("login failure", 3)
+        return true
+    elseif (r == nil) then
+        error("login request failed", 3)
     end
 end
 
@@ -90,7 +90,13 @@ function Account.list_all(self, folder, mbox)
         return
     end
 
-    local _, mailboxes, folders = ifcore.list(self._imap, '', folder .. mbox)
+    local r, mailboxes, folders = ifcore.list(self._imap, '', folder .. mbox)
+
+    if (r == false) then
+        return false
+    elseif (r == nil) then
+        error("list request failed", 2)
+    end
 
     local m = {}
     for s in string.gmatch(mailboxes, '%C+') do
@@ -131,7 +137,13 @@ function Account.list_subscribed(self, folder, mbox)
         return
     end
 
-    local _, mailboxes, folders = ifcore.lsub(self._imap, '', folder .. mbox)
+    local r, mailboxes, folders = ifcore.lsub(self._imap, '', folder .. mbox)
+
+    if (r == false) then
+        return false
+    elseif (r == nil) then
+        error("lsub request failed", 2)
+    end
 
     local m = {}
     for s in string.gmatch(mailboxes, '%C+') do
@@ -158,6 +170,8 @@ function Account.create_mailbox(self, name)
 
     local r = ifcore.create(self._imap, name)
 
+    if (r == nil) then error("create request failed", 2) end
+
     if (type(options) == 'table' and options.info == true) then
         print(string.format("Created mailbox %s@%s/%s.",
                             self._imap.username, self._imap.server, name))
@@ -174,6 +188,8 @@ function Account.delete_mailbox(self, name)
     end
 
     local r = ifcore.delete(self._imap, name)
+
+    if (r == nil) then error("delete request failed", 2) end
 
     if (type(options) == 'table' and options.info == true) then
         print(string.format("Deleted mailbox %s@%s/%s.",
@@ -193,6 +209,8 @@ function Account.rename_mailbox(self, oldname, newname)
 
     local r = ifcore.rename(self._imap, oldname, newname)
 
+    if (r == nil) then error("rename request failed", 2) end
+
     if (type(options) == 'table' and options.info == true) then
         print(string.format("Renamed mailbox %s@%s/%s to %s@%s/%s.",
                             self._imap.username, self._imap.server, oldname,
@@ -211,6 +229,8 @@ function Account.subscribe_mailbox(self, name)
 
     local r = ifcore.subscribe(self._imap, name)
 
+    if (r == nil) then error("subscribe request failed", 2) end
+
     if (type(options) == 'table' and options.info == true) then
         print(string.format("Subscribed mailbox %s@%s/%s.",
                             self._imap.username, self._imap.server, name))
@@ -227,6 +247,8 @@ function Account.unsubscribe_mailbox(self, name)
     end
 
     local r = ifcore.unsubscribe(self._imap, name)
+
+    if (r == nil) then error("unsubscribe request failed", 2) end
 
     if (type(options) == 'table' and options.info == true) then
         print(string.format("Unsubscribed mailbox %s@%s/%s.",

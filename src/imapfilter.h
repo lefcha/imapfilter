@@ -49,7 +49,6 @@
 #define STATUS_RESPONSE_TRYCREATE	9
 #define STATUS_RESPONSE_TIMEOUT		10
 
-
 /* Initial buffer size for input, output and namespace buffers. */
 #define INPUT_BUF			4096
 #define OUTPUT_BUF			1024
@@ -114,7 +113,7 @@ int imap_select(session *ssn, const char *mbox);
 int imap_examine(session *ssn, const char *mbox);
 int imap_create(session *ssn, const char *mbox);
 int imap_delete(session *ssn, const char *mbox);
-int imap_rename(session *ssn, const char *oldmbox, const char *newmbox);
+int imap_rename(session *ssn, char *oldmbox, char *newmbox);
 int imap_subscribe(session *ssn, const char *mbox);
 int imap_unsubscribe(session *ssn, const char *mbox);
 int imap_list(session *ssn, const char *refer, const char *name);
@@ -184,7 +183,7 @@ LUALIB_API int luaopen_ifre(lua_State *lua);
 
 /*	request.c	*/
 int request_noop(const char *server, const char *port, const char *user);
-int request_login(const char *server, const char *port, const char *ssl,
+int request_login(const char *server, const char *port, const char *protocol,
     const char *user, const char *pass);
 int request_logout(const char *server, const char *port, const char *user);
 int request_status(const char *server, const char *port, const char *user,
@@ -266,15 +265,13 @@ void catch_signals(void);
 void release_signals(void);
 
 /*	socket.c	*/
-int open_connection(session *ssn, const char *server, const char *port,
-    const char *protocol);
+int open_connection(session *ssn);
 int close_connection(session *ssn);
 ssize_t socket_read(session *ssn, char *buf, size_t len, long timeout,
     int timeoutfail);
 ssize_t socket_write(session *ssn, const char *buf, size_t len);
 #ifndef NO_SSLTLS
-int open_secure_connection(session *ssn, const char *server, const char *port,
-    const char *protocol);
+int open_secure_connection(session *ssn);
 int close_secure_connection(session *ssn);
 ssize_t socket_secure_read(session *ssn, char *buf, size_t len);
 ssize_t socket_secure_write(session *ssn, const char *buf, size_t len);
