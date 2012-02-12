@@ -16,26 +16,26 @@ extern options opts;
 buffer ibuf;			/* Input buffer. */
 enum {				/* Server data responses to be parsed;
 				 * regular expressions index. */
-	DATA_RESPONSE_TAGGED,
-	DATA_RESPONSE_CAPABILITY,
-	DATA_RESPONSE_AUTHENTICATE,
-	DATA_RESPONSE_NAMESPACE,
-	DATA_RESPONSE_STATUS,
-	DATA_RESPONSE_STATUS_MESSAGES,
-	DATA_RESPONSE_STATUS_RECENT,
-	DATA_RESPONSE_STATUS_UNSEEN,
-	DATA_RESPONSE_STATUS_UIDNEXT,
-	DATA_RESPONSE_EXAMINE_EXISTS,
-	DATA_RESPONSE_EXAMINE_RECENT,
-	DATA_RESPONSE_LIST,
-	DATA_RESPONSE_SEARCH,
-	DATA_RESPONSE_FETCH,
-	DATA_RESPONSE_FETCH_FLAGS,
-	DATA_RESPONSE_FETCH_DATE,
-	DATA_RESPONSE_FETCH_SIZE,
-	DATA_RESPONSE_FETCH_STRUCTURE,
-	DATA_RESPONSE_FETCH_BODY,
-	DATA_RESPONSE_IDLE,
+	RESPONSE_TAGGED,
+	RESPONSE_CAPABILITY,
+	RESPONSE_AUTHENTICATE,
+	RESPONSE_NAMESPACE,
+	RESPONSE_STATUS,
+	RESPONSE_STATUS_MESSAGES,
+	RESPONSE_STATUS_RECENT,
+	RESPONSE_STATUS_UNSEEN,
+	RESPONSE_STATUS_UIDNEXT,
+	RESPONSE_EXAMINE_EXISTS,
+	RESPONSE_EXAMINE_RECENT,
+	RESPONSE_LIST,
+	RESPONSE_SEARCH,
+	RESPONSE_FETCH,
+	RESPONSE_FETCH_FLAGS,
+	RESPONSE_FETCH_DATE,
+	RESPONSE_FETCH_SIZE,
+	RESPONSE_FETCH_STRUCTURE,
+	RESPONSE_FETCH_BODY,
+	RESPONSE_IDLE,
 };
 regexp responses[] = {		/* Server data responses to be parsed;
 				 * regular expressions patterns. */
@@ -114,31 +114,31 @@ check_tag(char *buf, session *ssn, int tag)
 	char t[4 + 1];
 	regexp *re;
 
-	r = STATUS_RESPONSE_NONE;
+	r = STATUS_NONE;
 
 	snprintf(t, sizeof(t), "%04X", tag);
 
-	re = &responses[DATA_RESPONSE_TAGGED];
+	re = &responses[RESPONSE_TAGGED];
 
 	if (!regexec(re->preg, buf, re->nmatch, re->pmatch, 0)) {
 		if (!strncasecmp(buf + re->pmatch[1].rm_so, t,
 		    strlen(t))) {
 			if (!strncasecmp(buf + re->pmatch[2].rm_so,
 			    "OK", strlen("OK")))
-				r = STATUS_RESPONSE_OK;
+				r = STATUS_OK;
 			else if (!strncasecmp(buf + re->pmatch[2].rm_so,
 			    "NO", strlen("NO")))
-				r = STATUS_RESPONSE_NO;
+				r = STATUS_NO;
 			else if (!strncasecmp(buf + re->pmatch[2].rm_so,
 			    "BAD", strlen("BAD")))
-				r = STATUS_RESPONSE_BAD;
+				r = STATUS_BAD;
 		}
 	}
 
-	if (r != STATUS_RESPONSE_NONE)
+	if (r != STATUS_NONE)
 		verbose("S (%d): %s", ssn->socket, buf + re->pmatch[0].rm_so);
 
-	if (r == STATUS_RESPONSE_NO || r == STATUS_RESPONSE_BAD)
+	if (r == STATUS_NO || r == STATUS_BAD)
 		error("IMAP (%d): %s", ssn->socket, buf + re->pmatch[0].rm_so);
 
 	return r;
@@ -224,12 +224,12 @@ response_generic(session *ssn, int tag)
 		ibuf.len += n;
 
 		if (check_bye(ibuf.data))
-			return STATUS_RESPONSE_BYE;
-	} while ((r = check_tag(ibuf.data, ssn, tag)) == STATUS_RESPONSE_NONE);
+			return STATUS_BYE;
+	} while ((r = check_tag(ibuf.data, ssn, tag)) == STATUS_NONE);
 
-	if (r == STATUS_RESPONSE_NO &&
+	if (r == STATUS_NO &&
 	    (check_trycreate(ibuf.data) || get_option_boolean("create")))
-		return STATUS_RESPONSE_TRYCREATE;
+		return STATUS_TRYCREATE;
 
 	return r;
 }
@@ -252,10 +252,10 @@ response_continuation(session *ssn)
 		ibuf.len += n;
 
 		if (check_bye(ibuf.data))
-			return STATUS_RESPONSE_BYE;
+			return STATUS_BYE;
 	} while (!check_continuation(ibuf.data));
 
-	return STATUS_RESPONSE_CONTINUE;
+	return STATUS_CONTINUE;
 }
 
 
@@ -274,12 +274,12 @@ response_greeting(session *ssn)
 	verbose("S (%d): %s", ssn->socket, ibuf.data);
 
 	if (check_bye(ibuf.data))
-		return STATUS_RESPONSE_BYE;
+		return STATUS_BYE;
 
 	if (check_preauth(ibuf.data))
-		return STATUS_RESPONSE_PREAUTH;
+		return STATUS_PREAUTH;
 
-	return STATUS_RESPONSE_NONE;
+	return STATUS_NONE;
 }
 
 
@@ -298,7 +298,7 @@ response_capability(session *ssn, int tag)
 
 	ssn->protocol = PROTOCOL_NONE;
 
-	re = &responses[DATA_RESPONSE_CAPABILITY];
+	re = &responses[RESPONSE_CAPABILITY];
 
 	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) {
 		s = xstrndup(ibuf.data + re->pmatch[1].rm_so,
@@ -349,9 +349,9 @@ response_authenticate(session *ssn, int tag, unsigned char **cont)
 	int r;
 	regexp *re;
 
-	re = &responses[DATA_RESPONSE_AUTHENTICATE];
+	re = &responses[RESPONSE_AUTHENTICATE];
 
-	if ((r = response_continuation(ssn)) == STATUS_RESPONSE_CONTINUE &&
+	if ((r = response_continuation(ssn)) == STATUS_CONTINUE &&
 	    !regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0))
 		*cont = (unsigned char *)xstrndup(ibuf.data + re->pmatch[1].rm_so,
 		    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
@@ -376,7 +376,7 @@ response_namespace(session *ssn, int tag)
 	ssn->ns.prefix = NULL;
 	ssn->ns.delim = '\0';
 
-	re = &responses[DATA_RESPONSE_NAMESPACE];
+	re = &responses[RESPONSE_NAMESPACE];
 
 	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) {
 		n = re->pmatch[2].rm_eo - re->pmatch[2].rm_so;
@@ -406,25 +406,25 @@ response_status(session *ssn, int tag, unsigned int *exist,
 	if ((r = response_generic(ssn, tag)) == -1)
 		return -1;
 
-	re = &responses[DATA_RESPONSE_STATUS];
+	re = &responses[RESPONSE_STATUS];
 
 	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) {
 		s = xstrndup(ibuf.data + re->pmatch[1].rm_so,
 		    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
 
-		re = &responses[DATA_RESPONSE_STATUS_MESSAGES];
+		re = &responses[RESPONSE_STATUS_MESSAGES];
 		if (!regexec(re->preg, s, re->nmatch, re->pmatch, 0))
 			*exist = strtol(s + re->pmatch[1].rm_so, NULL, 10);
 
-		re = &responses[DATA_RESPONSE_STATUS_RECENT];
+		re = &responses[RESPONSE_STATUS_RECENT];
 		if (!regexec(re->preg, s, re->nmatch, re->pmatch, 0))
 			*recent = strtol(s + re->pmatch[1].rm_so, NULL, 10);
 
-		re = &responses[DATA_RESPONSE_STATUS_UNSEEN];
+		re = &responses[RESPONSE_STATUS_UNSEEN];
 		if (!regexec(re->preg, s, re->nmatch, re->pmatch, 0))
 			*unseen = strtol(s + re->pmatch[1].rm_so, NULL, 10);
 
-		re = &responses[DATA_RESPONSE_STATUS_UIDNEXT];
+		re = &responses[RESPONSE_STATUS_UIDNEXT];
 		if (!regexec(re->preg, s, re->nmatch, re->pmatch, 0))
 			*uidnext = strtol(s + re->pmatch[1].rm_so, NULL, 10);
 
@@ -448,11 +448,11 @@ response_examine(session *ssn, int tag, unsigned int *exist,
 	if ((r = response_generic(ssn, tag)) == -1)
 		return -1;
 
-	re = &responses[DATA_RESPONSE_EXAMINE_EXISTS];
+	re = &responses[RESPONSE_EXAMINE_EXISTS];
 	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0))
 		*exist = strtol(ibuf.data + re->pmatch[1].rm_so, NULL, 10);
 
-	re = &responses[DATA_RESPONSE_EXAMINE_RECENT];
+	re = &responses[RESPONSE_EXAMINE_RECENT];
 	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0))
 		*recent = strtol(ibuf.data + re->pmatch[1].rm_so, NULL, 10);
 
@@ -472,7 +472,7 @@ response_select(session *ssn, int tag)
 		return -1;
 
 	if (xstrcasestr(ibuf.data, "[READ-ONLY]"))
-		return STATUS_RESPONSE_READONLY;
+		return STATUS_READONLY;
 
 	return r;
 }
@@ -497,7 +497,7 @@ response_list(session *ssn, int tag, char **mboxs, char **folders)
 	f = *folders = (char *)xmalloc((ibuf.len + 1) * sizeof(char));
 	*m = *f = '\0';
 
-	re = &responses[DATA_RESPONSE_LIST];
+	re = &responses[RESPONSE_LIST];
 
 	b = ibuf.data;
 	while (!regexec(re->preg, b, re->nmatch, re->pmatch, 0)) {
@@ -560,7 +560,7 @@ response_search(session *ssn, int tag, char **mesgs)
 	if ((r = response_generic(ssn, tag)) == -1)
 		return -1;
 
-	re = &responses[DATA_RESPONSE_SEARCH];
+	re = &responses[RESPONSE_SEARCH];
 
 	b = ibuf.data;
 	m = NULL;
@@ -600,22 +600,22 @@ response_fetchfast(session *ssn, int tag, char **flags, char **date,
 	if ((r = response_generic(ssn, tag)) == -1)
 		return -1;
 
-	re = &responses[DATA_RESPONSE_FETCH];
+	re = &responses[RESPONSE_FETCH];
 	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) { 
 		s = xstrndup(ibuf.data + re->pmatch[1].rm_so,
 		    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
 
-		re = &responses[DATA_RESPONSE_FETCH_FLAGS];
+		re = &responses[RESPONSE_FETCH_FLAGS];
 		if (!regexec(re->preg, s, re->nmatch, re->pmatch, 0))
 			*flags = xstrndup(s + re->pmatch[1].rm_so,
 			    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
 
-		re = &responses[DATA_RESPONSE_FETCH_DATE];
+		re = &responses[RESPONSE_FETCH_DATE];
 		if (!regexec(re->preg, s, re->nmatch, re->pmatch, 0))
 			*date = xstrndup(s + re->pmatch[1].rm_so,
 			    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
 
-		re = &responses[DATA_RESPONSE_FETCH_SIZE];
+		re = &responses[RESPONSE_FETCH_SIZE];
 		if (!regexec(re->preg, s, re->nmatch, re->pmatch, 0))
 			*size = xstrndup(s + re->pmatch[1].rm_so,
 			    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
@@ -640,12 +640,12 @@ response_fetchflags(session *ssn, int tag, char **flags)
 	if ((r = response_generic(ssn, tag)) == -1)
 		return -1;
 
-	re = &responses[DATA_RESPONSE_FETCH];
+	re = &responses[RESPONSE_FETCH];
 	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) { 
 		s = xstrndup(ibuf.data + re->pmatch[1].rm_so,
 		    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
 
-		re = &responses[DATA_RESPONSE_FETCH_FLAGS];
+		re = &responses[RESPONSE_FETCH_FLAGS];
 		if (!regexec(re->preg, s, re->nmatch, re->pmatch, 0))
 			*flags = xstrndup(s + re->pmatch[1].rm_so,
 			    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
@@ -671,12 +671,12 @@ response_fetchdate(session *ssn, int tag, char **date)
 	if ((r = response_generic(ssn, tag)) == -1)
 		return -1;
 
-	re = &responses[DATA_RESPONSE_FETCH];
+	re = &responses[RESPONSE_FETCH];
 	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) { 
 		s = xstrndup(ibuf.data + re->pmatch[1].rm_so,
 		    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
 
-		re = &responses[DATA_RESPONSE_FETCH_DATE];
+		re = &responses[RESPONSE_FETCH_DATE];
 		if (!regexec(re->preg, s, re->nmatch, re->pmatch, 0))
 			*date = xstrndup(s + re->pmatch[1].rm_so,
 			    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
@@ -702,12 +702,12 @@ response_fetchsize(session *ssn, int tag, char **size)
 	if ((r = response_generic(ssn, tag)) == -1)
 		return -1;
 
-	re = &responses[DATA_RESPONSE_FETCH];
+	re = &responses[RESPONSE_FETCH];
 	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) { 
 		s = xstrndup(ibuf.data + re->pmatch[1].rm_so,
 		    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
 
-		re = &responses[DATA_RESPONSE_FETCH_SIZE];
+		re = &responses[RESPONSE_FETCH_SIZE];
 		if (!regexec(re->preg, s, re->nmatch, re->pmatch, 0))
 			*size = xstrndup(s + re->pmatch[1].rm_so,
 			    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
@@ -733,12 +733,12 @@ response_fetchstructure(session *ssn, int tag, char **structure)
 	if ((r = response_generic(ssn, tag)) == -1)
 		return -1;
 
-	re = &responses[DATA_RESPONSE_FETCH];
+	re = &responses[RESPONSE_FETCH];
 	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) { 
 		s = xstrndup(ibuf.data + re->pmatch[1].rm_so,
 		    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
 
-		re = &responses[DATA_RESPONSE_FETCH_STRUCTURE];
+		re = &responses[RESPONSE_FETCH_STRUCTURE];
 		if (!regexec(re->preg, s, re->nmatch, re->pmatch, 0)) {
 			*structure = xstrndup(s + re->pmatch[1].rm_so,
 			    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
@@ -771,7 +771,7 @@ response_fetchbody(session *ssn, int tag, char **body, size_t *len)
 	match = -1;
 	offset = 0;
 	
-	re = &responses[DATA_RESPONSE_FETCH_BODY];
+	re = &responses[RESPONSE_FETCH_BODY];
 
 	do {
 		buffer_check(&ibuf, ibuf.len + INPUT_BUF);
@@ -793,10 +793,10 @@ response_fetchbody(session *ssn, int tag, char **body, size_t *len)
 
 		if (offset != 0 && ibuf.len >= offset) {
 			if (check_bye(ibuf.data + offset))
-				return STATUS_RESPONSE_BYE;
+				return STATUS_BYE;
 		}
 	} while (ibuf.len < offset || (r = check_tag(ibuf.data + offset, ssn,
-	    tag)) == STATUS_RESPONSE_NONE);
+	    tag)) == STATUS_NONE);
 
 	if (match == 0) {
 		if (re->pmatch[2].rm_so != -1 &&
@@ -823,7 +823,7 @@ response_idle(session *ssn, int tag)
 	if (tag == -1)
 		return -1;
 
-	re = &responses[DATA_RESPONSE_IDLE];
+	re = &responses[RESPONSE_IDLE];
 
 	do {
 		buffer_reset(&ibuf);
@@ -834,16 +834,16 @@ response_idle(session *ssn, int tag)
 			return -1;
 			break; /* NOTREACHED */
 		case 0:
-			return STATUS_RESPONSE_TIMEOUT;
+			return STATUS_TIMEOUT;
 			break; /* NOTREACHED */
 		}
 
 		verbose("S (%d): %s", ssn->socket, ibuf.data);
 
 		if (check_bye(ibuf.data))
-			return STATUS_RESPONSE_BYE;
+			return STATUS_BYE;
 
 	} while (regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0));
 
-	return STATUS_RESPONSE_UNTAGGED;
+	return STATUS_UNTAGGED;
 }

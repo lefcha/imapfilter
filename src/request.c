@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 #include <strings.h>
+#include <stdarg.h>
 
 #include "imapfilter.h"
 #include "session.h"
@@ -8,6 +10,15 @@
 
 
 extern options opts;
+
+buffer obuf;			/* Output buffer. */
+
+static int tag = 0x1000;	/* Every IMAP command is prefixed with a
+				 * unique [:alnum:] string. */
+
+
+int send_request(session *s, const char *fmt,...);
+int send_continuation(session *s, const char *data, size_t len);
 
 
 #define TRY(F)					\
@@ -22,12 +33,86 @@ extern options opts;
 		else				\
 			return -1;		\
 		break;				\
-	case STATUS_RESPONSE_BYE:		\
+	case STATUS_BYE:			\
 		close_connection(s);		\
 		session_destroy(s);		\
 		return -1;			\
 		break;				\
+	}					\
+
+
+/*
+ * Sends to server data; a command.
+ */
+int
+send_request(session *s, const char *fmt,...)
+{
+	int n;
+	va_list args;
+	int t = tag;
+
+	if (s->socket == -1)
+		return -1;
+
+	buffer_reset(&obuf);
+	obuf.len = snprintf(obuf.data, obuf.size + 1, "%04X ", tag);
+
+	va_start(args, fmt);
+	n = vsnprintf(obuf.data + obuf.len, obuf.size - obuf.len -
+	    strlen("\r\n") + 1, fmt, args);
+	if (n > (int)obuf.size) {
+		buffer_check(&obuf, n);
+		vsnprintf(obuf.data + obuf.len, obuf.size - obuf.len -
+		    strlen("\r\n") + 1, fmt, args);
 	}
+	obuf.len = strlen(obuf.data);
+	va_end(args);
+
+	snprintf(obuf.data + obuf.len, obuf.size - obuf.len + 1, "\r\n");
+	obuf.len = strlen(obuf.data);
+
+	debug("sending command (%d):\n\n%s\n", s->socket, obuf.data);
+
+	verbose("C (%d): %s", s->socket, obuf.data);
+
+	if (socket_write(s, obuf.data, obuf.len) == -1)
+		return -1;
+
+	if (tag == 0xFFFF)	/* Tag always between 0x1000 and 0xFFFF. */
+		tag = 0x0FFF;
+	tag++;
+
+	return t;
+}
+
+/*
+ * Sends a response to a command continuation request.
+ */
+int
+send_continuation(session *s, const char *data, size_t len)
+{
+
+	if (s->socket == -1)
+		return -1;
+
+	if (socket_write(s, data, len) == -1 ||
+	    socket_write(s, "\r\n", strlen("\r\n")) == -1)
+		return -1;
+
+	if (opts.debug) {
+		unsigned int i;
+
+		debug("sending continuation data (%d):\n\n", s->socket);
+		
+		for (i = 0; i < len; i++)
+			debugc(data[i]);
+		
+		debug("\r\n\n");
+			
+	}
+
+	return 0;
+}
 
 
 /*
@@ -42,7 +127,7 @@ request_noop(const char *server, const char *port, const char *user)
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	TRY(t = imap_noop(s));
+	TRY(t = send_request(s, "NOOP"));
 	TRY(r = response_generic(s, t));
 
 	return r;
@@ -57,11 +142,11 @@ int
 request_login(const char *server, const char *port, const char *ssl,
     const char *user, const char *pass)
 {
-	int r = -1, rg = -1;
+	int t, r = -1, rg = -1;
 	session *s = NULL;
 
 	if ((s = session_find(server, port, user)) && s->socket != -1)
-		return STATUS_RESPONSE_NONE;
+		return STATUS_NONE;
 
 	if (!s) {
 		s = session_new();
@@ -83,60 +168,87 @@ request_login(const char *server, const char *port, const char *ssl,
 	if ((rg = response_greeting(s)) == -1)
 		goto fail;
 
-	if (opts.debug)
-		if (response_generic(s, imap_noop(s)) == -1)
+	if (opts.debug) {
+		t = send_request(s, "NOOP");
+		if (response_generic(s, t) == -1)
 			goto fail;
+	}
 
-	if (response_capability(s, imap_capability(s)) == -1)
+	t = send_request(s, "CAPABILITY");
+	if (response_capability(s, t) == -1)
 		goto fail;
 
 #ifndef NO_SSLTLS
 	if (!ssl && s->capabilities & CAPABILITY_STARTTLS &&
-	    get_option_boolean("starttls"))
-		switch (response_generic(s, imap_starttls(s))) {
-		case STATUS_RESPONSE_OK:
+	    get_option_boolean("starttls")) {
+		t = send_request(s, "STARTTLS");
+		switch (response_generic(s, t)) {
+		case STATUS_OK:
 			if (open_secure_connection(s) == -1)
 				goto fail;
-			if (response_capability(s, imap_capability(s)) == -1)
+			t = send_request(s, "CAPABILITY");
+			if (response_capability(s, t) == -1)
 				goto fail;
 			break;
 		case -1:
 			goto fail;
 			break;
 		}
+	}
 #endif
 
-	if (rg != STATUS_RESPONSE_PREAUTH) {
+	if (rg != STATUS_PREAUTH) {
 #ifndef NO_CRAMMD5
 		if (s->capabilities & CAPABILITY_CRAMMD5 &&
-		    get_option_boolean("crammd5"))
-			if ((r = auth_cram_md5(s, user, pass)) == -1)
+		    get_option_boolean("crammd5")) {
+			unsigned char *in, *out;
+			if ((t = send_request(s, "AUTHENTICATE CRAM-MD5"))
+			    == -1)
 				goto fail;
+			if (response_authenticate(s, t, &in) ==
+			    STATUS_CONTINUE) {
+				if ((out = auth_cram_md5(user, pass, in)) == NULL)
+					goto fail;
+				send_continuation(s, (char *)(out),
+				    strlen((char *)(out)));
+				xfree(out);
+				if ((r = response_generic(s, t)) == -1)
+					goto fail;
+			} else
+				goto fail;
+		}
 #endif
-		if (r != STATUS_RESPONSE_OK &&
-		    (r = response_generic(s, imap_login(s, user, pass))) == -1)
-			goto fail;
+		if (r != STATUS_OK) {
+			t = send_request(s, "LOGIN \"%s\" \"%s\"", user, pass);
+			if ((r = response_generic(s, t)) == -1)
+				goto fail;
+		}
 
-		if (r == STATUS_RESPONSE_NO) {
+		if (r == STATUS_NO) {
 			error("username %s or password rejected at %s\n",
 			    user, server);
 			goto fail;
 		}
 	} else {
-		r = STATUS_RESPONSE_PREAUTH;
+		r = STATUS_PREAUTH;
 	}
 
-	if (response_capability(s, imap_capability(s)) == -1)
+	t = send_request(s, "CAPABILITY");
+	if (response_capability(s, t) == -1)
 		goto fail;
 
 	if (s->capabilities & CAPABILITY_NAMESPACE &&
-	    get_option_boolean("namespace"))
-		if (response_namespace(s, imap_namespace(s)) == -1)
+	    get_option_boolean("namespace")) {
+		t = send_request(s, "NAMESPACE");
+		if (response_namespace(s, t) == -1)
 			goto fail;
+	}
 
-	if (s->selected)
-		if (response_select(s, imap_select(s, s->selected)) == -1)
+	if (s->selected) {
+		t = send_request(s, "SELECT \"%s\"", s->selected);
+		if (response_select(s, t) == -1)
 			goto fail;
+	}
 
 	return r;
 fail:
@@ -153,13 +265,14 @@ fail:
 int
 request_logout(const char *server, const char *port, const char *user)
 {
-	int r;
+	int t, r;
 	session *s;
 
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	r = response_generic(s, imap_logout(s));
+	t = send_request(s, "LOGOUT");
+	r = response_generic(s, t);
 
 	close_connection(s);
 	session_destroy(s);
@@ -186,10 +299,11 @@ request_status(const char *server, const char *port, const char *user,
 	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
 
 	if (s->protocol == PROTOCOL_IMAP4REV1) {
-		TRY(t = imap_status(s, m, "MESSAGES RECENT UNSEEN UIDNEXT"));
+		TRY(t = send_request(s,
+		    "STATUS \"%s\" (MESSAGES RECENT UNSEEN UIDNEXT)", m));
 		TRY(r = response_status(s, t, exists, recent, unseen, uidnext));
 	} else {
-		TRY(t = imap_examine(s, m));
+		TRY(t = send_request(s, "EXAMINE \"%s\"", m));
 		TRY(r = response_examine(s, t, exists, recent));
 	}
 
@@ -213,10 +327,10 @@ request_select(const char *server, const char *port, const char *user,
 
 	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
 
-	TRY(t = imap_select(s, m));
+	TRY(t = send_request(s, "SELECT \"%s\"", m));
 	TRY(r = response_select(s, t));
 
-	if (r == STATUS_RESPONSE_OK) {
+	if (r == STATUS_OK) {
 		if (s && s->selected)
 			xfree(s->selected);
 		s->selected = xstrdup(m);
@@ -238,10 +352,10 @@ request_close(const char *server, const char *port, const char *user)
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	TRY(t = imap_close(s));
+	TRY(t = send_request(s, "CLOSE"));
 	TRY(r = response_generic(s, t));
 
-	if (r == STATUS_RESPONSE_OK && s->selected) {
+	if (r == STATUS_OK && s->selected) {
 		xfree(s->selected);
 		s->selected = NULL;
 	}
@@ -262,7 +376,7 @@ request_expunge(const char *server, const char *port, const char *user)
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	TRY(t = imap_expunge(s));
+	TRY(t = send_request(s, "EXPUNGE"));
 	TRY(r = response_generic(s, t));
 
 	return r;
@@ -285,7 +399,7 @@ request_list(const char *server, const char *port, const char *user,
 
 	n = apply_namespace(name, s->ns.prefix, s->ns.delim);
 	
-	TRY(t = imap_list(s, refer, n));
+	TRY(t = send_request(s, "LIST \"%s\" \"%s\"", refer, n));
 	TRY(r = response_list(s, t, mboxs, folders));
 
 	return r;
@@ -308,7 +422,7 @@ request_lsub(const char *server, const char *port, const char *user,
 
 	n = apply_namespace(name, s->ns.prefix, s->ns.delim);
 
-	TRY(t = imap_lsub(s, refer, n));
+	TRY(t = send_request(s, "LSUB \"%s\" \"%s\"", refer, n));
 	TRY(r = response_list(s, t, mboxs, folders));
 
 	return r;
@@ -328,7 +442,12 @@ request_search(const char *server, const char *port, const char *user,
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	TRY(t = imap_search(s, charset, criteria));
+	if (charset != NULL && *charset != '\0') {
+		TRY(t = send_request(s, "UID SEARCH CHARSET \"%s\" %s", charset,
+		    criteria));
+	} else {
+		TRY(t = send_request(s, "UID SEARCH %s", criteria));
+	}
 	TRY(r = response_search(s, t, mesgs));
 
 	return r;
@@ -348,7 +467,7 @@ request_fetchfast(const char *server, const char *port, const char *user,
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	TRY(t = imap_fetch(s, mesg, "FAST"));
+	TRY(t = send_request(s, "UID FETCH %s FAST", mesg));
 	TRY(r = response_fetchfast(s, t, flags, date, size));
 
 	return r;
@@ -368,7 +487,7 @@ request_fetchflags(const char *server, const char *port, const char *user,
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	TRY(t = imap_fetch(s, mesg, "FLAGS"));
+	TRY(t = send_request(s, "UID FETCH %s FLAGS", mesg));
 	TRY(r = response_fetchflags(s, t, flags));
 
 	return r;
@@ -388,7 +507,7 @@ request_fetchdate(const char *server, const char *port, const char *user,
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	TRY(t = imap_fetch(s, mesg, "INTERNALDATE"));
+	TRY(t = send_request(s, "UID FETCH %s INTERNALDATE", mesg));
 	TRY(r = response_fetchdate(s, t, date));
 
 	return r;
@@ -406,7 +525,7 @@ request_fetchsize(const char *server, const char *port, const char *user,
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	TRY(t = imap_fetch(s, mesg, "RFC822.SIZE"));
+	TRY(t = send_request(s, "UID FETCH %s RFC822.SIZE", mesg));
 	TRY(r = response_fetchsize(s, t, size));
 
 	return r;
@@ -426,7 +545,7 @@ request_fetchstructure(const char *server, const char *port, const char *user,
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	TRY(t = imap_fetch(s, mesg, "BODYSTRUCTURE"));
+	TRY(t = send_request(s, "UID FETCH %s BODYSTRUCTURE", mesg));
 	TRY(r = response_fetchstructure(s, t, structure));
 
 	return r;
@@ -446,7 +565,7 @@ request_fetchheader(const char *server, const char *port, const char *user,
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	TRY(t = imap_fetch(s, mesg, "BODY.PEEK[HEADER]"));
+	TRY(t = send_request(s, "UID FETCH %s BODY.PEEK[HEADER]", mesg));
 	TRY(r = response_fetchbody(s, t, header, len));
 
 	return r;
@@ -466,7 +585,7 @@ request_fetchtext(const char *server, const char *port, const char *user,
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	TRY(t = imap_fetch(s, mesg, "BODY.PEEK[TEXT]"));
+	TRY(t = send_request(s, "UID FETCH %s BODY.PEEK[TEXT]", mesg));
 	TRY(r = response_fetchbody(s, t, text, len));
 
 	return r;
@@ -494,7 +613,7 @@ request_fetchfields(const char *server, const char *port, const char *user,
 
 		snprintf(f, n, "%s%s%s", "BODY.PEEK[HEADER.FIELDS (",
 		    headerfields, ")]");
-		TRY(t = imap_fetch(s, mesg, f));
+		TRY(t = send_request(s, "UID FETCH %s %s", mesg, f));
 	}
 	TRY(r = response_fetchbody(s, t, fields, len));
 
@@ -521,7 +640,7 @@ request_fetchpart(const char *server, const char *port, const char *user,
 		char f[n];
 
 		snprintf(f, n, "%s%s%s", "BODY.PEEK[", part, "]");
-		TRY(t = imap_fetch(s, mesg, f));
+		TRY(t = send_request(s, "UID FETCH %s %s", mesg, f));
 	}
 	TRY(r = response_fetchbody(s, t, bodypart, len));
 
@@ -542,11 +661,13 @@ request_store(const char *server, const char *port, const char *user,
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-	TRY(t = imap_store(s, mesg, mode, flags));
+	TRY(t = send_request(s, "UID STORE %s %sFLAGS.SILENT (%s)", mesg, 
+	    (!strncasecmp(mode, "add", 3) ? "+" :
+	    !strncasecmp(mode, "remove", 6) ? "-" : ""), flags));
 	TRY(r = response_generic(s, t));
 
 	if (xstrcasestr(flags, "\\Deleted") && get_option_boolean("expunge")) {
-		TRY(t = imap_expunge(s));
+		TRY(t = send_request(s, "EXPUNGE"));
 		TRY(response_generic(s, t));
 	}
 
@@ -571,15 +692,15 @@ request_copy(const char *server, const char *port, const char *user,
 	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
 
 	do {
-		TRY(t = imap_copy(s, mesg, m));
+		TRY(t = send_request(s, "UID COPY %s \"%s\"", mesg, m));
 		TRY(r = response_generic(s, t));
 		switch (r) {
-		case STATUS_RESPONSE_TRYCREATE:
-			TRY(t = imap_create(s, m));
+		case STATUS_TRYCREATE:
+			TRY(t = send_request(s, "CREATE \"%s\"", m));
 			TRY(response_generic(s, t));
 
 			if (get_option_boolean("subscribe")) {
-				TRY(t = imap_subscribe(s, m));
+				TRY(t = send_request(s, "SUBSCRIBE \"%s\"", m));
 				TRY(response_generic(s, t));
 			}
 			break;
@@ -587,7 +708,7 @@ request_copy(const char *server, const char *port, const char *user,
 			return -1;
 			break;
 		}
-	} while (r == STATUS_RESPONSE_TRYCREATE);
+	} while (r == STATUS_TRYCREATE);
 
 	return r;
 }
@@ -611,20 +732,23 @@ request_append(const char *server, const char *port, const char *user,
 	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
 
 	do {
-		TRY(t = imap_append(s, m, flags, date, mesglen));
+		TRY(t = send_request(s, "APPEND \"%s\"%s%s%s%s%s%s {%d}", m,
+			(flags ? " (" : ""), (flags ? flags : ""),
+			(flags ? ")" : ""), (date ? " \"" : ""),
+			(date ? date : ""), (date ? "\"" : ""), mesglen));
 		TRY(r = response_continuation(s));
 
 		switch (r) {
-		case STATUS_RESPONSE_CONTINUE:
-			TRY(imap_continuation(s, mesg, mesglen)); 
+		case STATUS_CONTINUE:
+			TRY(send_continuation(s, mesg, mesglen)); 
 			TRY(r = response_generic(s, t));
 			break;
-		case STATUS_RESPONSE_TRYCREATE:
-			TRY(t = imap_create(s, m));
+		case STATUS_TRYCREATE:
+			TRY(t = send_request(s, "CREATE \"%s\"", m));
 			TRY(response_generic(s, t));
 
 			if (get_option_boolean("subscribe")) {
-				TRY(t = imap_subscribe(s, m));
+				TRY(t = send_request(s, "SUBSCRIBE \"%s\"", m));
 				TRY(response_generic(s, t));
 			}
 			break;
@@ -632,7 +756,7 @@ request_append(const char *server, const char *port, const char *user,
 			return -1;
 			break;
 		}
-	} while (r == STATUS_RESPONSE_TRYCREATE);
+	} while (r == STATUS_TRYCREATE);
 
 	return r;
 }
@@ -654,7 +778,7 @@ request_create(const char *server, const char *port, const char *user,
 
 	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
 
-	TRY(t = imap_create(s, m));
+	TRY(t = send_request(s, "CREATE \"%s\"", m));
 	TRY(r = response_generic(s, t));
 
 	return r;
@@ -677,7 +801,7 @@ request_delete(const char *server, const char *port, const char *user,
 
 	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
 
-	TRY(t = imap_delete(s, m));
+	TRY(t = send_request(s, "DELETE \"%s\"", m));
 	TRY(r = response_generic(s, t));
 
 	return r;
@@ -701,7 +825,7 @@ request_rename(const char *server, const char *port, const char *user,
 	o = xstrdup(apply_namespace(oldmbox, s->ns.prefix, s->ns.delim));
 	n = xstrdup(apply_namespace(newmbox, s->ns.prefix, s->ns.delim));
 
-	TRY(t = imap_rename(s, o, n));
+	TRY(t = send_request(s, "RENAME \"%s\" \"%s\"", o, n));
 	TRY(r = response_generic(s, t));
 
 	return r;
@@ -724,7 +848,7 @@ request_subscribe(const char *server, const char *port, const char *user,
 
 	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
 
-	TRY(t = imap_subscribe(s, m));
+	TRY(t = send_request(s, "SUBSCRIBE \"%s\"", m));
 	TRY(r = response_generic(s, t));
 
 	return r;
@@ -747,7 +871,7 @@ request_unsubscribe(const char *server, const char *port, const char *user,
 
 	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
 
-	TRY(t = imap_unsubscribe(s, m));
+	TRY(t = send_request(s, "UNSUBSCRIBE \"%s\"", m));
 	TRY(r = response_generic(s, t));
 
 	return r;
@@ -763,21 +887,20 @@ request_idle(const char *server, const char *port, const char *user)
 	if (!(s = session_find(server, port, user)))
 		return -1;
 
-
 	if (!(s->capabilities & CAPABILITY_IDLE))
 		return -1;
 
 	do {
 		ri = 0;
 
-		TRY(t = imap_idle(s));
+		TRY(t = send_request(s, "IDLE"));
 		TRY(r = response_continuation(s));
-		if (r == STATUS_RESPONSE_CONTINUE) {
+		if (r == STATUS_CONTINUE) {
 			TRY(ri = response_idle(s, t));
-			TRY(imap_done(s));
+			TRY(send_continuation(s, "DONE", strlen("DONE")));
 			TRY(r = response_generic(s, t));
 		}
-	} while (ri == STATUS_RESPONSE_TIMEOUT);
+	} while (ri == STATUS_TIMEOUT);
 
 	return r;
 }

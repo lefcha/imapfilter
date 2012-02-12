@@ -37,17 +37,17 @@
 #define CAPABILITY_IDLE			0x10
 
 /* Status responses and response codes. */
-#define STATUS_RESPONSE_NONE		0
-#define STATUS_RESPONSE_OK		1
-#define STATUS_RESPONSE_NO		2
-#define STATUS_RESPONSE_BAD		3
-#define STATUS_RESPONSE_UNTAGGED	4
-#define STATUS_RESPONSE_CONTINUE	5
-#define STATUS_RESPONSE_BYE		6
-#define STATUS_RESPONSE_PREAUTH		7
-#define STATUS_RESPONSE_READONLY	8
-#define STATUS_RESPONSE_TRYCREATE	9
-#define STATUS_RESPONSE_TIMEOUT		10
+#define STATUS_NONE		0
+#define STATUS_OK		1
+#define STATUS_NO		2
+#define STATUS_BAD		3
+#define STATUS_UNTAGGED		4
+#define STATUS_CONTINUE		5
+#define STATUS_BYE		6
+#define STATUS_PREAUTH		7
+#define STATUS_READONLY		8
+#define STATUS_TRYCREATE	9
+#define STATUS_TIMEOUT		10
 
 /* Initial buffer size for input, output and namespace buffers. */
 #define INPUT_BUF			4096
@@ -80,7 +80,8 @@ typedef struct environment {
 
 /*	auth.c		*/
 #ifndef NO_CRAMMD5
-int auth_cram_md5(session *ssn, const char *user, const char *pass);
+unsigned char *auth_cram_md5(const char *user, const char *pass,
+    unsigned char *chal);
 #endif
 
 /*	cert.c		*/
@@ -98,40 +99,6 @@ int exists_dir(char *fname);
 int create_file(char *fname, mode_t mode);
 int get_pathmax(void);
 char *get_filepath(char *fname);
-
-/*	imap.c		*/
-int imap_continuation(session *ssn, const char *cont, size_t len);
-int imap_capability(session *ssn);
-int imap_noop(session *ssn);
-int imap_logout(session *ssn);
-#ifndef NO_SSLTLS
-int imap_starttls(session *ssn);
-#endif
-int imap_authenticate(session *ssn, const char *auth);
-int imap_login(session *ssn, const char *user, const char *pass);
-int imap_select(session *ssn, const char *mbox);
-int imap_examine(session *ssn, const char *mbox);
-int imap_create(session *ssn, const char *mbox);
-int imap_delete(session *ssn, const char *mbox);
-int imap_rename(session *ssn, char *oldmbox, char *newmbox);
-int imap_subscribe(session *ssn, const char *mbox);
-int imap_unsubscribe(session *ssn, const char *mbox);
-int imap_list(session *ssn, const char *refer, const char *name);
-int imap_lsub(session *ssn, const char *refer, const char *name);
-int imap_status(session *ssn, const char *mbox, const char *items);
-int imap_append(session *ssn, const char *mbox, const char *flags,
-    const char *date, unsigned int size);
-int imap_check(session *ssn);
-int imap_close(session *ssn);
-int imap_expunge(session *ssn);
-int imap_search(session *ssn, const char *charset, const char *criteria);
-int imap_fetch(session *ssn, const char *mesg, const char *items);
-int imap_store(session *ssn, const char *mesg, const char *mode,
-    const char *flags);
-int imap_copy(session *ssn, const char *mesg, const char *mbox);
-int imap_namespace(session *ssn);
-int imap_idle(session *ssn);
-int imap_done(session *ssn);
 
 /*	log.c		*/
 void verbose(const char *info,...);
@@ -235,7 +202,6 @@ int request_subscribe(const char *server, const char *port, const char *user,
 int request_unsubscribe(const char *server, const char *port, const char *user,
     const char *mbox);
 int request_idle(const char *server, const char *port, const char *user);
-
 
 /*	response.c	*/
 int response_generic(session *ssn, int tag);

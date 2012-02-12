@@ -121,7 +121,7 @@ main(int argc, char *argv[])
 			s = l->data;
 			l = l->next;
 
-			response_generic(s, imap_logout(s));
+			request_logout(s->server, s->username, s->password);
 			close_connection(s);
 			session_destroy(s);
 		}

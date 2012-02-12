@@ -101,8 +101,8 @@ open_secure_connection(session *ssn)
 
 	method = NULL;
 
-	if (!strncasecmp(ssn->ssl, "ssl3", 4) ||
-	    !strncasecmp(ssn->ssl, "ssl2", 4))
+	if (ssn->ssl && (!strncasecmp(ssn->ssl, "ssl3", 4) ||
+	    !strncasecmp(ssn->ssl, "ssl2", 4)))
 		method = SSLv23_client_method();
 	else
 		method = TLSv1_client_method();

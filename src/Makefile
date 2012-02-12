@@ -15,8 +15,8 @@ LUA = common.lua set.lua regex.lua account.lua mailbox.lua message.lua \
       options.lua auxiliary.lua deprecated.lua
 
 BIN = imapfilter
-OBJ = auth.o buffer.o cert.o core.o file.o imap.o imapfilter.o list.o log.o \
-      lua.o memory.o misc.o namespace.o pcre.o regexp.o request.o response.o \
+OBJ = auth.o buffer.o cert.o core.o file.o imapfilter.o list.o log.o lua.o \
+      memory.o misc.o namespace.o pcre.o regexp.o request.o response.o \
       session.o signal.o socket.o system.o
 
 all: $(BIN)
@@ -29,11 +29,9 @@ $(BIN): $(OBJ)
 	$(CC) -o $(BIN) $(LDFLAGS) $(OBJ) $(LIBS)
 
 $(OBJ): imapfilter.h
-auth.o: session.h
 buffer.o: buffer.h 
 cert.o: pathnames.h session.h
 file.o: pathnames.h
-imap.o: buffer.h session.h
 imapfilter.o: buffer.h list.h pathnames.h regexp.h session.h version.h
 list.o: list.h
 log.o: list.h pathnames.h session.h

@@ -110,7 +110,7 @@ ifcore_noop(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	return 1;
 }
@@ -145,8 +145,8 @@ ifcore_login(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK ||
-	    r == STATUS_RESPONSE_PREAUTH));
+	lua_pushboolean(lua, (r == STATUS_OK ||
+	    r == STATUS_PREAUTH));
 
 	return 1;
 }
@@ -179,7 +179,7 @@ ifcore_logout(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	return 1;
 }
@@ -219,7 +219,7 @@ ifcore_status(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 	lua_pushnumber(lua, (lua_Number) (exists));
 	lua_pushnumber(lua, (lua_Number) (recent));
 	lua_pushnumber(lua, (lua_Number) (unseen));
@@ -259,7 +259,7 @@ ifcore_select(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	return 1;
 }
@@ -292,7 +292,7 @@ ifcore_close(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	return 1;
 }
@@ -325,7 +325,7 @@ ifcore_expunge(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	return 1;
 }
@@ -366,7 +366,7 @@ ifcore_list(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	if (!mboxs && !folders)
 		return 1;
@@ -416,7 +416,7 @@ ifcore_lsub(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	if (!mboxs)
 		return 1;
@@ -462,7 +462,7 @@ ifcore_search(lua_State *lua)
 
 	lua_pop(lua, 3);
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	if (!mesgs)
 		return 1;
@@ -509,7 +509,7 @@ ifcore_fetchfast(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	if (!flags || !date || !size)
 		return 1;
@@ -559,7 +559,7 @@ ifcore_fetchflags(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	if (!flags)
 		return 1;
@@ -605,7 +605,7 @@ ifcore_fetchdate(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	if (!date)
 		return 1;
@@ -648,7 +648,7 @@ ifcore_fetchsize(lua_State *lua)
 
 	lua_pop(lua, 2);
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	if (!size)
 		return 1;
@@ -694,7 +694,7 @@ ifcore_fetchstructure(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	if (!structure)
 		return 1;
@@ -740,7 +740,7 @@ ifcore_fetchheader(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	if (!header)
 		return 1;
@@ -786,7 +786,7 @@ ifcore_fetchtext(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	if (!text)
 		return 1;
@@ -834,7 +834,7 @@ ifcore_fetchfields(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	if (!fields)
 		return 1;
@@ -882,7 +882,7 @@ ifcore_fetchpart(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	if (!part)
 		return 1;
@@ -926,7 +926,7 @@ ifcore_store(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	return 1;
 }
@@ -963,7 +963,7 @@ ifcore_copy(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	return 1;
 }
@@ -1012,7 +1012,7 @@ ifcore_append(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	return 1;
 }
@@ -1048,7 +1048,7 @@ ifcore_create(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	return 1;
 }
@@ -1084,7 +1084,7 @@ ifcore_delete(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	return 1;
 }
@@ -1121,7 +1121,7 @@ ifcore_rename(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	return 1;
 }
@@ -1157,7 +1157,7 @@ ifcore_subscribe(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	return 1;
 }
@@ -1193,7 +1193,7 @@ ifcore_unsubscribe(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	return 1;
 }
@@ -1226,7 +1226,7 @@ ifcore_idle(lua_State *lua)
 	if (r == -1)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_RESPONSE_OK));
+	lua_pushboolean(lua, (r == STATUS_OK));
 
 	return 1;
 }
