@@ -29,7 +29,7 @@ int send_continuation(session *s, const char *data, size_t len);
 		    s->ssl,			\
 		    s->username,		\
 		    s->password) != -1)		\
-			F;			\
+			return STATUS_NONE;	\
 		else				\
 			return -1;		\
 		break;				\
