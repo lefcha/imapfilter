@@ -72,10 +72,6 @@ start_lua()
 	    lua_pcall(lua, 0, LUA_MULTRET, 0))
 		fatal(ERROR_CONFIG, "%s\n", lua_tostring(lua, -1));
 
-	if (luaL_loadfile(lua, PATHNAME_DEPRECATED) ||
-	    lua_pcall(lua, 0, LUA_MULTRET, 0))
-		fatal(ERROR_CONFIG, "%s\n", lua_tostring(lua, -1));
-
 	if (opts.oneline != NULL) {
 		if (luaL_loadbuffer(lua, opts.oneline, strlen(opts.oneline),
 		    "=<command line>") || lua_pcall(lua, 0, LUA_MULTRET, 0))
@@ -203,72 +199,6 @@ get_option_string(const char *opt)
 
 
 /*
- * Get the type of a table's element.
- */
-int
-get_table_type(const char *key)
-{
-	int t;
-
-	lua_pushstring(lua, key);
-	lua_gettable(lua, -2);
-	t = lua_type(lua, -1);
-	lua_pop(lua, 1);
-
-	return t;
-}
-
-
-/*
- * Get the value of a table's element of type number.
- */
-lua_Number
-get_table_number(const char *key)
-{
-	lua_Number n;
-
-	lua_pushstring(lua, key);
-	lua_gettable(lua, -2);
-	n = lua_tonumber(lua, -1);
-	lua_pop(lua, 1);
-
-	return n;
-}
-
-
-/*
- * Get the value of a table's element of type string.
- */
-const char *
-get_table_string(const char *key)
-{
-	const char *s;
-
-	lua_pushstring(lua, key);
-	lua_gettable(lua, -2);
-	s = lua_tostring(lua, -1);
-	lua_pop(lua, 1);
-
-	return s;
-}
-
-
-/*
- * Set a table's element value to nil.
- */
-int
-set_table_nil(const char *key)
-{
-
-	lua_pushstring(lua, key);
-	lua_pushnil(lua);
-	lua_settable(lua, -3);
-
-	return 0;
-}
-
-
-/*
  * Set a table's element value to the specified boolean.
  */
 int
@@ -292,21 +222,6 @@ set_table_number(const char *key, lua_Number value)
 
 	lua_pushstring(lua, key);
 	lua_pushnumber(lua, value);
-	lua_settable(lua, -3);
-
-	return 0;
-}
-
-
-/*
- * Set a table's element value to the specified string.
- */
-int
-set_table_string(const char *key, const char *value)
-{
-
-	lua_pushstring(lua, key);
-	lua_pushstring(lua, value);
 	lua_settable(lua, -3);
 
 	return 0;

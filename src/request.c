@@ -17,41 +17,37 @@ static int tag = 0x1000;	/* Every IMAP command is prefixed with a
 				 * unique [:alnum:] string. */
 
 
-int send_request(session *s, const char *fmt,...);
-int send_continuation(session *s, const char *data, size_t len);
+int send_request(session *ssn, const char *fmt,...);
+int send_continuation(session *ssn, const char *data, size_t len);
 
 
-#define TRY(F)					\
-	switch ((F)) {				\
-	case -1:				\
-		if (request_login(s->server,	\
-		    s->port,			\
-		    s->ssl,			\
-		    s->username,		\
-		    s->password) != -1)		\
-			return STATUS_NONE;	\
-		else				\
-			return -1;		\
-		break;				\
-	case STATUS_BYE:			\
-		close_connection(s);		\
-		session_destroy(s);		\
-		return -1;			\
-		break;				\
-	}					\
+#define TRY(F)								     \
+	switch ((F)) {							     \
+	case -1:							     \
+		if (request_login(&ssn, NULL, NULL, NULL, NULL, NULL) != -1) \
+			return STATUS_NONE;				     \
+		else							     \
+			return -1;					     \
+		break;							     \
+	case STATUS_BYE:						     \
+		close_connection(ssn);					     \
+		session_destroy(ssn);					     \
+		return -1;						     \
+		break;							     \
+	}
 
 
 /*
  * Sends to server data; a command.
  */
 int
-send_request(session *s, const char *fmt,...)
+send_request(session *ssn, const char *fmt,...)
 {
 	int n;
 	va_list args;
 	int t = tag;
 
-	if (s->socket == -1)
+	if (ssn->socket == -1)
 		return -1;
 
 	buffer_reset(&obuf);
@@ -72,17 +68,17 @@ send_request(session *s, const char *fmt,...)
 	obuf.len = strlen(obuf.data);
 
 	if (!strncasecmp(fmt, "LOGIN", strlen("LOGIN"))) {
-		debug("sending command (%d):\n\n%.*s*\r\n\n", s->socket,
-		    obuf.len - strlen(s->password) - strlen("\"\"\r\n"),
+		debug("sending command (%d):\n\n%.*s*\r\n\n", ssn->socket,
+		    obuf.len - strlen(ssn->password) - strlen("\"\"\r\n"),
 		    obuf.data);
-		verbose("C (%d): %.*s*\r\n", s->socket, obuf.len -
-		    strlen(s->password) - strlen("\"\"\r\n"),  obuf.data);
+		verbose("C (%d): %.*s*\r\n", ssn->socket, obuf.len -
+		    strlen(ssn->password) - strlen("\"\"\r\n"),  obuf.data);
 	} else {
-		debug("sending command (%d):\n\n%s\n", s->socket, obuf.data);
-		verbose("C (%d): %s", s->socket, obuf.data);
+		debug("sending command (%d):\n\n%s\n", ssn->socket, obuf.data);
+		verbose("C (%d): %s", ssn->socket, obuf.data);
 	}
 
-	if (socket_write(s, obuf.data, obuf.len) == -1)
+	if (socket_write(ssn, obuf.data, obuf.len) == -1)
 		return -1;
 
 	if (tag == 0xFFFF)	/* Tag always between 0x1000 and 0xFFFF. */
@@ -96,20 +92,20 @@ send_request(session *s, const char *fmt,...)
  * Sends a response to a command continuation request.
  */
 int
-send_continuation(session *s, const char *data, size_t len)
+send_continuation(session *ssn, const char *data, size_t len)
 {
 
-	if (s->socket == -1)
+	if (ssn->socket == -1)
 		return -1;
 
-	if (socket_write(s, data, len) == -1 ||
-	    socket_write(s, "\r\n", strlen("\r\n")) == -1)
+	if (socket_write(ssn, data, len) == -1 ||
+	    socket_write(ssn, "\r\n", strlen("\r\n")) == -1)
 		return -1;
 
 	if (opts.debug) {
 		unsigned int i;
 
-		debug("sending continuation data (%d):\n\n", s->socket);
+		debug("sending continuation data (%d):\n\n", ssn->socket);
 		
 		for (i = 0; i < len; i++)
 			debugc(data[i]);
@@ -126,16 +122,12 @@ send_continuation(session *s, const char *data, size_t len)
  * Reset any inactivity autologout timer on the server.
  */
 int
-request_noop(const char *server, const char *port, const char *user)
+request_noop(session *ssn)
 {
 	int t, r;
-	session *s;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
-
-	TRY(t = send_request(s, "NOOP"));
-	TRY(r = response_generic(s, t));
+	TRY(t = send_request(ssn, "NOOP"));
+	TRY(r = response_generic(ssn, t));
 
 	return r;
 }
@@ -146,55 +138,55 @@ request_noop(const char *server, const char *port, const char *user)
  * the namespace of the mailboxes.
  */
 int
-request_login(const char *server, const char *port, const char *ssl,
-    const char *user, const char *pass)
+request_login(session **ssnptr, const char *server, const char *port, const
+    char *ssl, const char *user, const char *pass)
 {
 	int t, r = -1, rg = -1;
-	session *s = NULL;
-
-	if ((s = session_find(server, port, user)) && s->socket != -1)
+	session *ssn = *ssnptr;
+	
+	if (*ssnptr && (*ssnptr)->socket != -1)
 		return STATUS_NONE;
 
-	if (!s) {
-		s = session_new();
+	if (!*ssnptr) {
+		ssn = *ssnptr = session_new();
 
-		s->server = xstrdup(server);
-		s->port = xstrdup(port);
-		s->username = xstrdup(user);
-		s->password = xstrdup(pass);
+		ssn->server = xstrdup(server);
+		ssn->port = xstrdup(port);
+		ssn->username = xstrdup(user);
+		ssn->password = xstrdup(pass);
 
-		if (ssl && (!strncasecmp(ssl, "tls1", 4) ||
+		if ((!strncasecmp(ssl, "tls1", 4) ||
 		    !strncasecmp(ssl, "ssl3", 4) ||
-		    strncasecmp(ssl, "ssl2", 4)))
-			s->ssl = xstrdup(ssl);
+		    !strncasecmp(ssl, "ssl2", 4)))
+			ssn->ssl = xstrdup(ssl);
 	}
 
-	if (open_connection(s) == -1)
+	if (open_connection(ssn) == -1)
 		goto fail;
 
-	if ((rg = response_greeting(s)) == -1)
+	if ((rg = response_greeting(ssn)) == -1)
 		goto fail;
 
 	if (opts.debug) {
-		t = send_request(s, "NOOP");
-		if (response_generic(s, t) == -1)
+		t = send_request(ssn, "NOOP");
+		if (response_generic(ssn, t) == -1)
 			goto fail;
 	}
 
-	t = send_request(s, "CAPABILITY");
-	if (response_capability(s, t) == -1)
+	t = send_request(ssn, "CAPABILITY");
+	if (response_capability(ssn, t) == -1)
 		goto fail;
 
 #ifndef NO_SSLTLS
-	if (!ssl && s->capabilities & CAPABILITY_STARTTLS &&
+	if (!ssl && ssn->capabilities & CAPABILITY_STARTTLS &&
 	    get_option_boolean("starttls")) {
-		t = send_request(s, "STARTTLS");
-		switch (response_generic(s, t)) {
+		t = send_request(ssn, "STARTTLS");
+		switch (response_generic(ssn, t)) {
 		case STATUS_OK:
-			if (open_secure_connection(s) == -1)
+			if (open_secure_connection(ssn) == -1)
 				goto fail;
-			t = send_request(s, "CAPABILITY");
-			if (response_capability(s, t) == -1)
+			t = send_request(ssn, "CAPABILITY");
+			if (response_capability(ssn, t) == -1)
 				goto fail;
 			break;
 		case -1:
@@ -206,61 +198,62 @@ request_login(const char *server, const char *port, const char *ssl,
 
 	if (rg != STATUS_PREAUTH) {
 #ifndef NO_CRAMMD5
-		if (s->capabilities & CAPABILITY_CRAMMD5 &&
+		if (ssn->capabilities & CAPABILITY_CRAMMD5 &&
 		    get_option_boolean("crammd5")) {
 			unsigned char *in, *out;
-			if ((t = send_request(s, "AUTHENTICATE CRAM-MD5"))
+			if ((t = send_request(ssn, "AUTHENTICATE CRAM-MD5"))
 			    == -1)
 				goto fail;
-			if (response_authenticate(s, t, &in) ==
+			if (response_authenticate(ssn, t, &in) ==
 			    STATUS_CONTINUE) {
 				if ((out = auth_cram_md5(user, pass, in)) == NULL)
 					goto fail;
-				send_continuation(s, (char *)(out),
+				send_continuation(ssn, (char *)(out),
 				    strlen((char *)(out)));
 				xfree(out);
-				if ((r = response_generic(s, t)) == -1)
+				if ((r = response_generic(ssn, t)) == -1)
 					goto fail;
 			} else
 				goto fail;
 		}
 #endif
 		if (r != STATUS_OK) {
-			t = send_request(s, "LOGIN \"%s\" \"%s\"", user, pass);
-			if ((r = response_generic(s, t)) == -1)
+			t = send_request(ssn, "LOGIN \"%s\" \"%s\"", ssn->username,
+			    ssn->password);
+			if ((r = response_generic(ssn, t)) == -1)
 				goto fail;
 		}
 
 		if (r == STATUS_NO) {
 			error("username %s or password rejected at %s\n",
-			    user, server);
+			    ssn->username, ssn->server);
 			goto fail;
 		}
 	} else {
 		r = STATUS_PREAUTH;
 	}
 
-	t = send_request(s, "CAPABILITY");
-	if (response_capability(s, t) == -1)
+	t = send_request(ssn, "CAPABILITY");
+	if (response_capability(ssn, t) == -1)
 		goto fail;
 
-	if (s->capabilities & CAPABILITY_NAMESPACE &&
+	if (ssn->capabilities & CAPABILITY_NAMESPACE &&
 	    get_option_boolean("namespace")) {
-		t = send_request(s, "NAMESPACE");
-		if (response_namespace(s, t) == -1)
+		t = send_request(ssn, "NAMESPACE");
+		if (response_namespace(ssn, t) == -1)
 			goto fail;
 	}
 
-	if (s->selected) {
-		t = send_request(s, "SELECT \"%s\"", s->selected);
-		if (response_select(s, t) == -1)
+	if (ssn->selected) {
+		t = send_request(ssn, "SELECT \"%s\"", ssn->selected);
+		if (response_select(ssn, t) == -1)
 			goto fail;
 	}
 
 	return r;
 fail:
-	close_connection(s);
-	session_destroy(s);
+	close_connection(ssn);
+	session_destroy(ssn);
 
 	return -1;
 }
@@ -270,19 +263,15 @@ fail:
  * Logout from the IMAP server and disconnect from the server.
  */
 int
-request_logout(const char *server, const char *port, const char *user)
+request_logout(session *ssn)
 {
 	int t, r;
-	session *s;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
+	t = send_request(ssn, "LOGOUT");
+	r = response_generic(ssn, t);
 
-	t = send_request(s, "LOGOUT");
-	r = response_generic(s, t);
-
-	close_connection(s);
-	session_destroy(s);
+	close_connection(ssn);
+	session_destroy(ssn);
 
 	return r;
 }
@@ -292,26 +281,21 @@ request_logout(const char *server, const char *port, const char *user)
  * Get mailbox's status.
  */
 int
-request_status(const char *server, const char *port, const char *user,
-    const char *mbox, unsigned int *exists, unsigned int *recent,
-    unsigned int *unseen, unsigned int *uidnext)
+request_status(session *ssn, const char *mbox, unsigned int *exists, unsigned
+    int *recent, unsigned int *unseen, unsigned int *uidnext)
 {
 	int t, r;
-	session *s;
 	const char *m;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
+	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
 
-	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
-
-	if (s->protocol == PROTOCOL_IMAP4REV1) {
-		TRY(t = send_request(s,
+	if (ssn->protocol == PROTOCOL_IMAP4REV1) {
+		TRY(t = send_request(ssn,
 		    "STATUS \"%s\" (MESSAGES RECENT UNSEEN UIDNEXT)", m));
-		TRY(r = response_status(s, t, exists, recent, unseen, uidnext));
+		TRY(r = response_status(ssn, t, exists, recent, unseen, uidnext));
 	} else {
-		TRY(t = send_request(s, "EXAMINE \"%s\"", m));
-		TRY(r = response_examine(s, t, exists, recent));
+		TRY(t = send_request(ssn, "EXAMINE \"%s\"", m));
+		TRY(r = response_examine(ssn, t, exists, recent));
 	}
 
 	return r;
@@ -322,25 +306,21 @@ request_status(const char *server, const char *port, const char *user,
  * Open mailbox in read-write mode.
  */
 int
-request_select(const char *server, const char *port, const char *user,
+request_select(session *ssn,
     const char *mbox)
 {
 	int t, r;
-	session *s;
 	const char *m;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
+	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
 
-	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
-
-	TRY(t = send_request(s, "SELECT \"%s\"", m));
-	TRY(r = response_select(s, t));
+	TRY(t = send_request(ssn, "SELECT \"%s\"", m));
+	TRY(r = response_select(ssn, t));
 
 	if (r == STATUS_OK) {
-		if (s && s->selected)
-			xfree(s->selected);
-		s->selected = xstrdup(m);
+		if (ssn && ssn->selected)
+			xfree(ssn->selected);
+		ssn->selected = xstrdup(m);
 	}
 	
 	return r;
@@ -351,20 +331,16 @@ request_select(const char *server, const char *port, const char *user,
  * Close examined/selected mailbox.
  */
 int
-request_close(const char *server, const char *port, const char *user)
+request_close(session *ssn)
 {
 	int t, r;
-	session *s;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
+	TRY(t = send_request(ssn, "CLOSE"));
+	TRY(r = response_generic(ssn, t));
 
-	TRY(t = send_request(s, "CLOSE"));
-	TRY(r = response_generic(s, t));
-
-	if (r == STATUS_OK && s->selected) {
-		xfree(s->selected);
-		s->selected = NULL;
+	if (r == STATUS_OK && ssn->selected) {
+		xfree(ssn->selected);
+		ssn->selected = NULL;
 	}
 
 	return r;
@@ -375,16 +351,12 @@ request_close(const char *server, const char *port, const char *user)
  * Remove all messages marked for deletion from selected mailbox.
  */
 int
-request_expunge(const char *server, const char *port, const char *user)
+request_expunge(session *ssn)
 {
 	int t, r;
-	session *s;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
-
-	TRY(t = send_request(s, "EXPUNGE"));
-	TRY(r = response_generic(s, t));
+	TRY(t = send_request(ssn, "EXPUNGE"));
+	TRY(r = response_generic(ssn, t));
 
 	return r;
 }
@@ -394,20 +366,16 @@ request_expunge(const char *server, const char *port, const char *user)
  * List available mailboxes.
  */
 int
-request_list(const char *server, const char *port, const char *user,
-    const char *refer, const char *name, char **mboxs, char **folders)
+request_list(session *ssn, const char *refer, const char *name, char **mboxs,
+    char **folders)
 {
 	int t, r;
-	session *s;
 	const char *n;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
-
-	n = apply_namespace(name, s->ns.prefix, s->ns.delim);
+	n = apply_namespace(name, ssn->ns.prefix, ssn->ns.delim);
 	
-	TRY(t = send_request(s, "LIST \"%s\" \"%s\"", refer, n));
-	TRY(r = response_list(s, t, mboxs, folders));
+	TRY(t = send_request(ssn, "LIST \"%s\" \"%s\"", refer, n));
+	TRY(r = response_list(ssn, t, mboxs, folders));
 
 	return r;
 }
@@ -417,20 +385,16 @@ request_list(const char *server, const char *port, const char *user,
  * List subscribed mailboxes.
  */
 int
-request_lsub(const char *server, const char *port, const char *user,
-    const char *refer, const char *name, char **mboxs, char **folders)
+request_lsub(session *ssn, const char *refer, const char *name, char **mboxs,
+    char **folders)
 {
 	int t, r;
-	session *s;
 	const char *n;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
+	n = apply_namespace(name, ssn->ns.prefix, ssn->ns.delim);
 
-	n = apply_namespace(name, s->ns.prefix, s->ns.delim);
-
-	TRY(t = send_request(s, "LSUB \"%s\" \"%s\"", refer, n));
-	TRY(r = response_list(s, t, mboxs, folders));
+	TRY(t = send_request(ssn, "LSUB \"%s\" \"%s\"", refer, n));
+	TRY(r = response_list(ssn, t, mboxs, folders));
 
 	return r;
 }
@@ -440,22 +404,18 @@ request_lsub(const char *server, const char *port, const char *user,
  * Search selected mailbox according to the supplied search criteria.
  */
 int
-request_search(const char *server, const char *port, const char *user,
-    const char *criteria, const char *charset, char **mesgs)
+request_search(session *ssn, const char *criteria, const char *charset, char
+    **mesgs)
 {
 	int t, r;
-	session *s;
-
-	if (!(s = session_find(server, port, user)))
-		return -1;
 
 	if (charset != NULL && *charset != '\0') {
-		TRY(t = send_request(s, "UID SEARCH CHARSET \"%s\" %s", charset,
+		TRY(t = send_request(ssn, "UID SEARCH CHARSET \"%s\" %s", charset,
 		    criteria));
 	} else {
-		TRY(t = send_request(s, "UID SEARCH %s", criteria));
+		TRY(t = send_request(ssn, "UID SEARCH %s", criteria));
 	}
-	TRY(r = response_search(s, t, mesgs));
+	TRY(r = response_search(ssn, t, mesgs));
 
 	return r;
 }
@@ -465,17 +425,13 @@ request_search(const char *server, const char *port, const char *user,
  * Fetch the FLAGS, INTERNALDATE and RFC822.SIZE of the messages.
  */
 int
-request_fetchfast(const char *server, const char *port, const char *user,
-    const char *mesg, char **flags, char **date, char **size)
+request_fetchfast(session *ssn, const char *mesg, char **flags, char **date,
+    char **size)
 {
 	int t, r;
-	session *s;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
-
-	TRY(t = send_request(s, "UID FETCH %s FAST", mesg));
-	TRY(r = response_fetchfast(s, t, flags, date, size));
+	TRY(t = send_request(ssn, "UID FETCH %s FAST", mesg));
+	TRY(r = response_fetchfast(ssn, t, flags, date, size));
 
 	return r;
 }
@@ -485,17 +441,12 @@ request_fetchfast(const char *server, const char *port, const char *user,
  * Fetch the FLAGS of the messages.
  */
 int
-request_fetchflags(const char *server, const char *port, const char *user,
-    const char *mesg, char **flags)
+request_fetchflags(session *ssn, const char *mesg, char **flags)
 {
 	int t, r;
-	session *s;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
-
-	TRY(t = send_request(s, "UID FETCH %s FLAGS", mesg));
-	TRY(r = response_fetchflags(s, t, flags));
+	TRY(t = send_request(ssn, "UID FETCH %s FLAGS", mesg));
+	TRY(r = response_fetchflags(ssn, t, flags));
 
 	return r;
 }
@@ -505,17 +456,12 @@ request_fetchflags(const char *server, const char *port, const char *user,
  * Fetch the INTERNALDATE of the messages.
  */
 int
-request_fetchdate(const char *server, const char *port, const char *user,
-    const char *mesg, char **date)
+request_fetchdate(session *ssn, const char *mesg, char **date)
 {
 	int t, r;
-	session *s;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
-
-	TRY(t = send_request(s, "UID FETCH %s INTERNALDATE", mesg));
-	TRY(r = response_fetchdate(s, t, date));
+	TRY(t = send_request(ssn, "UID FETCH %s INTERNALDATE", mesg));
+	TRY(r = response_fetchdate(ssn, t, date));
 
 	return r;
 }
@@ -523,17 +469,12 @@ request_fetchdate(const char *server, const char *port, const char *user,
  * Fetch the RFC822.SIZE of the messages.
  */
 int
-request_fetchsize(const char *server, const char *port, const char *user,
-    const char *mesg, char **size)
+request_fetchsize(session *ssn, const char *mesg, char **size)
 {
 	int t, r;
-	session *s;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
-
-	TRY(t = send_request(s, "UID FETCH %s RFC822.SIZE", mesg));
-	TRY(r = response_fetchsize(s, t, size));
+	TRY(t = send_request(ssn, "UID FETCH %s RFC822.SIZE", mesg));
+	TRY(r = response_fetchsize(ssn, t, size));
 
 	return r;
 }
@@ -543,17 +484,12 @@ request_fetchsize(const char *server, const char *port, const char *user,
  * Fetch the body structure, ie. BODYSTRUCTURE, of the messages.
  */
 int
-request_fetchstructure(const char *server, const char *port, const char *user,
-    const char *mesg, char **structure)
+request_fetchstructure(session *ssn, const char *mesg, char **structure)
 {
 	int t, r;
-	session *s;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
-
-	TRY(t = send_request(s, "UID FETCH %s BODYSTRUCTURE", mesg));
-	TRY(r = response_fetchstructure(s, t, structure));
+	TRY(t = send_request(ssn, "UID FETCH %s BODYSTRUCTURE", mesg));
+	TRY(r = response_fetchstructure(ssn, t, structure));
 
 	return r;
 }
@@ -563,17 +499,12 @@ request_fetchstructure(const char *server, const char *port, const char *user,
  * Fetch the header, ie. BODY[HEADER], of the messages.
  */
 int
-request_fetchheader(const char *server, const char *port, const char *user,
-    const char *mesg, char **header, size_t *len)
+request_fetchheader(session *ssn, const char *mesg, char **header, size_t *len)
 {
 	int t, r;
-	session *s;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
-
-	TRY(t = send_request(s, "UID FETCH %s BODY.PEEK[HEADER]", mesg));
-	TRY(r = response_fetchbody(s, t, header, len));
+	TRY(t = send_request(ssn, "UID FETCH %s BODY.PEEK[HEADER]", mesg));
+	TRY(r = response_fetchbody(ssn, t, header, len));
 
 	return r;
 }
@@ -583,17 +514,12 @@ request_fetchheader(const char *server, const char *port, const char *user,
  * Fetch the text, ie. BODY[TEXT], of the messages.
  */
 int
-request_fetchtext(const char *server, const char *port, const char *user,
-    const char *mesg, char **text, size_t *len)
+request_fetchtext(session *ssn, const char *mesg, char **text, size_t *len)
 {
 	int t, r;
-	session *s;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
-
-	TRY(t = send_request(s, "UID FETCH %s BODY.PEEK[TEXT]", mesg));
-	TRY(r = response_fetchbody(s, t, text, len));
+	TRY(t = send_request(ssn, "UID FETCH %s BODY.PEEK[TEXT]", mesg));
+	TRY(r = response_fetchbody(ssn, t, text, len));
 
 	return r;
 }
@@ -604,14 +530,10 @@ request_fetchtext(const char *server, const char *port, const char *user,
  * the messages.
  */
 int
-request_fetchfields(const char *server, const char *port, const char *user,
-    const char *mesg, const char *headerfields, char **fields, size_t *len)
+request_fetchfields(session *ssn, const char *mesg, const char *headerfields,
+    char **fields, size_t *len)
 {
 	int t, r;
-	session *s;
-
-	if (!(s = session_find(server, port, user)))
-		return -1;
 
 	{
 		int n = strlen("BODY.PEEK[HEADER.FIELDS ()]") +
@@ -620,9 +542,9 @@ request_fetchfields(const char *server, const char *port, const char *user,
 
 		snprintf(f, n, "%s%s%s", "BODY.PEEK[HEADER.FIELDS (",
 		    headerfields, ")]");
-		TRY(t = send_request(s, "UID FETCH %s %s", mesg, f));
+		TRY(t = send_request(ssn, "UID FETCH %s %s", mesg, f));
 	}
-	TRY(r = response_fetchbody(s, t, fields, len));
+	TRY(r = response_fetchbody(ssn, t, fields, len));
 
 	return r;
 }
@@ -633,23 +555,19 @@ request_fetchfields(const char *server, const char *port, const char *user,
  * messages.
  */
 int
-request_fetchpart(const char *server, const char *port, const char *user,
-    const char *mesg, const char *part, char **bodypart, size_t *len)
+request_fetchpart(session *ssn, const char *mesg, const char *part, char
+    **bodypart, size_t *len)
 {
 	int t, r;
-	session *s;
-
-	if (!(s = session_find(server, port, user)))
-		return -1;
 
 	{
 		int n = strlen("BODY.PEEK[]") + strlen(part) + 1;
 		char f[n];
 
 		snprintf(f, n, "%s%s%s", "BODY.PEEK[", part, "]");
-		TRY(t = send_request(s, "UID FETCH %s %s", mesg, f));
+		TRY(t = send_request(ssn, "UID FETCH %s %s", mesg, f));
 	}
-	TRY(r = response_fetchbody(s, t, bodypart, len));
+	TRY(r = response_fetchbody(ssn, t, bodypart, len));
 
 	return r;
 }
@@ -659,23 +577,19 @@ request_fetchpart(const char *server, const char *port, const char *user,
  * Add, remove or replace the specified flags of the messages.
  */
 int
-request_store(const char *server, const char *port, const char *user,
-    const char *mesg, const char *mode, const char *flags)
+request_store(session *ssn, const char *mesg, const char *mode, const char
+    *flags)
 {
 	int t, r;
-	session *s;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
-
-	TRY(t = send_request(s, "UID STORE %s %sFLAGS.SILENT (%s)", mesg, 
+	TRY(t = send_request(ssn, "UID STORE %s %sFLAGS.SILENT (%s)", mesg, 
 	    (!strncasecmp(mode, "add", 3) ? "+" :
 	    !strncasecmp(mode, "remove", 6) ? "-" : ""), flags));
-	TRY(r = response_generic(s, t));
+	TRY(r = response_generic(ssn, t));
 
 	if (xstrcasestr(flags, "\\Deleted") && get_option_boolean("expunge")) {
-		TRY(t = send_request(s, "EXPUNGE"));
-		TRY(response_generic(s, t));
+		TRY(t = send_request(ssn, "EXPUNGE"));
+		TRY(response_generic(ssn, t));
 	}
 
 	return r;
@@ -686,29 +600,24 @@ request_store(const char *server, const char *port, const char *user,
  * Copy the specified messages to another mailbox.
  */
 int
-request_copy(const char *server, const char *port, const char *user,
-    const char *mesg, const char *mbox)
+request_copy(session *ssn, const char *mesg, const char *mbox)
 {
 	int t, r;
-	session *s;
 	const char *m;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
-
-	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
+	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
 
 	do {
-		TRY(t = send_request(s, "UID COPY %s \"%s\"", mesg, m));
-		TRY(r = response_generic(s, t));
+		TRY(t = send_request(ssn, "UID COPY %s \"%s\"", mesg, m));
+		TRY(r = response_generic(ssn, t));
 		switch (r) {
 		case STATUS_TRYCREATE:
-			TRY(t = send_request(s, "CREATE \"%s\"", m));
-			TRY(response_generic(s, t));
+			TRY(t = send_request(ssn, "CREATE \"%s\"", m));
+			TRY(response_generic(ssn, t));
 
 			if (get_option_boolean("subscribe")) {
-				TRY(t = send_request(s, "SUBSCRIBE \"%s\"", m));
-				TRY(response_generic(s, t));
+				TRY(t = send_request(ssn, "SUBSCRIBE \"%s\"", m));
+				TRY(response_generic(ssn, t));
 			}
 			break;
 		case -1:
@@ -725,38 +634,33 @@ request_copy(const char *server, const char *port, const char *user,
  * Append supplied message to the specified mailbox.
  */
 int
-request_append(const char *server, const char *port, const char *user,
-    const char *mbox, const char *mesg, size_t mesglen, const char *flags,
-    const char *date)
+request_append(session *ssn, const char *mbox, const char *mesg, size_t
+    mesglen, const char *flags, const char *date)
 {
 	int t, r;
-	session *s;
 	const char *m;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
-
-	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
+	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
 
 	do {
-		TRY(t = send_request(s, "APPEND \"%s\"%s%s%s%s%s%s {%d}", m,
+		TRY(t = send_request(ssn, "APPEND \"%s\"%s%s%s%s%s%s {%d}", m,
 			(flags ? " (" : ""), (flags ? flags : ""),
 			(flags ? ")" : ""), (date ? " \"" : ""),
 			(date ? date : ""), (date ? "\"" : ""), mesglen));
-		TRY(r = response_continuation(s));
+		TRY(r = response_continuation(ssn));
 
 		switch (r) {
 		case STATUS_CONTINUE:
-			TRY(send_continuation(s, mesg, mesglen)); 
-			TRY(r = response_generic(s, t));
+			TRY(send_continuation(ssn, mesg, mesglen)); 
+			TRY(r = response_generic(ssn, t));
 			break;
 		case STATUS_TRYCREATE:
-			TRY(t = send_request(s, "CREATE \"%s\"", m));
-			TRY(response_generic(s, t));
+			TRY(t = send_request(ssn, "CREATE \"%s\"", m));
+			TRY(response_generic(ssn, t));
 
 			if (get_option_boolean("subscribe")) {
-				TRY(t = send_request(s, "SUBSCRIBE \"%s\"", m));
-				TRY(response_generic(s, t));
+				TRY(t = send_request(ssn, "SUBSCRIBE \"%s\"", m));
+				TRY(response_generic(ssn, t));
 			}
 			break;
 		case -1:
@@ -773,20 +677,15 @@ request_append(const char *server, const char *port, const char *user,
  * Create the specified mailbox.
  */
 int
-request_create(const char *server, const char *port, const char *user,
-    const char *mbox)
+request_create(session *ssn, const char *mbox)
 {
 	int t, r;
-	session *s;
 	const char *m;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
+	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
 
-	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
-
-	TRY(t = send_request(s, "CREATE \"%s\"", m));
-	TRY(r = response_generic(s, t));
+	TRY(t = send_request(ssn, "CREATE \"%s\"", m));
+	TRY(r = response_generic(ssn, t));
 
 	return r;
 }
@@ -796,20 +695,15 @@ request_create(const char *server, const char *port, const char *user,
  * Delete the specified mailbox.
  */
 int
-request_delete(const char *server, const char *port, const char *user,
-    const char *mbox)
+request_delete(session *ssn, const char *mbox)
 {
 	int t, r;
-	session *s;
 	const char *m;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
+	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
 
-	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
-
-	TRY(t = send_request(s, "DELETE \"%s\"", m));
-	TRY(r = response_generic(s, t));
+	TRY(t = send_request(ssn, "DELETE \"%s\"", m));
+	TRY(r = response_generic(ssn, t));
 
 	return r;
 }
@@ -819,21 +713,16 @@ request_delete(const char *server, const char *port, const char *user,
  * Rename a mailbox.
  */
 int
-request_rename(const char *server, const char *port, const char *user,
-    const char *oldmbox, const char *newmbox)
+request_rename(session *ssn, const char *oldmbox, const char *newmbox)
 {
 	int t, r;
-	session *s;
 	char *o, *n;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
+	o = xstrdup(apply_namespace(oldmbox, ssn->ns.prefix, ssn->ns.delim));
+	n = xstrdup(apply_namespace(newmbox, ssn->ns.prefix, ssn->ns.delim));
 
-	o = xstrdup(apply_namespace(oldmbox, s->ns.prefix, s->ns.delim));
-	n = xstrdup(apply_namespace(newmbox, s->ns.prefix, s->ns.delim));
-
-	TRY(t = send_request(s, "RENAME \"%s\" \"%s\"", o, n));
-	TRY(r = response_generic(s, t));
+	TRY(t = send_request(ssn, "RENAME \"%s\" \"%s\"", o, n));
+	TRY(r = response_generic(ssn, t));
 
 	return r;
 }
@@ -843,20 +732,15 @@ request_rename(const char *server, const char *port, const char *user,
  * Subscribe the specified mailbox.
  */
 int
-request_subscribe(const char *server, const char *port, const char *user,
-    const char *mbox)
+request_subscribe(session *ssn, const char *mbox)
 {
 	int t, r;
-	session *s;
 	const char *m;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
+	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
 
-	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
-
-	TRY(t = send_request(s, "SUBSCRIBE \"%s\"", m));
-	TRY(r = response_generic(s, t));
+	TRY(t = send_request(ssn, "SUBSCRIBE \"%s\"", m));
+	TRY(r = response_generic(ssn, t));
 
 	return r;
 }
@@ -866,46 +750,37 @@ request_subscribe(const char *server, const char *port, const char *user,
  * Unsubscribe the specified mailbox.
  */
 int
-request_unsubscribe(const char *server, const char *port, const char *user,
-    const char *mbox)
+request_unsubscribe(session *ssn, const char *mbox)
 {
 	int t, r;
-	session *s;
 	const char *m;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
+	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
 
-	m = apply_namespace(mbox, s->ns.prefix, s->ns.delim);
-
-	TRY(t = send_request(s, "UNSUBSCRIBE \"%s\"", m));
-	TRY(r = response_generic(s, t));
+	TRY(t = send_request(ssn, "UNSUBSCRIBE \"%s\"", m));
+	TRY(r = response_generic(ssn, t));
 
 	return r;
 }
 
 
 int
-request_idle(const char *server, const char *port, const char *user)
+request_idle(session *ssn)
 {
 	int t, r, ri;
-	session *s;
 
-	if (!(s = session_find(server, port, user)))
-		return -1;
-
-	if (!(s->capabilities & CAPABILITY_IDLE))
+	if (!(ssn->capabilities & CAPABILITY_IDLE))
 		return -1;
 
 	do {
 		ri = 0;
 
-		TRY(t = send_request(s, "IDLE"));
-		TRY(r = response_continuation(s));
+		TRY(t = send_request(ssn, "IDLE"));
+		TRY(r = response_continuation(ssn));
 		if (r == STATUS_CONTINUE) {
-			TRY(ri = response_idle(s, t));
-			TRY(send_continuation(s, "DONE", strlen("DONE")));
-			TRY(r = response_generic(s, t));
+			TRY(ri = response_idle(ssn, t));
+			TRY(send_continuation(ssn, "DONE", strlen("DONE")));
+			TRY(r = response_generic(ssn, t));
 		}
 	} while (ri == STATUS_TIMEOUT);
 

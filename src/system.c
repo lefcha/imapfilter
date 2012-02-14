@@ -107,7 +107,6 @@ ifsys_popen(lua_State *lua)
 
 	if (lua_gettop(lua) != 2)
 		luaL_error(lua, "wrong number of arguments");
-
 	luaL_checktype(lua, 1, LUA_TSTRING);
 	luaL_checktype(lua, 2, LUA_TSTRING);
 
@@ -135,7 +134,6 @@ ifsys_pclose(lua_State *lua)
 
 	if (lua_gettop(lua) != 1)
 		luaL_error(lua, "wrong number of arguments");
-
 	luaL_checktype(lua, 1, LUA_TUSERDATA);
 
 	fp = *(FILE **) (lua_touserdata(lua, 1));
@@ -167,7 +165,6 @@ ifsys_read(lua_State *lua)
 
 	if (lua_gettop(lua) != 1)
 		luaL_error(lua, "wrong number of arguments");
-
 	luaL_checktype(lua, 1, LUA_TUSERDATA);
 
 	fp = *(FILE **) (lua_touserdata(lua, 1));
@@ -214,7 +211,6 @@ ifsys_write(lua_State *lua)
 
 	if (lua_gettop(lua) != 2)
 		luaL_error(lua, "wrong number of arguments");
-
 	luaL_checktype(lua, 1, LUA_TUSERDATA);
 	luaL_checktype(lua, 2, LUA_TSTRING);
 
@@ -238,7 +234,6 @@ ifsys_sleep(lua_State *lua)
 
 	if (lua_gettop(lua) != 1)
 		luaL_error(lua, "wrong number of arguments");
-
 	luaL_checktype(lua, 1, LUA_TNUMBER);
 
 	lua_pushnumber(lua,
@@ -259,7 +254,6 @@ ifsys_daemon(lua_State *lua)
 
 	if (lua_gettop(lua) != 2)
 		luaL_error(lua, "wrong number of arguments");
-
 	luaL_checktype(lua, 1, LUA_TBOOLEAN);
 	luaL_checktype(lua, 2, LUA_TBOOLEAN);
 

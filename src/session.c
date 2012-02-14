@@ -9,15 +9,16 @@
 extern list *sessions;
 
 
+void session_init(session *ssn);
+
+
 /*
  * Allocate memory for a new session and add it to the sessions linked list.
  */
 session *
 session_new(void)
 {
-	session *s;
-
-	s = (session *)xmalloc(sizeof(session));
+	session *s = (session *)xmalloc(sizeof(session));
 
 	session_init(s);
 
@@ -78,27 +79,4 @@ session_destroy(session *ssn)
 	if (ssn->selected)
 		xfree(ssn->selected);
 	xfree(ssn);
-
-	ssn = NULL;
-}
-
-
-/*
- * Based on the specified socket, find an active IMAP session.
- */
-session *
-session_find(const char *serv, const char *port, const char *user)
-{
-	list *l;
-	session *s;
-
-	for (l = sessions; l; l = l->next) {
-		s = l->data;
-		if (!strcmp(s->server, serv) &&
-		    !strcmp(s->port, port) &&
-		    !strcmp(s->username, user))
-			return s;
-	}
-
-	return NULL;
 }

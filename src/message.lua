@@ -10,19 +10,8 @@ Message._mt.__call = function (self, account, mailbox, uid)
     local object = {}
 
     object._type = 'message'
-
-    for key, value in pairs(Message) do
-        if type(value) == 'function' then
-            object[key] = value
-        end
-    end
-
-    object._mt = {}
-    setmetatable(object, object._mt)
-
     object._account = account
     object._mailbox = mailbox
-
     object._uid = uid
 
     object._structure = nil
@@ -32,6 +21,13 @@ Message._mt.__call = function (self, account, mailbox, uid)
     object._parts = {}
     object._size = nil
     object._date = nil
+
+    for key, value in pairs(Message) do
+        if type(value) == 'function' then object[key] = value end
+    end
+
+    object._mt = {}
+    setmetatable(object, object._mt)
 
     return object
 end

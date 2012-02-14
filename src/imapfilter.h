@@ -37,19 +37,19 @@
 #define CAPABILITY_IDLE			0x10
 
 /* Status responses and response codes. */
-#define STATUS_NONE		0
-#define STATUS_OK		1
-#define STATUS_NO		2
-#define STATUS_BAD		3
-#define STATUS_UNTAGGED		4
-#define STATUS_CONTINUE		5
-#define STATUS_BYE		6
-#define STATUS_PREAUTH		7
-#define STATUS_READONLY		8
-#define STATUS_TRYCREATE	9
-#define STATUS_TIMEOUT		10
+#define STATUS_NONE			0
+#define STATUS_OK			1
+#define STATUS_NO			2
+#define STATUS_BAD			3
+#define STATUS_UNTAGGED			4
+#define STATUS_CONTINUE			5
+#define STATUS_BYE			6
+#define STATUS_PREAUTH			7
+#define STATUS_READONLY			8
+#define STATUS_TRYCREATE		9
+#define STATUS_TIMEOUT			10
 
-/* Initial buffer size for input, output and namespace buffers. */
+/* Initial size for buffers. */
 #define INPUT_BUF			4096
 #define OUTPUT_BUF			1024
 #define NAMESPACE_BUF			512
@@ -121,14 +121,9 @@ int get_option_boolean(const char *opt);
 lua_Number get_option_number(const char *opt);
 const char *get_option_string(const char *opt);
 
-int get_table_type(const char *key);
-lua_Number get_table_number(const char *key);
-const char *get_table_string(const char *key);
-
-int set_table_nil(const char *key);
 int set_table_boolean(const char *key, int value);
 int set_table_number(const char *key, lua_Number value);
-int set_table_string(const char *key, const char *value);
+int set_table_lightuserdata(const char *key, void *value);
 
 /*	memory.c	*/
 void *xmalloc(size_t size);
@@ -149,59 +144,46 @@ const char *reverse_namespace(const char *mbox, char *prefix, char delim);
 LUALIB_API int luaopen_ifre(lua_State *lua);
 
 /*	request.c	*/
-int request_noop(const char *server, const char *port, const char *user);
-int request_login(const char *server, const char *port, const char *protocol,
-    const char *user, const char *pass);
-int request_logout(const char *server, const char *port, const char *user);
-int request_status(const char *server, const char *port, const char *user,
-    const char *mbox, unsigned int *exist, unsigned int *recent,
-    unsigned int *unseen, unsigned int *uidnext);
-int request_select(const char *server, const char *port, const char *user,
-    const char *mbox);
-int request_close(const char *server, const char *port, const char *user);
-int request_expunge(const char *server, const char *port, const char *user);
-int request_list(const char *server, const char *port, const char *user,
-    const char *refer, const char *name, char **mboxs, char **folders);
-int request_lsub(const char *server, const char *port, const char *user,
-    const char *refer, const char *name, char **mboxs, char **folders);
-int request_search(const char *server, const char *port, const char *user,
-    const char *criteria, const char *charset, char **mesgs);
-int request_fetchfast(const char *server, const char *port, const char *user,
-    const char *mesg, char **flags, char **date, char **size);
-int request_fetchflags(const char *server, const char *port, const char *user,
-    const char *mesg, char **flags);
-int request_fetchdate(const char *server, const char *port, const char *user,
-    const char *mesg, char **date);
-int request_fetchsize(const char *server, const char *port, const char *user,
-    const char *mesg, char **size);
-int request_fetchstructure(const char *server, const char *port,
-    const char *user, const char *mesg, char **structure);
-int request_fetchheader(const char *server, const char *port, const char *user,
-    const char *mesg, char **header, size_t *len);
-int request_fetchtext(const char *server, const char *port, const char *user,
-    const char *mesg, char **text, size_t *len);
-int request_fetchfields(const char *server, const char *port, const char *user,
-    const char *mesg, const char *headerfields, char **fields, size_t *len);
-int request_fetchpart(const char *server, const char *port, const char *user,
-    const char *mesg, const char *bodypart, char **part, size_t *len);
-int request_store(const char *server, const char *port, const char *user,
-    const char *mesg, const char *mode, const char *flags);
-int request_copy(const char *server, const char *port, const char *user,
-    const char *mesg, const char *mbox);
-int request_append(const char *server, const char *port, const char *user,
-    const char *mbox, const char *mesg, size_t mesglen, const char *flags,
-    const char *date);
-int request_create(const char *server, const char *port, const char *user,
-    const char *mbox);
-int request_delete(const char *server, const char *port, const char *user,
-    const char *mbox);
-int request_rename(const char *server, const char *port, const char *user,
-    const char *oldmbox, const char *newmbox);
-int request_subscribe(const char *server, const char *port, const char *user,
-    const char *mbox);
-int request_unsubscribe(const char *server, const char *port, const char *user,
-    const char *mbox);
-int request_idle(const char *server, const char *port, const char *user);
+int request_noop(session *ssn);
+int request_login(session **ssn, const char *server, const char *port, const
+    char *protocol, const char *user, const char *pass);
+int request_logout(session *ssn);
+int request_status(session *ssn, const char *mbox, unsigned int *exist,
+    unsigned int *recent, unsigned int *unseen, unsigned int *uidnext);
+int request_select(session *ssn, const char *mbox);
+int request_close(session *ssn);
+int request_expunge(session *ssn);
+int request_list(session *ssn, const char *refer, const char *name, char
+    **mboxs, char **folders);
+int request_lsub(session *ssn, const char *refer, const char *name, char
+    **mboxs, char **folders);
+int request_search(session *ssn, const char *criteria, const char *charset,
+    char **mesgs);
+int request_fetchfast(session *ssn, const char *mesg, char **flags, char
+    **date, char **size);
+int request_fetchflags(session *ssn, const char *mesg, char **flags);
+int request_fetchdate(session *ssn, const char *mesg, char **date);
+int request_fetchsize(session *ssn, const char *mesg, char **size);
+int request_fetchstructure(session *ssn, const char *mesg, char **structure);
+int request_fetchheader(session *ssn, const char *mesg, char **header, size_t
+    *len);
+int request_fetchtext(session *ssn, const char *mesg, char **text, size_t
+    *len);
+int request_fetchfields(session *ssn, const char *mesg, const char
+    *headerfields, char **fields, size_t *len);
+int request_fetchpart(session *ssn, const char *mesg, const char *bodypart,
+    char **part, size_t *len);
+int request_store(session *ssn, const char *mesg, const char *mode, const char
+    *flags);
+int request_copy(session *ssn, const char *mesg, const char *mbox);
+int request_append(session *ssn, const char *mbox, const char *mesg, size_t
+    mesglen, const char *flags, const char *date);
+int request_create(session *ssn, const char *mbox);
+int request_delete(session *ssn, const char *mbox);
+int request_rename(session *ssn, const char *oldmbox, const char *newmbox);
+int request_subscribe(session *ssn, const char *mbox);
+int request_unsubscribe(session *ssn, const char *mbox);
+int request_idle(session *ssn);
 
 /*	response.c	*/
 int response_generic(session *ssn, int tag);

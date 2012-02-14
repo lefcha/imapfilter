@@ -11,13 +11,11 @@ function Set._new(self, values)
 
     object = values or {}
 
-    for key, value in pairs(Set) do
-        if type(value) == 'function' then
-            object[key] = value
-        end
-    end
-
     object._type = 'set'
+
+    for key, value in pairs(Set) do
+        if type(value) == 'function' then object[key] = value end
+    end
 
     object._mt = {}
     object._mt.__add = object._union
@@ -37,17 +35,13 @@ function Set._union(seta, setb)
         if not t[b] then t[b] = {} end
         t[b][m] = true
     end
-
     for _, v in ipairs(setb) do
         b, m = table.unpack(v)
         if not t[b] then t[b] = {} end
         t[b][m] = true
     end
-
     for b in pairs(t) do
-        for m in pairs(t[b]) do
-            table.insert(set, { b, m })
-        end
+        for m in pairs(t[b]) do table.insert(set, { b, m }) end
     end
 
     return set
@@ -63,19 +57,15 @@ function Set._intersection(seta, setb)
         if not ta[b] then ta[b] = {} end
         ta[b][m] = true
     end
-
     for _, v in ipairs(setb) do
         b, m = table.unpack(v)
         if not tb[b] then tb[b] = {} end
         tb[b][m] = true
     end
-
     for b in pairs(ta) do
         if tb[b] then
             for m in pairs(ta[b]) do
-                if tb[b][m] then
-                    table.insert(set, { b, m })
-                end
+                if tb[b][m] then table.insert(set, { b, m }) end
             end
         end
     end
@@ -92,18 +82,12 @@ function Set._difference(seta, setb)
         if not t[b] then t[b] = {} end
         t[b][m] = true
     end
-
     for _, v in ipairs(setb) do
         b, m = table.unpack(v)
-        if t[b] then
-            t[b][m] = nil
-        end
+        if t[b] then t[b][m] = nil end
     end
-
     for b in pairs(t) do
-        for m in pairs(t[b]) do
-            table.insert(set, { b, m })
-        end
+        for m in pairs(t[b]) do table.insert(set, { b, m }) end
     end
 
     return set
@@ -115,9 +99,7 @@ function Set.add_flags(self, flags)
 
     local r = true
     for mbox in pairs(_extract_mailboxes(self)) do
-        if not mbox.add_flags(mbox, flags, self) then
-            r = false
-        end
+        if not mbox.add_flags(mbox, flags, self) then r = false end
     end
     return r
 end
@@ -127,9 +109,7 @@ function Set.remove_flags(self, flags)
 
     local r = true
     for mbox in pairs(_extract_mailboxes(self)) do
-        if not mbox.remove_flags(mbox, flags, self) then
-            r = false
-        end
+        if not mbox.remove_flags(mbox, flags, self) then r = false end
     end
     return r
 end
@@ -139,9 +119,7 @@ function Set.replace_flags(self, flags)
 
     local r = true
     for mbox in pairs(_extract_mailboxes(self)) do
-        if not mbox.replace_flags(mbox, flags, self) then
-            r = false
-        end
+        if not mbox.replace_flags(mbox, flags, self) then r = false end
     end
     return r
 end
@@ -149,9 +127,7 @@ end
 function Set.mark_answered(self)
     local r = true
     for mbox in pairs(_extract_mailboxes(self)) do
-        if not mbox.mark_answered(mbox, self) then
-            r = false
-        end
+        if not mbox.mark_answered(mbox, self) then r = false end
     end
     return r
 end
@@ -159,9 +135,7 @@ end
 function Set.mark_deleted(self)
     local r = true
     for mbox in pairs(_extract_mailboxes(self)) do
-        if not mbox.mark_deleted(mbox, self) then
-            r = false
-        end
+        if not mbox.mark_deleted(mbox, self) then r = false end
     end
     return r
 end
@@ -169,9 +143,7 @@ end
 function Set.mark_draft(self)
     local r = true
     for mbox in pairs(_extract_mailboxes(self)) do
-        if not mbox.mark_draft(mbox, self) then
-            r = false
-        end
+        if not mbox.mark_draft(mbox, self) then r = false end
     end
     return r
 end
@@ -179,9 +151,7 @@ end
 function Set.mark_flagged(self)
     local r = true
     for mbox in pairs(_extract_mailboxes(self)) do
-        if not mbox.mark_flagged(mbox, self) then
-            r = false
-        end
+        if not mbox.mark_flagged(mbox, self) then r = false end
     end
     return r
 end
@@ -189,9 +159,7 @@ end
 function Set.mark_seen(self)
     local r = true
     for mbox in pairs(_extract_mailboxes(self)) do
-        if not mbox.mark_seen(mbox, self) then
-            r = false
-        end
+        if not mbox.mark_seen(mbox, self) then r = false end
     end
     return r
 end
@@ -199,9 +167,7 @@ end
 function Set.unmark_answered(self)
     local r = true
     for mbox in pairs(_extract_mailboxes(self)) do
-        if not mbox.unmark_answered(mbox, self) then
-            r = false
-        end
+        if not mbox.unmark_answered(mbox, self) then r = false end
     end
     return r
 end
@@ -209,9 +175,7 @@ end
 function Set.unmark_deleted(self)
     local r = true
     for mbox in pairs(_extract_mailboxes(self)) do
-        if not mbox.unmark_deleted(mbox, self) then
-            r = false
-        end
+        if not mbox.unmark_deleted(mbox, self) then r = false end
     end
     return r
 end
@@ -219,9 +183,7 @@ end
 function Set.unmark_draft(self)
     local r = true
     for mbox in pairs(_extract_mailboxes(self)) do
-        if not mbox.unmark_draft(mbox, self) then
-            r = false
-        end
+        if not mbox.unmark_draft(mbox, self) then r = false end
     end
     return r
 end
@@ -229,9 +191,7 @@ end
 function Set.unmark_flagged(self)
     local r = true
     for mbox in pairs(_extract_mailboxes(self)) do
-        if not mbox.unmark_flagged(mbox, self) then
-            r = false
-        end
+        if not mbox.unmark_flagged(mbox, self) then r = false end
     end
     return r
 end
@@ -239,9 +199,7 @@ end
 function Set.unmark_seen(self)
     local r = true
     for mbox in pairs(_extract_mailboxes(self)) do
-        if not mbox.unmark_seen(mbox, self) then
-            r = false
-        end
+        if not mbox.unmark_seen(mbox, self) then r = false end
     end
     return r
 end
@@ -249,9 +207,7 @@ end
 function Set.delete_messages(self)
     local r = true
     for mbox in pairs(_extract_mailboxes(self)) do
-        if not mbox.delete_messages(mbox, self) then
-            r = false
-        end
+        if not mbox.delete_messages(mbox, self) then r = false end
     end
     return r
 end
@@ -261,9 +217,7 @@ function Set.copy_messages(self, dest)
 
     local r = true
     for mbox in pairs(_extract_mailboxes(self)) do
-        if not mbox.copy_messages(mbox, dest, self) then
-            r = false
-        end
+        if not mbox.copy_messages(mbox, dest, self) then r = false end
     end
     return r
 end
@@ -273,9 +227,7 @@ function Set.move_messages(self, dest)
 
     local r = true
     for mbox in pairs(_extract_mailboxes(self)) do
-        if not mbox.move_messages(mbox, dest, self) then
-            r = false
-        end
+        if not mbox.move_messages(mbox, dest, self) then r = false end
     end
     return r
 end

@@ -25,15 +25,13 @@ typedef struct session {
 		char *prefix;	/* Namespace prefix. */
 		char delim;	/* Namespace delimiter. */
 	} ns;
-	char *selected;
+	char *selected;		/* Selected mailbox. */
 } session;
 
 
 /*	session.c	*/
 session *session_new(void);
-void session_init(session *ssn);
 void session_destroy(session *ssn);
-session *session_find(const char *server, const char *port, const char *user);
 
 
 #endif				/* SESSION_H */

@@ -36,6 +36,9 @@ list_remove(list *lst, void *data)
 {
 	list *l;
 
+	if (!lst)
+		return NULL;
+
 	l = lst;
 	while (l != NULL) {
 		if (l->data != data)
@@ -53,6 +56,7 @@ list_remove(list *lst, void *data)
 			break;
 		}
 	}
+
 
 	return lst;
 }

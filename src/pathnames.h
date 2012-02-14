@@ -26,8 +26,5 @@
 /* Lua imapfilter auxiliary functions file. */
 #define PATHNAME_AUXILIARY		MAKEFILE_SHAREDIR "/auxiliary.lua"
 
-/* Lua imapfilter old interface functions file. */
-#define PATHNAME_DEPRECATED		MAKEFILE_SHAREDIR "/deprecated.lua"
-
 
 #endif				/* PATHNAMES_H */

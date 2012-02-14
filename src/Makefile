@@ -12,7 +12,7 @@ MAN1 = imapfilter.1
 MAN5 = imapfilter_config.5
 
 LUA = common.lua set.lua regex.lua account.lua mailbox.lua message.lua \
-      options.lua auxiliary.lua deprecated.lua
+      options.lua auxiliary.lua
 
 BIN = imapfilter
 OBJ = auth.o buffer.o cert.o core.o file.o imapfilter.o list.o log.o lua.o \

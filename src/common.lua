@@ -1,4 +1,11 @@
--- Common functions for all classes.
+-- Common functions for all classes and compatibility workarounds
+
+if _VERSION == 'Lua 5.1' then
+    table.unpack = unpack
+else
+    unpack = table.unpack
+end
+
 
 function _check_required(arg, argtype)
     if type(arg) == 'nil' then
@@ -17,9 +24,7 @@ function _check_optional(arg, argtype)
         elseif type(argtype) == 'table' then
             local b = false
             for _, t in ipairs(argtype) do
-                if type(arg) == t then
-                    b = true
-                end
+                if type(arg) == t then b = true end
             end
             if b == false then
                 error(argtype .. ' argument expected, got ' .. type(arg), 3)
@@ -42,9 +47,7 @@ function _extract_messages(mailbox, messages)
     local t = {}
     for _, v in ipairs(messages) do
         b, m = table.unpack(v)
-        if mailbox == b then
-            table.insert(t, m)
-        end
+        if mailbox == b then table.insert(t, m) end
     end
     return t
 end
@@ -52,9 +55,7 @@ end
 
 function _make_range(messages)
     for _, m in ipairs(messages) do
-        if type(m) ~= 'number' then
-            return messages
-        end
+        if type(m) ~= 'number' then return messages end
     end
 
     table.sort(messages)
@@ -98,9 +99,7 @@ function _make_query(criteria)
             if type(va) == 'string' then
                 s = s .. '' .. '(' .. va .. ')' .. ' '
             elseif type(va) == 'table' then
-                for i = 1, #va - 1 do
-                    s = s .. 'OR '
-                end
+                for i = 1, #va - 1 do s = s .. 'OR ' end
                 for ko, vo in ipairs(va) do
                     if type(vo) ~= 'string' then
                         error('filter rule not a string', 2)
@@ -112,9 +111,7 @@ function _make_query(criteria)
             end
         end
     else
-        for i = 1, #criteria - 1 do
-            s = s .. 'OR '
-        end
+        for i = 1, #criteria - 1 do s = s .. 'OR ' end
         for ko, vo in ipairs(criteria) do
             if type(vo) == 'string' then
                 s = s .. '' .. '(' .. vo .. ')' .. ' '

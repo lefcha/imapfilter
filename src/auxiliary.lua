@@ -2,7 +2,6 @@
 
 function form_date(days)
     _check_required(days, 'number')
-
     return os.date("%d-%b-%Y", os.time() - days * 60 * 60 * 24)
 end
 
@@ -15,7 +14,6 @@ function get_password(prompt)
     else
         io.write('Enter password: ')
     end
-
     ifsys.noecho()
     local p = io.read()
     ifsys.echo()
@@ -29,7 +27,6 @@ function pipe_to(command, data)
     _check_required(data, 'string')
 
     f = ifsys.popen(command, "w")
-
     ifsys.write(f, data)
 
     return ifsys.pclose(f)
@@ -39,7 +36,6 @@ function pipe_from(command)
     _check_required(command, 'string')
 
     f = ifsys.popen(command, "r")
-
     local string = ''
     while true do
         s = ifsys.read(f)
@@ -60,16 +56,9 @@ function become_daemon(interval, commands, nochdir, noclose)
     _check_optional(nochdir, 'boolean')
     _check_optional(noclose, 'boolean')
 
-    if nochdir == nil then
-        nochdir = false
-    end
-
-    if noclose == nil then
-        noclose = false
-    end
-
+    if nochdir == nil then nochdir = false end
+    if noclose == nil then noclose = false end
     ifsys.daemon(nochdir, noclose)
-
     repeat
         pcall(commands)
     until ifsys.sleep(interval) ~= 0

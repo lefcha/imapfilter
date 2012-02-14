@@ -155,7 +155,6 @@ ifre_compile(lua_State *lua)
 
 	if (lua_gettop(lua) != 2)
 		luaL_error(lua, "wrong number of arguments");
-
 	luaL_checktype(lua, 1, LUA_TSTRING);
 	luaL_checktype(lua, 2, LUA_TNUMBER);
 
@@ -193,7 +192,6 @@ ifre_exec(lua_State *lua)
 
 	if (lua_gettop(lua) != 3)
 		luaL_error(lua, "wrong number of arguments");
-
 	luaL_checktype(lua, 1, LUA_TUSERDATA);
 	luaL_checktype(lua, 2, LUA_TSTRING);
 	luaL_checktype(lua, 3, LUA_TNUMBER);
@@ -247,7 +245,6 @@ ifre_free(lua_State *lua)
 
 	if (lua_gettop(lua) != 1)
 		luaL_error(lua, "wrong number of arguments");
-
 	luaL_checktype(lua, 1, LUA_TUSERDATA);
 
 	re = *(pcre **)(lua_touserdata(lua, 1));
