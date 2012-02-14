@@ -71,9 +71,16 @@ send_request(session *s, const char *fmt,...)
 	snprintf(obuf.data + obuf.len, obuf.size - obuf.len + 1, "\r\n");
 	obuf.len = strlen(obuf.data);
 
-	debug("sending command (%d):\n\n%s\n", s->socket, obuf.data);
-
-	verbose("C (%d): %s", s->socket, obuf.data);
+	if (!strncasecmp(fmt, "LOGIN", strlen("LOGIN"))) {
+		debug("sending command (%d):\n\n%.*s*\r\n\n", s->socket,
+		    obuf.len - strlen(s->password) - strlen("\"\"\r\n"),
+		    obuf.data);
+		verbose("C (%d): %.*s*\r\n", s->socket, obuf.len -
+		    strlen(s->password) - strlen("\"\"\r\n"),  obuf.data);
+	} else {
+		debug("sending command (%d):\n\n%s\n", s->socket, obuf.data);
+		verbose("C (%d): %s", s->socket, obuf.data);
+	}
 
 	if (socket_write(s, obuf.data, obuf.len) == -1)
 		return -1;
