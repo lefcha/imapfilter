@@ -122,7 +122,8 @@ open_secure_connection(session *ssn)
 		switch (SSL_get_error(ssn->sslsocket, r)) {
 		case SSL_ERROR_ZERO_RETURN:
 			error("initiating SSL connection to %s; the "
-			    "connection has been closed cleanly\n", ssn->server);
+			    "connection has been closed cleanly\n",
+			    ssn->server);
 			goto fail;
 		case SSL_ERROR_WANT_CONNECT:
 		case SSL_ERROR_WANT_ACCEPT:
@@ -132,16 +133,20 @@ open_secure_connection(session *ssn)
 			break;
 		case SSL_ERROR_SYSCALL:
 			e = ERR_get_error();
-			if (e == 0)
-				error("initiating SSL connection to %s; EOF "
-				    "in violation of the protocol\n", ssn->server);
-			else if (e == -1)
+			if (e == 0 && r == 0)
+				error("initiating SSL connection to %s; EOF in "
+				    "violation of the protocol\n", ssn->server);
+			else if (e == 0 && r == -1)
 				error("initiating SSL connection to %s; %s\n",
 				    ssn->server, strerror(errno));
+			else
+				error("initiating SSL connection to %s; %s\n",
+				    ssn->server, ERR_error_string(e, NULL));
 			goto fail;
 		case SSL_ERROR_SSL:
-			error("initiating SSL connection to %s; %s\n", ssn->server,
-			    ERR_error_string(ERR_get_error(), NULL));
+			error("initiating SSL connection to %s; %s\n",
+			    ssn->server, ERR_error_string(ERR_get_error(),
+			    NULL));
 			goto fail;
 		default:
 			goto fail;
@@ -307,11 +312,14 @@ socket_secure_read(session *ssn, char *buf, size_t len)
 			break;
 		case SSL_ERROR_SYSCALL:
 			e = ERR_get_error();
-			if (e == 0)
+			if (e == 0 && r == 0)
 				error("reading data; EOF in violation of the "
 				    "protocol\n");
-			else if (e == -1)
+			else if (e == 0 && r == -1)
 				error("reading data; %s\n", strerror(errno));
+			else
+				error("reading data; %s\n", ERR_error_string(e,
+				    NULL));
 			return -1;
 		case SSL_ERROR_SSL:
 			error("reading data; %s\n",
@@ -397,15 +405,15 @@ fail:
 ssize_t
 socket_secure_write(session *ssn, const char *buf, size_t len)
 {
-	int w, e;
+	int r, e;
 
 	for (;;) {
-		w = (ssize_t) SSL_write(ssn->sslsocket, buf, len);
+		r = (ssize_t) SSL_write(ssn->sslsocket, buf, len);
 
-		if (w > 0)
+		if (r > 0)
 			break;
 
-		switch (SSL_get_error(ssn->sslsocket, w)) {
+		switch (SSL_get_error(ssn->sslsocket, r)) {
 		case SSL_ERROR_ZERO_RETURN:
 			error("writing data; the connection has been closed "
 			    "cleanly\n");
@@ -418,11 +426,14 @@ socket_secure_write(session *ssn, const char *buf, size_t len)
 			break;
 		case SSL_ERROR_SYSCALL:
 			e = ERR_get_error();
-			if (e == 0)
+			if (e == 0 && r == 0)
 				error("writing data; EOF in violation of the "
 				    "protocol\n");
-			else if (e == -1)
+			else if (e == 0 && r == -1)
 				error("writing data; %s\n", strerror(errno));
+			else
+				error("writing data; %s\n", ERR_error_string(e,
+				    NULL));
 			return -1;
 		case SSL_ERROR_SSL:
 			error("writing data; %s\n",
@@ -433,6 +444,6 @@ socket_secure_write(session *ssn, const char *buf, size_t len)
 		}
 	}
 
-	return w;
+	return r;
 }
 #endif
