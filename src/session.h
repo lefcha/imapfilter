@@ -9,11 +9,11 @@
 
 /* IMAP session. */
 typedef struct session {
-	char *server;		/* Server hostname. */
-	char *port;		/* Server port. */ 
-	char *ssl;		/* SSL protocol. */
-	char *username;		/* User name. */
-	char *password;		/* User password. */
+	const char *server;	/* Server hostname. */
+	const char *port;	/* Server port. */ 
+	const char *ssl;	/* SSL protocol. */
+	const char *username;	/* User name. */
+	const char *password;	/* User password. */
 	int socket;		/* Socket. */
 #ifndef NO_SSLTLS
 	SSL *sslsocket;		/* SSL socket. */
@@ -25,7 +25,7 @@ typedef struct session {
 		char *prefix;	/* Namespace prefix. */
 		char delim;	/* Namespace delimiter. */
 	} ns;
-	char *selected;		/* Selected mailbox. */
+	const char *selected;	/* Selected mailbox. */
 } session;
 
 

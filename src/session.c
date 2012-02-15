@@ -64,19 +64,7 @@ session_destroy(session *ssn)
 
 	sessions = list_remove(sessions, ssn);
 
-	if (ssn->server)
-		xfree(ssn->server);
-	if (ssn->port)
-		xfree(ssn->port);
-	if (ssn->ssl)
-		xfree(ssn->ssl);
-	if (ssn->username)
-		xfree(ssn->username);
-	if (ssn->password)
-		xfree(ssn->password);
 	if (ssn->ns.prefix)
 		xfree(ssn->ns.prefix);
-	if (ssn->selected)
-		xfree(ssn->selected);
 	xfree(ssn);
 }

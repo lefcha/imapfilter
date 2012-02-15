@@ -150,15 +150,15 @@ request_login(session **ssnptr, const char *server, const char *port, const
 	if (!*ssnptr) {
 		ssn = *ssnptr = session_new();
 
-		ssn->server = xstrdup(server);
-		ssn->port = xstrdup(port);
-		ssn->username = xstrdup(user);
-		ssn->password = xstrdup(pass);
+		ssn->server = server;
+		ssn->port = port;
+		ssn->username = user;
+		ssn->password = pass;
 
 		if ((!strncasecmp(ssl, "tls1", 4) ||
 		    !strncasecmp(ssl, "ssl3", 4) ||
 		    !strncasecmp(ssl, "ssl2", 4)))
-			ssn->ssl = xstrdup(ssl);
+			ssn->ssl = ssl;
 	}
 
 	if (open_connection(ssn) == -1)
@@ -206,7 +206,8 @@ request_login(session **ssnptr, const char *server, const char *port, const
 				goto fail;
 			if (response_authenticate(ssn, t, &in) ==
 			    STATUS_CONTINUE) {
-				if ((out = auth_cram_md5(user, pass, in)) == NULL)
+				if ((out = auth_cram_md5(user, pass, in)) ==
+				    NULL)
 					goto fail;
 				send_continuation(ssn, (char *)(out),
 				    strlen((char *)(out)));
@@ -218,8 +219,8 @@ request_login(session **ssnptr, const char *server, const char *port, const
 		}
 #endif
 		if (r != STATUS_OK) {
-			t = send_request(ssn, "LOGIN \"%s\" \"%s\"", ssn->username,
-			    ssn->password);
+			t = send_request(ssn, "LOGIN \"%s\" \"%s\"",
+			    ssn->username, ssn->password);
 			if ((r = response_generic(ssn, t)) == -1)
 				goto fail;
 		}
@@ -292,7 +293,8 @@ request_status(session *ssn, const char *mbox, unsigned int *exists, unsigned
 	if (ssn->protocol == PROTOCOL_IMAP4REV1) {
 		TRY(t = send_request(ssn,
 		    "STATUS \"%s\" (MESSAGES RECENT UNSEEN UIDNEXT)", m));
-		TRY(r = response_status(ssn, t, exists, recent, unseen, uidnext));
+		TRY(r = response_status(ssn, t, exists, recent, unseen,
+		    uidnext));
 	} else {
 		TRY(t = send_request(ssn, "EXAMINE \"%s\"", m));
 		TRY(r = response_examine(ssn, t, exists, recent));
@@ -306,8 +308,7 @@ request_status(session *ssn, const char *mbox, unsigned int *exists, unsigned
  * Open mailbox in read-write mode.
  */
 int
-request_select(session *ssn,
-    const char *mbox)
+request_select(session *ssn, const char *mbox)
 {
 	int t, r;
 	const char *m;
@@ -317,11 +318,8 @@ request_select(session *ssn,
 	TRY(t = send_request(ssn, "SELECT \"%s\"", m));
 	TRY(r = response_select(ssn, t));
 
-	if (r == STATUS_OK) {
-		if (ssn && ssn->selected)
-			xfree(ssn->selected);
-		ssn->selected = xstrdup(m);
-	}
+	if (r == STATUS_OK)
+		ssn->selected = mbox;
 	
 	return r;
 }
@@ -338,10 +336,8 @@ request_close(session *ssn)
 	TRY(t = send_request(ssn, "CLOSE"));
 	TRY(r = response_generic(ssn, t));
 
-	if (r == STATUS_OK && ssn->selected) {
-		xfree(ssn->selected);
+	if (r == STATUS_OK && ssn->selected)
 		ssn->selected = NULL;
-	}
 
 	return r;
 }
@@ -410,8 +406,8 @@ request_search(session *ssn, const char *criteria, const char *charset, char
 	int t, r;
 
 	if (charset != NULL && *charset != '\0') {
-		TRY(t = send_request(ssn, "UID SEARCH CHARSET \"%s\" %s", charset,
-		    criteria));
+		TRY(t = send_request(ssn, "UID SEARCH CHARSET \"%s\" %s",
+		    charset, criteria));
 	} else {
 		TRY(t = send_request(ssn, "UID SEARCH %s", criteria));
 	}
@@ -616,7 +612,8 @@ request_copy(session *ssn, const char *mesg, const char *mbox)
 			TRY(response_generic(ssn, t));
 
 			if (get_option_boolean("subscribe")) {
-				TRY(t = send_request(ssn, "SUBSCRIBE \"%s\"", m));
+				TRY(t = send_request(ssn, "SUBSCRIBE \"%s\"",
+				    m));
 				TRY(response_generic(ssn, t));
 			}
 			break;
@@ -659,7 +656,8 @@ request_append(session *ssn, const char *mbox, const char *mesg, size_t
 			TRY(response_generic(ssn, t));
 
 			if (get_option_boolean("subscribe")) {
-				TRY(t = send_request(ssn, "SUBSCRIBE \"%s\"", m));
+				TRY(t = send_request(ssn, "SUBSCRIBE \"%s\"",
+				    m));
 				TRY(response_generic(ssn, t));
 			}
 			break;
