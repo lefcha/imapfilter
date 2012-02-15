@@ -178,7 +178,7 @@ request_login(session **ssnptr, const char *server, const char *port, const
 		goto fail;
 
 #ifndef NO_SSLTLS
-	if (!ssl && ssn->capabilities & CAPABILITY_STARTTLS &&
+	if (!ssn->ssl && ssn->capabilities & CAPABILITY_STARTTLS &&
 	    get_option_boolean("starttls")) {
 		t = send_request(ssn, "STARTTLS");
 		switch (response_generic(ssn, t)) {
