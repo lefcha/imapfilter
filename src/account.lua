@@ -62,7 +62,11 @@ function Account._login_user(self)
 end
 
 function Account._logout_user(self)
-    if ifcore.logout(self._session) == nil then
+    local r = ifcore.logout(self._session)
+    if r == true then
+        self._session = nil
+        self._selected = nil
+    elseif r == nil then
         error("logout request failed", 0)
     end
 end
