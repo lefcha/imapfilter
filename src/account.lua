@@ -32,6 +32,7 @@ Account._mt.__call = function (self, arg)
 
     object._mt = {}
     object._mt.__index = object._attach_mailbox
+    object._mt.__gc = object._logout_user
     setmetatable(object, object._mt)
 
     object:_login_user()
@@ -57,6 +58,12 @@ function Account._login_user(self)
         return true
     elseif r == nil then
         error("login request failed", 0)
+    end
+end
+
+function Account._logout_user(self)
+    if ifcore.logout(self._session) == nil then
+        error("logout request failed", 0)
     end
 end
 

@@ -86,22 +86,17 @@ main(int argc, char *argv[])
 	}
 
 	get_pathmax();
-
 	open_debug();
-
 	create_homedir();
-
 	catch_signals();
-
 	open_log();
+	if (opts.config == NULL)
+		opts.config = get_filepath("config.lua");
 
 	buffer_init(&ibuf, INPUT_BUF);
 	buffer_init(&obuf, OUTPUT_BUF);
 	buffer_init(&nbuf, NAMESPACE_BUF);
 	buffer_init(&cbuf, CONVERSION_BUF);
-
-	if (opts.config == NULL)
-		opts.config = get_filepath("config.lua");
 
 	regexp_compile(responses);
 
@@ -111,7 +106,7 @@ main(int argc, char *argv[])
 #endif
 
 	start_lua();
-
+#if LUA_VERSION_NUM < 502
 	{
 		list *l;
 		session *s;
@@ -124,7 +119,7 @@ main(int argc, char *argv[])
 			request_logout(s);
 		}
 	}
-
+#endif
 	stop_lua();
 
 #ifndef NO_SSLTLS
