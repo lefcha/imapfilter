@@ -7,7 +7,7 @@
 -- IMAPFilter can be detached from the controlling terminal and run in
 -- the background as a system daemon.
 --
--- The auxiliary function daemon_mode() is supplied for conveniency.
+-- The auxiliary function become_daemon() is supplied for conveniency.
 -- The following example puts imapfilter in the background and runs
 -- endlessly, executing the commands in the forever() function and
 -- sleeping for 600 seconds between intervals:
