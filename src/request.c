@@ -237,7 +237,7 @@ request_login(session **ssnptr, const char *server, const char *port, const
 	if (response_capability(ssn, t) == -1)
 		goto fail;
 
-	if (ssn->capabilities & CAPABILITY_NAMESPACE &&
+	if (!ssn->ns.delim && ssn->capabilities & CAPABILITY_NAMESPACE &&
 	    get_option_boolean("namespace")) {
 		t = send_request(ssn, "NAMESPACE");
 		if (response_namespace(ssn, t) == -1)
