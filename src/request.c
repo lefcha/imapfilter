@@ -159,6 +159,10 @@ request_login(session **ssnptr, const char *server, const char *port, const
 		    !strncasecmp(ssl, "ssl3", 4) ||
 		    !strncasecmp(ssl, "ssl2", 4)))
 			ssn->ssl = ssl;
+	} else {
+		debug("recovering connection: %s://%s@%s:%s/%s\n", ssn->ssl ?
+		    "imaps" : "imap", ssn->username, ssn->server, ssn->port,
+		    ssn->selected ? ssn->selected : "");
 	}
 
 	if (open_connection(ssn) == -1)
