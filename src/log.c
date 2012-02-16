@@ -148,7 +148,8 @@ open_debug(void)
 
 	debugfp = fopen(opts.debug, "w");
 	if (debugfp == NULL) {
-		error("opening debug file %s: %s\n", opts.debug, strerror(errno));
+		error("opening debug file %s: %s\n", opts.debug,
+		    strerror(errno));
 		return 1;
 	}
 	return 0;

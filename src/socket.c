@@ -125,6 +125,7 @@ open_secure_connection(session *ssn)
 			    "connection has been closed cleanly\n",
 			    ssn->server);
 			goto fail;
+		case SSL_ERROR_NONE:
 		case SSL_ERROR_WANT_CONNECT:
 		case SSL_ERROR_WANT_ACCEPT:
 		case SSL_ERROR_WANT_X509_LOOKUP:
@@ -149,7 +150,7 @@ open_secure_connection(session *ssn)
 			    NULL));
 			goto fail;
 		default:
-			goto fail;
+			break;
 		}
 	}
 	if (get_option_boolean("certificates") && get_cert(ssn) == -1)
@@ -294,9 +295,7 @@ socket_secure_read(session *ssn, char *buf, size_t len)
 	int r, e;
 
 	for (;;) {
-		r = (ssize_t) SSL_read(ssn->sslsocket, buf, len);
-
-		if (r > 0)
+		if ((r = (ssize_t) SSL_read(ssn->sslsocket, buf, len)) > 0)
 			break;
 
 		switch (SSL_get_error(ssn->sslsocket, r)) {
@@ -304,6 +303,7 @@ socket_secure_read(session *ssn, char *buf, size_t len)
 			error("reading data; the connection has been closed "
 			    "cleanly\n");
 			return -1;
+		case SSL_ERROR_NONE:
 		case SSL_ERROR_WANT_READ:
 		case SSL_ERROR_WANT_WRITE:
 		case SSL_ERROR_WANT_CONNECT:
@@ -326,7 +326,7 @@ socket_secure_read(session *ssn, char *buf, size_t len)
 			    ERR_error_string(ERR_get_error(), NULL));
 			return -1;
 		default:
-			return -1;
+			break;
 		}
 	}
 
@@ -342,10 +342,10 @@ ssize_t
 socket_write(session *ssn, const char *buf, size_t len)
 {
 	int s;
-	ssize_t w, wt;
+	ssize_t r, t;
 	fd_set fds;
 
-	w = wt = 0;
+	r = t = 0;
 	s = 1;
 
 	FD_ZERO(&fds);
@@ -356,28 +356,28 @@ socket_write(session *ssn, const char *buf, size_t len)
 		    FD_ISSET(ssn->socket, &fds))) {
 #ifndef NO_SSLTLS
 			if (ssn->sslsocket) {
-				w = socket_secure_write(ssn, buf, len);
+				r = socket_secure_write(ssn, buf, len);
 
-				if (w <= 0)
+				if (r <= 0)
 					goto fail;
 			} else
 #endif
 			{
-				w = write(ssn->socket, buf, len);
+				r = write(ssn->socket, buf, len);
 
-				if (w == -1) {
+				if (r == -1) {
 					error("writing data; %s\n",
 					    strerror(errno));
 					goto fail;
-				} else if (w == 0) {
+				} else if (r == 0) {
 					goto fail;
 				}
 			}
 
-			if (w > 0) {
-				len -= w;
-				buf += w;
-				wt += w;
+			if (r > 0) {
+				len -= r;
+				buf += r;
+				t += r;
 			}
 		}
 	}
@@ -390,7 +390,7 @@ socket_write(session *ssn, const char *buf, size_t len)
 		goto fail;
 	}
 
-	return wt;
+	return t;
 fail:
 	close_connection(ssn);
 
@@ -408,9 +408,7 @@ socket_secure_write(session *ssn, const char *buf, size_t len)
 	int r, e;
 
 	for (;;) {
-		r = (ssize_t) SSL_write(ssn->sslsocket, buf, len);
-
-		if (r > 0)
+		if ((r = (ssize_t) SSL_write(ssn->sslsocket, buf, len)) > 0)
 			break;
 
 		switch (SSL_get_error(ssn->sslsocket, r)) {
@@ -418,6 +416,7 @@ socket_secure_write(session *ssn, const char *buf, size_t len)
 			error("writing data; the connection has been closed "
 			    "cleanly\n");
 			return -1;
+		case SSL_ERROR_NONE:
 		case SSL_ERROR_WANT_READ:
 		case SSL_ERROR_WANT_WRITE:
 		case SSL_ERROR_WANT_CONNECT:
@@ -440,7 +439,7 @@ socket_secure_write(session *ssn, const char *buf, size_t len)
 			    ERR_error_string(ERR_get_error(), NULL));
 			return -1;
 		default:
-			return -1;
+			break;
 		}
 	}
 

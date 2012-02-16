@@ -29,8 +29,7 @@ auth_cram_md5(const char *user, const char *pass, unsigned char *chal)
 
 	EVP_DecodeBlock(resp, chal, strlen((char *)(chal)));
 
-	HMAC_Init(&hmac, (const unsigned char *)pass, strlen(pass),
-	    EVP_md5());
+	HMAC_Init(&hmac, (const unsigned char *)pass, strlen(pass), EVP_md5());
 	HMAC_Update(&hmac, resp, strlen((char *)(resp)));
 	HMAC_Final(&hmac, md, &mdlen);
 

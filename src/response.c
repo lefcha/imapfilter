@@ -219,7 +219,8 @@ response_generic(session *ssn, int tag)
 
 	do {
 		buffer_check(&ibuf, ibuf.len + INPUT_BUF);
-		if ((n = receive_response(ssn, ibuf.data + ibuf.len, 0, 1)) == -1)
+		if ((n = receive_response(ssn, ibuf.data + ibuf.len, 0, 1)) ==
+		    -1)
 			return -1;
 		ibuf.len += n;
 
@@ -247,7 +248,8 @@ response_continuation(session *ssn)
 
 	do {
 		buffer_check(&ibuf, ibuf.len + INPUT_BUF);
-		if ((n = receive_response(ssn, ibuf.data + ibuf.len, 0, 1)) == -1)
+		if ((n = receive_response(ssn, ibuf.data + ibuf.len, 0, 1)) ==
+		    -1)
 			return -1;
 		ibuf.len += n;
 
@@ -353,8 +355,9 @@ response_authenticate(session *ssn, int tag, unsigned char **cont)
 
 	if ((r = response_continuation(ssn)) == STATUS_CONTINUE &&
 	    !regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0))
-		*cont = (unsigned char *)xstrndup(ibuf.data + re->pmatch[1].rm_so,
-		    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
+		*cont = (unsigned char *)xstrndup(ibuf.data +
+		    re->pmatch[1].rm_so, re->pmatch[1].rm_eo -
+		    re->pmatch[1].rm_so);
 
 	return r;
 }
@@ -571,7 +574,8 @@ response_search(session *ssn, int tag, char **mesgs)
 			*m = '\0';
 		}
 
-		min = (unsigned int)(re->pmatch[1].rm_eo - re->pmatch[1].rm_so) < ibuf.len ?
+		min = (unsigned int)(re->pmatch[1].rm_eo -
+		    re->pmatch[1].rm_so) < ibuf.len ?
 		    (unsigned int)(re->pmatch[1].rm_eo - re->pmatch[1].rm_so) :
 		    ibuf.len;
 
@@ -775,7 +779,8 @@ response_fetchbody(session *ssn, int tag, char **body, size_t *len)
 
 	do {
 		buffer_check(&ibuf, ibuf.len + INPUT_BUF);
-		if ((n = receive_response(ssn, ibuf.data + ibuf.len, 0, 1)) == -1)
+		if ((n = receive_response(ssn, ibuf.data + ibuf.len, 0, 1)) ==
+		    -1)
 			return -1;
 		ibuf.len += n;
 
