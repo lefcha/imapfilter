@@ -1,4 +1,4 @@
-.Dd April 4, 2011
+.Dd February 19, 2011
 .Dt IMAPFILTER 1
 .Os
 .Sh NAME
@@ -6,8 +6,9 @@
 .Nd mail filter
 .Sh SYNOPSIS
 .Nm
-.Op Fl diVv
+.Op Fl iVv
 .Op Fl c Ar configfile
+.Op Fl d Ar debugfile
 .Op Fl e Ar 'command'
 .Op Fl l Ar logfile
 .Sh DESCRIPTION
@@ -25,26 +26,23 @@ are as follows:
 .It Fl c Ar configfile
 Path to the configuration file.  The default is
 .Pa $HOME/.imapfilter/config.lua .
-.It Fl d
-Debug mode; creates a temporary file name in
-.Pa $HOME/.imapfilter/debug.XXXXXX ,
-where debugging messages about the program's progress are printed.
+.It Fl d Ar debugfile
+File that contains debugging information about the full communication with the
+server, along with other inner workings' details.
 .It Fl e Ar 'command'
-May be used to enter one line of program (configuration).
-When this options is used,
-.Nm
-will not look for any configuration file.
+May be used to enter
+.Dq one line
+of configuration, while it is also possible to pipe a full configuration as a
+string.
+When this options is used, a configuration file will not be loaded.
 .It Fl i
-Enters interactive mode after executing the configuration file or the command
-line.
+Enters interactive mode after executing the configuration file.
 .It Fl l Ar logfile
-File that contains logs of error messages
-.Nm
-produces.
+File that contains logs of error messages produced.
 .It Fl V
-Displays program's version.
+Displays version and copyright information.
 .It Fl v
-Verbose mode; prints detailed information about the program's actions.
+Enables printing of some brief details of the communication with the server.
 .El
 .Sh ENVIRONMENT
 .Bl -tag -width Ds
@@ -59,8 +57,6 @@ as user passwords, the recommended permissions are read/write for the user, and
 not accessible by others.
 .It Pa $HOME/.imapfilter/certificates
 File where the SSL/TLS certificates are stored.
-.It Pa $HOME/.imapfilter/debug.XXXXXX
-Debug files.
 .El
 .Sh SEE ALSO
 .Xr imapfilter_config 5
