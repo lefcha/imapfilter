@@ -1,4 +1,4 @@
-.Dd December 8, 2011
+.Dd February 19, 2012
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -1267,16 +1267,3 @@ User's home directory.
 .El
 .Sh SEE ALSO
 .Xr imapfilter 1
-.Sh BUGS
-.Pp
-Since version 2.2, a different format is used for the returned structures of
-the searching methods, due to the introduction of multiple mailbox searching
-and meta-searching, and thus any configuration files that rely on them should
-be updated.  Consequently, the processing and fetching methods have been also
-enhanced and the relevant documentation modified, and while these changes are
-backwards compatible, an update of the configuration file is still recommended.
-.Pp
-Since version 2.0, the configuration file format has changed.  The new format
-is not backwards compatible, and thus it should not be mixed with the old
-format. Nevertheless, configuration files that employ the old, and now
-deprecated, format can still be read and executed as before.
