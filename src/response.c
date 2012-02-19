@@ -240,8 +240,9 @@ response_generic(session *ssn, int tag)
  * Get server data and make sure there is a continuation response inside them.
  */
 int
-response_continuation(session *ssn)
+response_continuation(session *ssn, int tag)
 {
+	int r;
 	ssize_t n;
 
 	buffer_reset(&ibuf);
@@ -255,9 +256,17 @@ response_continuation(session *ssn)
 
 		if (check_bye(ibuf.data))
 			return STATUS_BYE;
-	} while (!check_continuation(ibuf.data));
+	} while ((r = check_tag(ibuf.data, ssn, tag)) == STATUS_NONE &&
+	    !check_continuation(ibuf.data));
 
-	return STATUS_CONTINUE;
+	if (r == STATUS_NO &&
+	    (check_trycreate(ibuf.data) || get_option_boolean("create")))
+		return STATUS_TRYCREATE;
+
+	if (r == STATUS_NONE)
+		return STATUS_CONTINUE;
+
+	return r;
 }
 
 
@@ -348,7 +357,7 @@ response_authenticate(session *ssn, int tag, unsigned char **cont)
 
 	re = &responses[RESPONSE_AUTHENTICATE];
 
-	if ((r = response_continuation(ssn)) == STATUS_CONTINUE &&
+	if ((r = response_continuation(ssn, tag)) == STATUS_CONTINUE &&
 	    !regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0))
 		*cont = (unsigned char *)xstrndup(ibuf.data +
 		    re->pmatch[1].rm_so, re->pmatch[1].rm_eo -

@@ -603,25 +603,18 @@ request_copy(session *ssn, const char *mesg, const char *mbox)
 
 	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
 
-	do {
+	TRY(t = send_request(ssn, "UID COPY %s \"%s\"", mesg, m));
+	TRY(r = response_generic(ssn, t));
+	if (r == STATUS_TRYCREATE) {
+		TRY(t = send_request(ssn, "CREATE \"%s\"", m));
+		TRY(response_generic(ssn, t));
+		if (get_option_boolean("subscribe")) {
+			TRY(t = send_request(ssn, "SUBSCRIBE \"%s\"", m));
+			TRY(response_generic(ssn, t));
+		}
 		TRY(t = send_request(ssn, "UID COPY %s \"%s\"", mesg, m));
 		TRY(r = response_generic(ssn, t));
-		switch (r) {
-		case STATUS_TRYCREATE:
-			TRY(t = send_request(ssn, "CREATE \"%s\"", m));
-			TRY(response_generic(ssn, t));
-
-			if (get_option_boolean("subscribe")) {
-				TRY(t = send_request(ssn, "SUBSCRIBE \"%s\"",
-				    m));
-				TRY(response_generic(ssn, t));
-			}
-			break;
-		case -1:
-			return -1;
-			break;
-		}
-	} while (r == STATUS_TRYCREATE);
+	}
 
 	return r;
 }
@@ -639,33 +632,30 @@ request_append(session *ssn, const char *mbox, const char *mesg, size_t
 
 	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
 
-	do {
+	TRY(t = send_request(ssn, "APPEND \"%s\"%s%s%s%s%s%s {%d}", m,
+		(flags ? " (" : ""), (flags ? flags : ""),
+		(flags ? ")" : ""), (date ? " \"" : ""),
+		(date ? date : ""), (date ? "\"" : ""), mesglen));
+	TRY(r = response_continuation(ssn, t));
+
+	if (r == STATUS_TRYCREATE) {
+		TRY(t = send_request(ssn, "CREATE \"%s\"", m));
+		TRY(response_generic(ssn, t));
+		if (get_option_boolean("subscribe")) {
+			TRY(t = send_request(ssn, "SUBSCRIBE \"%s\"", m));
+			TRY(response_generic(ssn, t));
+		}
 		TRY(t = send_request(ssn, "APPEND \"%s\"%s%s%s%s%s%s {%d}", m,
 			(flags ? " (" : ""), (flags ? flags : ""),
 			(flags ? ")" : ""), (date ? " \"" : ""),
 			(date ? date : ""), (date ? "\"" : ""), mesglen));
-		TRY(r = response_continuation(ssn));
+		TRY(r = response_continuation(ssn, t));
+	}
 
-		switch (r) {
-		case STATUS_CONTINUE:
-			TRY(send_continuation(ssn, mesg, mesglen)); 
-			TRY(r = response_generic(ssn, t));
-			break;
-		case STATUS_TRYCREATE:
-			TRY(t = send_request(ssn, "CREATE \"%s\"", m));
-			TRY(response_generic(ssn, t));
-
-			if (get_option_boolean("subscribe")) {
-				TRY(t = send_request(ssn, "SUBSCRIBE \"%s\"",
-				    m));
-				TRY(response_generic(ssn, t));
-			}
-			break;
-		case -1:
-			return -1;
-			break;
-		}
-	} while (r == STATUS_TRYCREATE);
+	if (r == STATUS_CONTINUE) {
+		TRY(send_continuation(ssn, mesg, mesglen)); 
+		TRY(r = response_generic(ssn, t));
+	}
 
 	return r;
 }
@@ -774,7 +764,7 @@ request_idle(session *ssn)
 		ri = 0;
 
 		TRY(t = send_request(ssn, "IDLE"));
-		TRY(r = response_continuation(ssn));
+		TRY(r = response_continuation(ssn, t));
 		if (r == STATUS_CONTINUE) {
 			TRY(ri = response_idle(ssn, t));
 			TRY(send_continuation(ssn, "DONE", strlen("DONE")));

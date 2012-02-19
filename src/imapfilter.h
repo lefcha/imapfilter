@@ -181,7 +181,7 @@ int request_idle(session *ssn);
 
 /*	response.c	*/
 int response_generic(session *ssn, int tag);
-int response_continuation(session *ssn);
+int response_continuation(session *ssn, int tag);
 int response_greeting(session *ssn);
 int response_capability(session *ssn, int tag);
 int response_authenticate(session *ssn, int tag, unsigned char **cont);
