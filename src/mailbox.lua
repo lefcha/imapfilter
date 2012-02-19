@@ -797,6 +797,11 @@ function Mailbox.append_message(self, message, flags, date)
     r = ifcore.append(self._account._session, self._mailbox, message, flags,
     date)
     if r == nil then error("append request failed", 0) end
+    if options.info == true and r == true then
+        print(string.format("Appended message of %d octets to %s@%s/%s.",
+                            #message, self._account._username,
+                            self._account._server, self._mailbox))
+    end
     
     return r
 end
