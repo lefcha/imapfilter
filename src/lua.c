@@ -115,7 +115,7 @@ init_options(void)
 	set_table_boolean("namespace", 1);
 	set_table_boolean("starttls", 1);
 	set_table_boolean("subscribe", 0);
-	set_table_number("timeout", 0);
+	set_table_number("timeout", 60);
 
 	lua_setglobal(lua, "options");
 }
