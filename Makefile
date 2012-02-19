@@ -1,2 +1,2 @@
-all nossl install uninstall clean:
+all install uninstall clean:
 	cd src && $(MAKE) $@

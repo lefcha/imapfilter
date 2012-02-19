@@ -181,7 +181,6 @@ request_login(session **ssnptr, const char *server, const char *port, const
 	if (response_capability(ssn, t) == -1)
 		goto fail;
 
-#ifndef NO_SSLTLS
 	if (!ssn->ssl && ssn->capabilities & CAPABILITY_STARTTLS &&
 	    get_option_boolean("starttls")) {
 		t = send_request(ssn, "STARTTLS");
@@ -198,10 +197,8 @@ request_login(session **ssnptr, const char *server, const char *port, const
 			break;
 		}
 	}
-#endif
 
 	if (rg != STATUS_PREAUTH) {
-#ifndef NO_CRAMMD5
 		if (ssn->capabilities & CAPABILITY_CRAMMD5 &&
 		    get_option_boolean("crammd5")) {
 			unsigned char *in, *out;
@@ -221,7 +218,6 @@ request_login(session **ssnptr, const char *server, const char *port, const
 			} else
 				goto fail;
 		}
-#endif
 		if (r != STATUS_OK) {
 			t = send_request(ssn, "LOGIN \"%s\" \"%s\"",
 			    ssn->username, ssn->password);

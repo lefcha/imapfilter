@@ -1,5 +1,3 @@
-#ifndef NO_SSLTLS
-
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -7,13 +5,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "imapfilter.h"
-#include "session.h"
-
 #include <openssl/x509.h>
 #include <openssl/ssl.h>
 #include <openssl/pem.h>
 #include <openssl/evp.h>
+
+#include "imapfilter.h"
+#include "session.h"
 
 
 extern environment env;
@@ -207,4 +205,3 @@ mismatch_cert(void)
 	else
 		return -1;
 }
-#endif				/* NO_SSLTLS */

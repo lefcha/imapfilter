@@ -9,11 +9,9 @@
 #include <lua.h>
 #include <lualib.h>
 
-#include "session.h"
-
-#ifndef NO_SSLTLS
 #include <openssl/ssl.h>
-#endif
+
+#include "session.h"
 
 
 /* Fatal error exit codes. */
@@ -79,15 +77,11 @@ typedef struct environment {
 
 
 /*	auth.c		*/
-#ifndef NO_CRAMMD5
 unsigned char *auth_cram_md5(const char *user, const char *pass,
     unsigned char *chal);
-#endif
 
 /*	cert.c		*/
-#ifndef NO_SSLTLS
 int get_cert(session *ssn);
-#endif
 
 /*	core.c		*/
 LUALIB_API int luaopen_ifcore(lua_State *lua);
@@ -218,12 +212,10 @@ int close_connection(session *ssn);
 ssize_t socket_read(session *ssn, char *buf, size_t len, long timeout,
     int timeoutfail);
 ssize_t socket_write(session *ssn, const char *buf, size_t len);
-#ifndef NO_SSLTLS
 int open_secure_connection(session *ssn);
 int close_secure_connection(session *ssn);
 ssize_t socket_secure_read(session *ssn, char *buf, size_t len);
 ssize_t socket_secure_write(session *ssn, const char *buf, size_t len);
-#endif
 
 /*	system.c	*/
 LUALIB_API int luaopen_ifsys(lua_State *lua);

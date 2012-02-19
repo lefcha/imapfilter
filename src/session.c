@@ -41,9 +41,7 @@ session_init(session *ssn)
 	ssn->username = NULL;
 	ssn->password = NULL;
 	ssn->socket = -1;
-#ifndef NO_SSLTLS
 	ssn->sslsocket = NULL;
-#endif
 	ssn->protocol = PROTOCOL_NONE;
 	ssn->capabilities = CAPABILITY_NONE;
 	ssn->ns.prefix = NULL;

@@ -4,9 +4,21 @@ BINDIR = $(PREFIX)/bin
 SHAREDIR = $(PREFIX)/share/imapfilter
 MANDIR = $(PREFIX)/man
 
-CFLAGS = -Wall -O -DMAKEFILE_SHAREDIR='"$(SHAREDIR)"'
-LDFLAGS =
-LIBS = -lm -llua -lpcre -lssl -lcrypto
+MYCFLAGS =
+MYLDFLAGS =
+MYLIBS =
+
+INCDIRS =
+LIBDIRS =
+
+LIBLUA = -llua
+LIBPCRE = -lpcre
+LIBSSL = -lssl
+LIBCRYPTO = -lcrypto
+
+CFLAGS = -Wall -O -DCONFIG_SHAREDIR='"$(SHAREDIR)"' $(INCDIRS) $(MYCFLAGS)
+LDFLAGS = $(LIBDIRS) $(MYLDFLAGS)
+LIBS = -lm $(LIBLUA) $(LIBPCRE) $(LIBSSL) $(LIBCRYPTO) $(MYLIBS)
 
 MAN1 = imapfilter.1
 MAN5 = imapfilter_config.5
@@ -20,10 +32,6 @@ OBJ = auth.o buffer.o cert.o core.o file.o imapfilter.o list.o log.o lua.o \
       session.o signal.o socket.o system.o
 
 all: $(BIN)
-
-nossl:
-	$(MAKE) $(BIN) CFLAGS="-Wall -O -DMAKEFILE_SHAREDIR='\"$(SHAREDIR)\"' \
-		-DNO_SSLTLS -DNO_CRAMMD5" LIBS="-lm -llua -lpcre"
 
 $(BIN): $(OBJ)
 	$(CC) -o $(BIN) $(LDFLAGS) $(OBJ) $(LIBS)

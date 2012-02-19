@@ -7,6 +7,9 @@
 #include <sys/stat.h>
 #include <locale.h>
 
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+
 #include "imapfilter.h"
 #include "session.h"
 #include "list.h"
@@ -14,11 +17,6 @@
 #include "buffer.h"
 #include "pathnames.h"
 #include "regexp.h"
-
-#ifndef NO_SSLTLS
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#endif
 
 
 extern buffer ibuf, obuf, nbuf, cbuf;
@@ -100,10 +98,8 @@ main(int argc, char *argv[])
 
 	regexp_compile(responses);
 
-#ifndef NO_SSLTLS
 	SSL_library_init();
 	SSL_load_error_strings();
-#endif
 
 	start_lua();
 #if LUA_VERSION_NUM < 502
@@ -122,9 +118,7 @@ main(int argc, char *argv[])
 #endif
 	stop_lua();
 
-#ifndef NO_SSLTLS
 	ERR_free_strings();
-#endif
 
 	regexp_free(responses);
 

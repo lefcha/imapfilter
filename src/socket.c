@@ -10,13 +10,11 @@
 #include <sys/time.h>
 #include <sys/select.h>
 
-#include "imapfilter.h"
-#include "session.h"
-
-#ifndef NO_SSLTLS
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-#endif
+
+#include "imapfilter.h"
+#include "session.h"
 
 
 /*
@@ -27,13 +25,6 @@ open_connection(session *ssn)
 {
 	struct addrinfo hints, *res, *ressave;
 	int n, sockfd;
-
-#ifdef NO_SSLTLS
-	if (ssn->ssl) {
-		error("SSL not supported by this build\n");
-		return -1;
-	}
-#endif
 
 	memset(&hints, 0, sizeof(struct addrinfo));
 
@@ -75,20 +66,17 @@ open_connection(session *ssn)
 
 	ssn->socket = sockfd;
 
-#ifndef NO_SSLTLS
 	if (ssn->ssl) {
 		if (open_secure_connection(ssn) == -1) {
 			close_connection(ssn);
 			return -1;
 		}
 	}
-#endif
 
 	return ssn->socket;
 }
 
 
-#ifndef NO_SSLTLS
 /*
  * Initialize SSL/TLS connection.
  */
@@ -166,7 +154,6 @@ fail:
 
 	return -1;
 }
-#endif				/* NO_SSLTLS */
 
 
 /*
@@ -179,9 +166,7 @@ close_connection(session *ssn)
 
 	r = 0;
 
-#ifndef NO_SSLTLS
 	close_secure_connection(ssn);
-#endif
 
 	if (ssn->socket != -1) {
 		r = close(ssn->socket);
@@ -194,7 +179,6 @@ close_connection(session *ssn)
 }
 
 
-#ifndef NO_SSLTLS
 /*
  * Shutdown SSL/TLS connection.
  */
@@ -210,7 +194,6 @@ close_secure_connection(session *ssn)
 
 	return 0;
 }
-#endif
 
 
 /*
@@ -242,7 +225,6 @@ socket_read(session *ssn, char *buf, size_t len, long timeout, int timeoutfail)
 	FD_ZERO(&fds);
 	FD_SET(ssn->socket, &fds);
  
-#ifndef NO_SSLTLS
 	if (ssn->sslsocket) {
 		if (SSL_pending(ssn->sslsocket) > 0 ||
 		    ((s = select(ssn->socket + 1, &fds, NULL, NULL, tvp)) > 0 &&
@@ -252,9 +234,7 @@ socket_read(session *ssn, char *buf, size_t len, long timeout, int timeoutfail)
 			if (r <= 0)
 				goto fail;
 		}
-	} else
-#endif
-	{
+	} else {
 		if ((s = select(ssn->socket + 1, &fds, NULL, NULL, tvp)) > 0 &&
 		    FD_ISSET(ssn->socket, &fds)) {
 			r = read(ssn->socket, buf, len);
@@ -285,7 +265,6 @@ fail:
 }
 
 
-#ifndef NO_SSLTLS
 /*
  * Read data from a TLS/SSL connection.
  */
@@ -332,7 +311,6 @@ socket_secure_read(session *ssn, char *buf, size_t len)
 
 	return r;
 }
-#endif
 
 
 /*
@@ -354,15 +332,12 @@ socket_write(session *ssn, const char *buf, size_t len)
 	while (len) {
 		if ((s = select(ssn->socket + 1, NULL, &fds, NULL, NULL) > 0 &&
 		    FD_ISSET(ssn->socket, &fds))) {
-#ifndef NO_SSLTLS
 			if (ssn->sslsocket) {
 				r = socket_secure_write(ssn, buf, len);
 
 				if (r <= 0)
 					goto fail;
-			} else
-#endif
-			{
+			} else {
 				r = write(ssn->socket, buf, len);
 
 				if (r == -1) {
@@ -398,7 +373,6 @@ fail:
 }
 
 
-#ifndef NO_SSLTLS
 /*
  * Write data to a TLS/SSL connection.
  */
@@ -445,4 +419,3 @@ socket_secure_write(session *ssn, const char *buf, size_t len)
 
 	return r;
 }
-#endif

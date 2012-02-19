@@ -3,28 +3,28 @@
 
 
 /* Lua imapfilter set functions file. */
-#define PATHNAME_COMMON			MAKEFILE_SHAREDIR "/common.lua"
+#define PATHNAME_COMMON			CONFIG_SHAREDIR "/common.lua"
 
 /* Lua imapfilter set functions file. */
-#define PATHNAME_SET			MAKEFILE_SHAREDIR "/set.lua"
+#define PATHNAME_SET			CONFIG_SHAREDIR "/set.lua"
 
 /* Lua imapfilter account functions file. */
-#define PATHNAME_ACCOUNT		MAKEFILE_SHAREDIR "/account.lua"
+#define PATHNAME_ACCOUNT		CONFIG_SHAREDIR "/account.lua"
 
 /* Lua imapfilter mailbox functions file. */
-#define PATHNAME_MAILBOX		MAKEFILE_SHAREDIR "/mailbox.lua"
+#define PATHNAME_MAILBOX		CONFIG_SHAREDIR "/mailbox.lua"
 
 /* Lua imapfilter message functions file. */
-#define PATHNAME_MESSAGE		MAKEFILE_SHAREDIR "/message.lua"
+#define PATHNAME_MESSAGE		CONFIG_SHAREDIR "/message.lua"
 
 /* Lua imapfilter message functions file. */
-#define PATHNAME_OPTIONS		MAKEFILE_SHAREDIR "/options.lua"
+#define PATHNAME_OPTIONS		CONFIG_SHAREDIR "/options.lua"
 
 /* Lua imapfilter regex functions file. */
-#define PATHNAME_REGEX			MAKEFILE_SHAREDIR "/regex.lua"
+#define PATHNAME_REGEX			CONFIG_SHAREDIR "/regex.lua"
 
 /* Lua imapfilter auxiliary functions file. */
-#define PATHNAME_AUXILIARY		MAKEFILE_SHAREDIR "/auxiliary.lua"
+#define PATHNAME_AUXILIARY		CONFIG_SHAREDIR "/auxiliary.lua"
 
 
 #endif				/* PATHNAMES_H */

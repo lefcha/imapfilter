@@ -320,14 +320,10 @@ response_capability(session *ssn, int tag)
 
 		if (xstrcasestr(s, "NAMESPACE"))
 			ssn->capabilities |= CAPABILITY_NAMESPACE;
-#ifndef NO_CRAMMD5
 		if (xstrcasestr(s, "AUTH=CRAM-MD5"))
 			ssn->capabilities |= CAPABILITY_CRAMMD5;
-#endif
-#ifndef NO_SSLTLS
 		if (xstrcasestr(s, "STARTTLS"))
 			ssn->capabilities |= CAPABILITY_STARTTLS;
-#endif
 		if (xstrcasestr(s, "CHILDREN"))
 			ssn->capabilities |= CAPABILITY_CHILDREN;
 
@@ -341,7 +337,6 @@ response_capability(session *ssn, int tag)
 }
 
 
-#ifndef NO_CRAMMD5
 /*
  * Process the data that server sent due to IMAP AUTHENTICATE client request.
  */
@@ -361,7 +356,6 @@ response_authenticate(session *ssn, int tag, unsigned char **cont)
 
 	return r;
 }
-#endif
 
 
 /*

@@ -1,11 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "imapfilter.h"
-
-#ifndef NO_CRAMMD5
 #include <openssl/hmac.h>
 #include <openssl/evp.h>
+
+#include "imapfilter.h"
 
 
 /*
@@ -57,4 +56,3 @@ auth_cram_md5(const char *user, const char *pass, unsigned char *chal)
 
 	return out;
 }
-#endif				/* NO_CRAMMD5 */
