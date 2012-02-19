@@ -144,7 +144,7 @@ usage(void)
 {
 
 	fprintf(stderr, "usage: imapfilter [-iVv] [-c configfile] "
-	    "[-e 'command'] [-l logfile] [-d debugfile]\n");
+	    "[-d debugfile] [-e 'command'] [-l logfile]\n");
 
 	exit(0);
 }
