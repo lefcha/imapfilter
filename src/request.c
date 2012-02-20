@@ -253,7 +253,6 @@ request_login(session **ssnptr, const char *server, const char *port, const
 
 	return r;
 fail:
-	close_connection(ssn);
 	session_destroy(ssn);
 
 	return -1;
