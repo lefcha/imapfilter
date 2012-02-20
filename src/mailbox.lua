@@ -367,6 +367,8 @@ function Mailbox._fetch_message(self, messages)
         end
     end
 
+    if options.close == true then self._cached_close(self) end
+
     return results
 end
 
@@ -1059,6 +1061,8 @@ function Mailbox.enter_idle(self)
    
     local r = ifcore.idle(self._account._session)
     if r == nil then error("idle request failed", 0) end
+
+    if options.close == true then self._cached_close(self) end
 
     return r
 end
