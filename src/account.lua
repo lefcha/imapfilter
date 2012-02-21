@@ -272,6 +272,8 @@ function Account.unsubscribe_mailbox(self, name)
     return r
 end
 
+Account.login = Account._login_user
+Account.logout = Account._logout_user
 
 Account._mt.__index = function () end
 Account._mt.__newindex = function () end

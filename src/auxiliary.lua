@@ -63,3 +63,5 @@ function become_daemon(interval, commands, nochdir, noclose)
         commands()
     until ifsys.sleep(interval) ~= 0
 end
+
+sleep = ifsys.sleep

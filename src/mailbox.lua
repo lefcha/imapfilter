@@ -1151,6 +1151,8 @@ function Mailbox.enter_idle(self)
     return r
 end
 
+Mailbox.select = _cached_select
+Mailbox.close = _cached_close
 
 Mailbox._mt.__index = function () end
 Mailbox._mt.__newindex = function () end
