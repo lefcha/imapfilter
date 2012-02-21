@@ -18,13 +18,14 @@ Account._mt.__call = function (self, arg)
     local object = {}
 
     object._type = 'account'
-    object._server = arg.server
-    object._username = arg.username
-    object._password = arg.password
-    object._port = tostring(arg.port or arg.ssl and 993 or 143)
-    object._ssl = arg.ssl or ''
-    object._session = nil
-    object._selected = nil
+    object._account = {}
+    object._account.server = arg.server
+    object._account.username = arg.username
+    object._account.password = arg.password
+    object._account.port = tostring(arg.port or arg.ssl and 993 or 143)
+    object._account.ssl = arg.ssl or ''
+    object._account.session = nil
+    object._account.selected = nil
 
     for key, value in pairs(Account) do
         if type(value) == 'function' then object[key] = value end
@@ -42,17 +43,18 @@ end
 
 
 function Account._login_user(self)
-    if self._password == nil then
-        self._password = get_password('Enter password for ' ..
-            self._username .. '@' .. self._server .. ': ')
+    if self._account.password == nil then
+        self._account.password = get_password('Enter password for ' ..
+            self._account.username .. '@' .. self._account.server .. ': ')
     end
 
-    local r, s = ifcore.login(self._server, self._port, self._ssl,
-                              self._username, self._password)
+    local r, s = ifcore.login(self._account.server, self._account.port,
+                              self._account.ssl, self._account.username,
+                              self._account.password)
 
     if r == true then
-        self._session = s
-        self._selected = nil
+        self._account.session = s
+        self._account.selected = nil
         return true
     elseif r == false then
         return true
@@ -62,11 +64,14 @@ function Account._login_user(self)
 end
 
 function Account._logout_user(self)
-    local r = ifcore.logout(self._session)
+    if not self._account.session then error("not connected", 0) end
+    local r = ifcore.logout(self._account.session)
     if r == true then
-        self._session = nil
-        self._selected = nil
+        self._account.session = nil
+        self._account.selected = nil
     elseif r == nil then
+        self._account.session = nil
+        self._account.selected = nil
         error("logout request failed", 0)
     end
 end
@@ -96,11 +101,15 @@ function Account.list_all(self, folder, mbox)
     end
     if mbox == nil then mbox = '%' end
 
-    local r, mailboxes, folders = ifcore.list(self._session, '', folder .. mbox)
+    if not self._account.session then error("not connected", 0) end
+    local r, mailboxes, folders = ifcore.list(self._account.session, '',
+                                              folder .. mbox)
 
     if r == false then
         return false
     elseif r == nil then
+        self._account.session = nil
+        self._account.selected = nil
         error("list request failed", 0)
     end
 
@@ -133,11 +142,15 @@ function Account.list_subscribed(self, folder, mbox)
     end
     if mbox == nil then mbox = '*' end
 
-    local r, mailboxes, folders = ifcore.lsub(self._session, '', folder .. mbox)
+    if not self._account.session then error("not connected", 0) end
+    local r, mailboxes, folders = ifcore.lsub(self._account.session, '',
+                                              folder .. mbox)
 
     if r == false then
         return false
     elseif r == nil then
+        self._account.session = nil
+        self._account.selected = nil
         error("lsub request failed", 0)
     end
 
@@ -158,13 +171,18 @@ end
 function Account.create_mailbox(self, name)
     _check_required(name, 'string')
 
-    local r = ifcore.create(self._session, name)
+    if not self._account.session then error("not connected", 0) end
+    local r = ifcore.create(self._account.session, name)
 
-    if r == nil then error("create request failed", 0) end
+    if r == nil then
+        self._account.session = nil
+        self._account.selected = nil
+        error("create request failed", 0)
+    end
 
     if options.info == true then
         print(string.format("Created mailbox %s@%s/%s.",
-                            self._username, self._server, name))
+                            self._account.username, self._account.server, name))
     end
 
     return r
@@ -173,13 +191,18 @@ end
 function Account.delete_mailbox(self, name)
     _check_required(name, 'string')
 
-    local r = ifcore.delete(self._session, name)
+    if not self._account.session then error("not connected", 0) end
+    local r = ifcore.delete(self._account.session, name)
 
-    if r == nil then error("delete request failed", 0) end
+    if r == nil then
+        self._account.session = nil
+        self._account.selected = nil
+        error("delete request failed", 0)
+    end
 
     if options.info == true then
         print(string.format("Deleted mailbox %s@%s/%s.",
-                            self._username, self._server, name))
+                            self._account.username, self._account.server, name))
     end
 
     return r
@@ -189,14 +212,20 @@ function Account.rename_mailbox(self, oldname, newname)
     _check_required(oldname, 'string')
     _check_required(newname, 'string')
 
-    local r = ifcore.rename(self._session, oldname, newname)
+    if not self._account.session then error("not connected", 0) end
+    local r = ifcore.rename(self._account.session, oldname, newname)
 
-    if r == nil then error("rename request failed", 0) end
+    if r == nil then
+        self._account.session = nil
+        self._account.selected = nil
+        error("rename request failed", 0)
+    end
 
     if options.info == true then
         print(string.format("Renamed mailbox %s@%s/%s to %s@%s/%s.",
-                            self._username, self._server, oldname,
-                            self._username, self._server, newname))
+                            self._account.username, self._account.server,
+                            oldname, self._account.username,
+                            self._account.server, newname))
     end
 
     return r
@@ -205,13 +234,18 @@ end
 function Account.subscribe_mailbox(self, name)
     _check_required(name, 'string')
 
-    local r = ifcore.subscribe(self._session, name)
+    if not self._account.session then error("not connected", 0) end
+    local r = ifcore.subscribe(self._account.session, name)
 
-    if r == nil then error("subscribe request failed", 0) end
+    if r == nil then
+        self._account.session = nil
+        self._account.selected = nil
+        error("subscribe request failed", 0)
+    end
 
     if options.info == true then
         print(string.format("Subscribed mailbox %s@%s/%s.",
-                            self._username, self._server, name))
+                            self._account.username, self._account.server, name))
     end
 
     return r
@@ -220,13 +254,18 @@ end
 function Account.unsubscribe_mailbox(self, name)
     _check_required(name, 'string')
 
-    local r = ifcore.unsubscribe(self._session, name)
+    if not self._account.session then error("not connected", 0) end
+    local r = ifcore.unsubscribe(self._account.session, name)
 
-    if r == nil then error("unsubscribe request failed", 0) end
+    if r == nil then
+        self._account.session = nil
+        self._account.selected = nil
+        error("unsubscribe request failed", 0)
+    end
 
     if options.info == true then
         print(string.format("Unsubscribed mailbox %s@%s/%s.",
-                            self._username, self._server, name))
+                            self._account.username, self._account.server, name))
     end
 
     return r

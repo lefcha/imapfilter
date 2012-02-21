@@ -26,7 +26,7 @@ end
 
 
 function Mailbox._attach_message(self, uid)
-    self[uid] = Message(self._account, self, uid)
+    self[uid] = Message(self._account._account, self, uid)
     return self[uid]
 end
 
@@ -36,15 +36,18 @@ end
 
 
 function Mailbox._cached_select(self)
-    if self._account._selected == nil or
-        self._account._selected ~= self._mailbox then
-        local r = ifcore.select(self._account._session, self._mailbox)
+    if self._account._account.selected == nil or
+        self._account._account.selected ~= self._mailbox then
+        if not self._account._account.session then error("not connected", 0) end
+        local r = ifcore.select(self._account._account.session, self._mailbox)
         if r == true then
-            self._account._selected = self._mailbox
+            self._account._account.selected = self._mailbox
             return true
         elseif r == false then
             return false
         elseif r == nil then
+            self._account._account.session = nil
+            self._account._account.selected = nil
             error("select request failed", 0)
         end
     else
@@ -53,9 +56,14 @@ function Mailbox._cached_select(self)
 end
 
 function Mailbox._cached_close(self)
-    self._account._selected = nil
-    local r = ifcore.close(self._account._session)
-    if r == nil then error("close request failed", 0) end
+    self._account._account.selected = nil
+    if not self._account._account.session then error("not connected", 0) end
+    local r = ifcore.close(self._account._account.session)
+    if r == nil then
+        self._account._account.session = nil
+        self._account._account.selected = nil
+        error("close request failed", 0)
+    end
     return r
 end
 
@@ -83,10 +91,14 @@ function Mailbox._send_query(self, criteria, charset)
         end
     end
 
-    local r, results = ifcore.search(self._account._session, query, charset)
+    if not self._account._account.session then error("not connected", 0) end
+    local r, results = ifcore.search(self._account._account.session, query,
+                                     charset)
     if r == false then 
         return false
     elseif r == nil then
+        self._account._account.session = nil
+        self._account._account.selected = nil
         error("search request failed", 0)
     end
 
@@ -116,11 +128,14 @@ function Mailbox._flag_messages(self, mode, flags, messages)
         if n < j then
             j = n
         end
-        r = ifcore.store(self._account._session, table.concat(m, ',', i, j),
-                         mode, f)
+        if not self._account._account.session then error("not connected", 0) end
+        r = ifcore.store(self._account._account.session, table.concat(m, ',',
+                         i, j), mode, f)
         if r == false then
             break
         elseif r == nil then
+            self._account._account.session = nil
+            self._account._account.selected = nil
             error("store request failed", 0)
         end
     end
@@ -135,7 +150,7 @@ function Mailbox._copy_messages(self, dest, messages)
     if not messages or #messages == 0 then return end
 
     local r = false
-    if self._account._session == dest._account._session then
+    if self._account._account.session == dest._account._account.session then
         if self._cached_select(self) ~= true then return end
 
         local m = _make_range(messages)
@@ -145,11 +160,16 @@ function Mailbox._copy_messages(self, dest, messages)
             if n < j then
                 j = n
             end
-            r = ifcore.copy(self._account._session, table.concat(m, ',', i, j),
-                            dest._mailbox)
+            if not self._account._account.session then 
+                error("not connected", 0)
+            end
+            r = ifcore.copy(self._account._account.session,
+                            table.concat(m, ',', i, j), dest._mailbox)
             if r == false then
                 break
             elseif r == nil then
+                self._account._account.session = nil
+                self._account._account.selected = nil
                 error("copy request failed", 0)
             end
         end
@@ -166,10 +186,17 @@ function Mailbox._copy_messages(self, dest, messages)
                 end
             end
 
-            r = ifcore.append(dest._account._session, dest._mailbox, mesgs[i],
-                              table.concat(fast[i]['flags'], ' '),
+            if not self._account._account.session then
+                error("not connected", 0)
+            end
+            r = ifcore.append(dest._account._account.session, dest._mailbox,
+                              mesgs[i], table.concat(fast[i]['flags'], ' '),
                               fast[i]['date'])
-            if r == nil then error("append request failed", 0) end
+            if r == nil then
+                self._account._account.session = nil
+                self._account._account.selected = nil
+                error("append request failed", 0)
+            end
         end
     end
 
@@ -183,11 +210,14 @@ function Mailbox._fetch_fast(self, messages)
 
     local results = {}
     for _, m in ipairs(messages) do
-        local r, flags, date, size = ifcore.fetchfast(self._account._session,
-                                                      tostring(m))
+        if not self._account._account.session then error("not connected", 0) end
+        local r, flags, date, size =
+            ifcore.fetchfast(self._account._account.session, tostring(m))
         if r == false then
             return false
         elseif r == nil then
+            self._account._account.session = nil
+            self._account._account.selected = nil
             error("fetchfast request failed", 0)
         end
         if flags ~= nil and date ~= nil and size ~= nil  then
@@ -213,10 +243,14 @@ function Mailbox._fetch_flags(self, messages)
 
     local results = {}
     for _, m in ipairs(messages) do
-        local r, flags = ifcore.fetchflags(self._account._session, tostring(m))
+        if not self._account._account.session then error("not connected", 0) end
+        local r, flags = ifcore.fetchflags(self._account._account.session,
+                                           tostring(m))
         if r == false then
             return false
         elseif r == nil then
+            self._account._account.session = nil
+            self._account._account.selected = nil
             error("fetchflags request failed", 0)
         end
         if flags ~= nil then
@@ -243,11 +277,16 @@ function Mailbox._fetch_date(self, messages)
             self[m]._date then
             results[m] = self[m]._date
         else
-            local r, date = ifcore.fetchdate(self._account._session,
+            if not self._account._account.session then
+                error("not connected", 0)
+            end
+            local r, date = ifcore.fetchdate(self._account._account.session,
                                              tostring(m))
             if r == false then
                 return false
             elseif r == nil then
+                self._account._account.session = nil
+                self._account._account.selected = nil
                 error("fetchdate request failed", 0)
             end
             if date ~= nil then
@@ -272,11 +311,16 @@ function Mailbox._fetch_size(self, messages)
             self[m]._size then
             results[m] = self[m]._size
         else
-            local r, size = ifcore.fetchsize(self._account._session,
+            if not self._account._account.session then
+                error("not connected", 0)
+            end
+            local r, size = ifcore.fetchsize(self._account._account.session,
                                              tostring(m))
             if r == false then
                 return false
             elseif r == nil then
+                self._account._account.session = nil
+                self._account._account.selected = nil
                 error("fetchsize request failed", 0)
             end
             if size ~= nil then
@@ -301,11 +345,16 @@ function Mailbox._fetch_header(self, messages)
             self[m]._header then
             results[m] = self[m]._header
         else
-            local r, header = ifcore.fetchheader(self._account._session,
+            if not self._account._account.session then
+                error("not connected", 0)
+            end
+            local r, header = ifcore.fetchheader(self._account._account.session,
                                                  tostring(m))
             if r == false then
                 return false
             elseif r == nil then
+                self._account._account.session = nil
+                self._account._account.selected = nil
                 error("fetchheader request failed", 0)
             end
             if header ~= nil then
@@ -330,11 +379,16 @@ function Mailbox._fetch_body(self, messages)
             self[m]._body then
             results[m] = self[m]._body
         else
-            local r, body = ifcore.fetchbody(self._account._session,
+            if not self._account._account.session then
+                error("not connected", 0)
+            end
+            local r, body = ifcore.fetchbody(self._account._account.session,
                                              tostring(m))
             if r == false then
                 return false
             elseif r == nil then
+                self._account._account.session = nil
+                self._account._account.selected = nil
                 error("fetchbody request failed", 0)
             end
             if body ~= nil then
@@ -385,11 +439,17 @@ function Mailbox._fetch_fields(self, fields, messages)
                 self[m]._fields[f] then
                 results[m] = results[m] .. self[m]._fields[f]
             else
-                local r, field = ifcore.fetchfields(self._account._session,
-                                                    tostring(m), f)
+                if not self._account._account.session then
+                    error("not connected", 0)
+                end
+                local r, field =
+                    ifcore.fetchfields(self._account._account.session,
+                                       tostring(m), f)
                 if r == false then
                     return false
                 elseif r == nil then
+                    self._account._account.session = nil
+                    self._account._account.selected = nil
                     error("fetchfields request failed", 0)
                 end
                 if field ~= nil then
@@ -417,11 +477,17 @@ function Mailbox._fetch_structure(self, messages)
             self[m]._structure then
             results[m] = self[m]._structure
         else
-            local r, structure = ifcore.fetchstructure(self._account._session,
-                                                       tostring(m))
+            if not self._account._account.session then
+                error("not connected", 0)
+            end
+            local r, structure =
+                ifcore.fetchstructure(self._account._account.session,
+                                      tostring(m))
             if r == false then
                 return false
             elseif r == nil then
+                self._account._account.session = nil
+                self._account._account.selected = nil
                 error("fetchstructure request failed", 0)
             end
             if structure ~= nil then
@@ -448,11 +514,16 @@ function Mailbox._fetch_parts(self, parts, message)
             self[message]._parts[part] then
             results[part] = self[message]._parts[part]
         else
-            local r, bodypart = ifcore.fetchpart(self._account._session,
+            if not self._account._account.session then
+                error("not connected", 0)
+            end
+            local r, bodypart = ifcore.fetchpart(self._account._account.session,
                                                  tostring(message), part)
             if r == false then
                 return false
             elseif r == nil then
+                self._account._account.session = nil
+                self._account._account.selected = nil
                 error("fetchparts request failed", 0)
             end
             if bodypart ~= nil then
@@ -469,18 +540,21 @@ end
 
 
 function Mailbox.check_status(self)
+    if not self._account._account.session then error("not connected", 0) end
     local r, exist, recent, unseen, uidnext =
-        ifcore.status(self._account._session,self._mailbox)
+        ifcore.status(self._account._account.session,self._mailbox)
     if r == false then
         return false
     elseif r == nil then
+        self._account._account.session = nil
+        self._account._account.selected = nil
         error("status request failed", 0)
     end
     if options.info == true then
         print(string.format("%d messages, %d recent, %d unseen, in %s@%s/%s.",
                             exist, recent, unseen,
-                            self._account._username,
-                            self._account._server, self._mailbox))
+                            self._account._account.username,
+                            self._account._account.server, self._mailbox))
     end
 
     return exist, recent, unseen, uidnext
@@ -504,8 +578,8 @@ function Mailbox.add_flags(self, flags, messages)
     local r = self._flag_messages(self, 'add', flags, mesgs)
     if options.info == true and r == true then
         print(string.format("%d messages flagged in %s@%s/%s.",
-                            #mesgs, self._account._username,
-                            self._account._server, self._mailbox))
+                            #mesgs, self._account._account.username,
+                            self._account._account.server, self._mailbox))
     end
 
     return r
@@ -519,8 +593,8 @@ function Mailbox.remove_flags(self, flags, messages)
     local r = self._flag_messages(self, 'remove', flags, mesgs)
     if options.info == true and r == true then
         print(string.format("%d messages flagged in %s@%s/%s.",
-                            #mesgs, self._account._username,
-                            self._account._server, self._mailbox))
+                            #mesgs, self._account._account.username,
+                            self._account._account.server, self._mailbox))
     end
 
     return r
@@ -534,8 +608,8 @@ function Mailbox.replace_flags(self, flags, messages)
     local r = self._flag_messages(self, 'replace', flags, mesgs)
     if options.info == true and r == true then
         print(string.format("%d messages flagged in %s@%s/%s.",
-                            #mesgs, self._account._username,
-                            self._account._server, self._mailbox))
+                            #mesgs, self._account._account.username,
+                            self._account._account.server, self._mailbox))
     end
 
     return r
@@ -549,8 +623,8 @@ function Mailbox.mark_answered(self, messages)
     local r = self._flag_messages(self, 'add', { '\\Answered' }, mesgs)
     if options.info == true and r == true then
         print(string.format("%d messages marked answered in %s@%s/%s.",
-                            #mesgs, self._account._username,
-                            self._account._server, self._mailbox))
+                            #mesgs, self._account._account.username,
+                            self._account._account.server, self._mailbox))
     end
 
     return r
@@ -564,8 +638,8 @@ function Mailbox.mark_deleted(self, messages)
     local r = self._flag_messages(self, 'add', { '\\Deleted' }, mesgs)
     if options.info == true and r == true then
         print(string.format("%d messages marked deleted in %s@%s/%s.",
-                            #mesgs, self._account._username,
-                            self._account._server, self._mailbox))
+                            #mesgs, self._account._account.username,
+                            self._account._account.server, self._mailbox))
     end
 
     return r
@@ -578,8 +652,8 @@ function Mailbox.mark_draft(self, messages)
     local r = self._flag_messages(self, 'add', { '\\Draft' }, mesgs)
     if options.info == true and r == true then
         print(string.format("%d messages marked draft in %s@%s/%s.",
-                            #mesgs, self._account._username,
-                            self._account._server, self._mailbox))
+                            #mesgs, self._account._account.username,
+                            self._account._account.server, self._mailbox))
     end
 
     return r
@@ -592,8 +666,8 @@ function Mailbox.mark_flagged(self, messages)
     local r = self._flag_messages(self, 'add', { '\\Flagged' }, mesgs)
     if options.info == true and r == true then
         print(string.format("%d messages marked flagged in %s@%s/%s.",
-                            #mesgs, self._account._username,
-                            self._account._server, self._mailbox))
+                            #mesgs, self._account._account.username,
+                            self._account._account.server, self._mailbox))
     end
 
     return r
@@ -606,8 +680,8 @@ function Mailbox.mark_seen(self, messages)
     local r = self._flag_messages(self, 'add', { '\\Seen' }, mesgs)
     if options.info == true and r == true then
         print(string.format("%d messages marked seen in %s@%s/%s.",
-                            #mesgs, self._account._username,
-                            self._account._server, self._mailbox))
+                            #mesgs, self._account._account.username,
+                            self._account._account.server, self._mailbox))
     end
 
     return r
@@ -620,8 +694,8 @@ function Mailbox.unmark_answered(self, messages)
     local r = self._flag_messages(self, 'remove', { '\\Answered' }, mesgs)
     if options.info == true and r == true then
         print(string.format("%d messages unmarked answered in %s@%s/%s.",
-                            #mesgs, self._account._username,
-                            self._account._server, self._mailbox))
+                            #mesgs, self._account._account.username,
+                            self._account._account.server, self._mailbox))
     end
 
     return r
@@ -634,8 +708,8 @@ function Mailbox.unmark_deleted(self, messages)
     local r = self._flag_messages(self, 'remove', { '\\Deleted' }, mesgs)
     if options.info == true and r == true then
         print(string.format("%d messages unmarked deleted in %s@%s/%s.",
-                            #mesgs, self._account._username,
-                            self._account._server, self._mailbox))
+                            #mesgs, self._account._account.username,
+                            self._account._account.server, self._mailbox))
     end
 
     return r
@@ -648,8 +722,8 @@ function Mailbox.unmark_draft(self, messages)
     local r = self._flag_messages(self, 'remove', { '\\Draft' }, mesgs)
     if options.info == true and r == true then
         print(string.format("%d messages unmarked draft in %s@%s/%s.",
-                            #mesgs, self._account._username,
-                            self._account._server, self._mailbox))
+                            #mesgs, self._account._account.username,
+                            self._account._account.server, self._mailbox))
     end
 
     return r
@@ -662,8 +736,8 @@ function Mailbox.unmark_flagged(self, messages)
     local r = self._flag_messages(self, 'remove', { '\\Flagged' }, mesgs)
     if options.info == true and r == true then
         print(string.format("%d messages unmarked flagged in %s@%s/%s.",
-                            #mesgs, self._account._username,
-                            self._account._server, self._mailbox))
+                            #mesgs, self._account._account.username,
+                            self._account._account.server, self._mailbox))
     end
 
     return r
@@ -676,8 +750,8 @@ function Mailbox.unmark_seen(self, messages)
     local r = self._flag_messages(self, 'remove', { '\\Seen' }, mesgs)
     if options.info == true and r == true then
         print(string.format("%d messages unmarked seen in %s@%s/%s.",
-                            #mesgs, self._account._username,
-                            self._account._server, self._mailbox))
+                            #mesgs, self._account._account.username,
+                            self._account._account.server, self._mailbox))
     end
 
     return r
@@ -691,8 +765,8 @@ function Mailbox.delete_messages(self, messages)
     local r = self._flag_messages(self, 'add', { '\\Deleted' }, mesgs)
     if options.info == true and r == true then
         print(string.format("%d messages deleted in %s@%s/%s.",
-                            #mesgs, self._account._username,
-                            self._account._server, self._mailbox))
+                            #mesgs, self._account._account.username,
+                            self._account._account.server, self._mailbox))
     end
 
     return r
@@ -707,10 +781,10 @@ function Mailbox.copy_messages(self, dest, messages)
     local r = self._copy_messages(self, dest, mesgs)
     if options.info == true and r == true then
         print(string.format("%d messages copied from %s@%s/%s to %s@%s/%s.",
-                            #mesgs, self._account._username,
-                            self._account._server, self._mailbox,
-                            dest._account._username,
-                            dest._account._server,
+                            #mesgs, self._account._account.username,
+                            self._account._account.server, self._mailbox,
+                            dest._account._account.username,
+                            dest._account._account.server,
                             dest._mailbox))
     end
 
@@ -731,10 +805,10 @@ function Mailbox.move_messages(self, dest, messages)
     if options.info == true and
         rc == true and rf == true then
         print(string.format("%d messages moved from %s@%s/%s to %s@%s/%s.",
-                            #mesgs, self._account._username,
-                            self._account._server, self._mailbox,
-                            dest._account._username,
-                            dest._account._server,
+                            #mesgs, self._account._account.username,
+                            self._account._account.server, self._mailbox,
+                            dest._account._account.username,
+                            dest._account._account.server,
                             dest._mailbox))
     end
 
@@ -796,13 +870,18 @@ function Mailbox.append_message(self, message, flags, date)
     _check_optional(date, 'string')
 
     if type(flags) == 'table' then flags = table.concat(flags, ' ') end
-    r = ifcore.append(self._account._session, self._mailbox, message, flags,
-    date)
-    if r == nil then error("append request failed", 0) end
+    if not self._account._account.session then error("not connected", 0) end
+    r = ifcore.append(self._account._account.session, self._mailbox, message,
+                      flags, date)
+    if r == nil then
+        self._account._account.session = nil
+        self._account._account.selected = nil
+        error("append request failed", 0)
+    end
     if options.info == true and r == true then
         print(string.format("Appended message of %d octets to %s@%s/%s.",
-                            #message, self._account._username,
-                            self._account._server, self._mailbox))
+                            #message, self._account._account.username,
+                            self._account._account.server, self._mailbox))
     end
     
     return r
@@ -1059,8 +1138,13 @@ end
 function Mailbox.enter_idle(self)
     if self._cached_select(self) ~= true then return false end
    
-    local r = ifcore.idle(self._account._session)
-    if r == nil then error("idle request failed", 0) end
+    if not self._account._account.session then error("not connected", 0) end
+    local r = ifcore.idle(self._account._account.session)
+    if r == nil then
+        self._account._account.session = nil
+        self._account._account.selected = nil
+        error("idle request failed", 0)
+    end
 
     if options.close == true then self._cached_close(self) end
 

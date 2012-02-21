@@ -38,7 +38,7 @@ function Message.fetch_structure(self)
     if not r or not r[self._uid] then return end
     if options.info == true then
         print(string.format("Fetched the structure of %s@%s/%s[%d].",
-                            self._account._username, self._account._server,
+                            self._account.username, self._account.server,
                             self._mailbox._mailbox, self._uid))
     end
     return r[self._uid]
@@ -49,7 +49,7 @@ function Message.fetch_header(self)
     if not r or not r[self._uid] then return end
     if options.info == true then
         print(string.format("Fetched the header of %s@%s/%s[%d].",
-                            self._account._username, self._account._server,
+                            self._account.username, self._account.server,
                             self._mailbox._mailbox, self._uid))
     end
     return r[self._uid]
@@ -60,7 +60,7 @@ function Message.fetch_body(self)
     if not r or not r[self._uid] then return end
     if options.info == true then
         print(string.format("Fetched the body of %s@%s/%s[%d].",
-                            self._account._username, self._account._server,
+                            self._account.username, self._account.server,
                             self._mailbox._mailbox, self._uid))
     end
     return r[self._uid]
@@ -71,7 +71,7 @@ function Message.fetch_message(self)
     if not r or not r[self._uid] then return end
     if options.info == true then
         print(string.format("Fetched message %s@%s/%s[%d].",
-                            self._account._username, self._account._server,
+                            self._account.username, self._account.server,
                             self._mailbox._mailbox, self._uid))
     end
     return r[self._uid]
@@ -83,7 +83,7 @@ function Message.fetch_field(self, field)
     if not r or not r[self._uid] then return end
     if options.info == true then
         print(string.format("Fetched field \"%s\" of %s@%s/%s[%d].", field,
-                            self._account._username, self._account._server,
+                            self._account.username, self._account.server,
                             self._mailbox._mailbox, self._uid))
     end
     return r[self._uid]
@@ -94,7 +94,7 @@ function Message.fetch_fields(self, fields)
     if not r or not r[self._uid] then return end
     if options.info == true then
         print(string.format("Fetched some of the fields of %s@%s/%s[%d].",
-                            self._account._username, self._account._server,
+                            self._account.username, self._account.server,
                             self._mailbox._mailbox, self._uid))
     end
     return r[self._uid]
@@ -105,7 +105,7 @@ function Message.fetch_part(self, part)
     if not r or not r[part] then return end
     if options.info == true then
         print(string.format("Fetched part \"%s\" of %s@%s/%s[%d].", part,
-                            self._account._username, self._account._server,
+                            self._account.username, self._account.server,
                             self._mailbox._mailbox, self._uid))
     end
     return r[part]
@@ -116,7 +116,7 @@ function Message.fetch_size(self)
     if not r or not r[self._uid] then return end
     if options.info == true then
         print(string.format("Fetched the size of %s@%s/%s[%d].",
-                            self._account._username, self._account._server,
+                            self._account.username, self._account.server,
                             self._mailbox._mailbox, self._uid))
     end
     return r[self._uid]
@@ -127,7 +127,7 @@ function Message.fetch_date(self)
     if not r or not r[self._uid] then return end
     if options.info == true then
         print(string.format("Fetched the date of %s@%s/%s[%d].",
-                            self._account._username, self._account._server,
+                            self._account.username, self._account.server,
                             self._mailbox._mailbox, self._uid))
     end
     return r[self._uid]
@@ -138,7 +138,7 @@ function Message.fetch_flags(self)
     if not r or not r[self._uid] then return end
     if options.info == true then
         print(string.format("Fetched the flags of %s@%s/%s[%d].",
-                            self._account._username, self._account._server,
+                            self._account.username, self._account.server,
                             self._mailbox._mailbox, self._uid))
     end
     return r[self._uid]
