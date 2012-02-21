@@ -48,6 +48,7 @@ function Account._login_user(self)
             self._account.username .. '@' .. self._account.server .. ': ')
     end
 
+    if self._account.session then return true end
     local r, s = ifcore.login(self._account.server, self._account.port,
                               self._account.ssl, self._account.username,
                               self._account.password)
