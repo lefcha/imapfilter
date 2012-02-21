@@ -60,6 +60,6 @@ function become_daemon(interval, commands, nochdir, noclose)
     if noclose == nil then noclose = false end
     ifsys.daemon(nochdir, noclose)
     repeat
-        pcall(commands)
+        commands()
     until ifsys.sleep(interval) ~= 0
 end
