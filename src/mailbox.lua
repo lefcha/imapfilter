@@ -1043,7 +1043,8 @@ function Mailbox.enter_idle(self)
     return true
 end
 
-Mailbox.select = _cached_select
+
+Mailbox.open = _cached_select
 Mailbox.close = _cached_close
 
 Mailbox._mt.__index = function () end
