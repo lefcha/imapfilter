@@ -81,11 +81,6 @@ static const luaL_Reg ifcorelib[] = {
 };
 
 
-#define TRY(F)								\
-	if ((F) == STATUS_NONE)						\
-		F;
-
-
 /*
  * Core function to reset any inactivity autologout timer on the server.
  */
@@ -98,7 +93,8 @@ ifcore_noop(lua_State *lua)
 		luaL_error(lua, "wrong number of arguments");
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 
-	TRY(r = request_noop((session *)(lua_topointer(lua, 1))));
+	while ((r = request_noop((session *)(lua_topointer(lua, 1)))) ==
+	    STATUS_NONE);
 
 	lua_pop(lua, 1);
 	
@@ -155,7 +151,8 @@ ifcore_logout(lua_State *lua)
 		luaL_error(lua, "wrong number of arguments");
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 
-	TRY(r = request_logout((session *)(lua_topointer(lua, 1))));
+	while ((r = request_logout((session *)(lua_topointer(lua, 1)))) ==
+	    STATUS_NONE);
 
 	lua_pop(lua, 1);
 
@@ -184,8 +181,9 @@ ifcore_status(lua_State *lua)
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 	luaL_checktype(lua, 2, LUA_TSTRING);
 
-	TRY(r = request_status((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2), &exists, &recent, &unseen, &uidnext));
+	while ((r = request_status((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2), &exists, &recent, &unseen, &uidnext)) ==
+	    STATUS_NONE);
 
 	lua_pop(lua, 2);
 
@@ -215,8 +213,8 @@ ifcore_select(lua_State *lua)
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 	luaL_checktype(lua, 2, LUA_TSTRING);
 
-	TRY(r = request_select((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2)));
+	while ((r = request_select((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2))) == STATUS_NONE);
 
 	lua_pop(lua, 2);
 
@@ -241,7 +239,8 @@ ifcore_close(lua_State *lua)
 		luaL_error(lua, "wrong number of arguments");
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 
-	TRY(r = request_close((session *)(lua_topointer(lua, 1))));
+	while ((r = request_close((session *)(lua_topointer(lua, 1)))) ==
+	    STATUS_NONE);
 
 	lua_pop(lua, 1);
 
@@ -266,7 +265,8 @@ ifcore_expunge(lua_State *lua)
 		luaL_error(lua, "wrong number of arguments");
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 
-	TRY(r = request_expunge((session *)(lua_topointer(lua, 1))));
+	while ((r = request_expunge((session *)(lua_topointer(lua, 1)))) ==
+	    STATUS_NONE);
 
 	lua_pop(lua, 1);
 
@@ -296,8 +296,9 @@ ifcore_list(lua_State *lua)
 	luaL_checktype(lua, 2, LUA_TSTRING);
 	luaL_checktype(lua, 3, LUA_TSTRING);
 
-	TRY(r = request_list((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2), lua_tostring(lua, 3), &mboxs, &folders));
+	while ((r = request_list((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2), lua_tostring(lua, 3), &mboxs, &folders)) ==
+	    STATUS_NONE);
 
 	lua_pop(lua, 3);
 
@@ -336,8 +337,9 @@ ifcore_lsub(lua_State *lua)
 	luaL_checktype(lua, 2, LUA_TSTRING);
 	luaL_checktype(lua, 3, LUA_TSTRING);
 
-	TRY(r = request_lsub((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2), lua_tostring(lua, 3), &mboxs, &folders));
+	while ((r = request_lsub((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2), lua_tostring(lua, 3), &mboxs, &folders)) ==
+	    STATUS_NONE);
 
 	lua_pop(lua, 3);
 
@@ -375,8 +377,9 @@ ifcore_search(lua_State *lua)
 	luaL_checktype(lua, 2, LUA_TSTRING);
 	luaL_checktype(lua, 3, LUA_TSTRING);
 
-	TRY(r = request_search((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2), lua_tostring(lua, 3), &mesgs));
+	while ((r = request_search((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2), lua_tostring(lua, 3), &mesgs)) ==
+	    STATUS_NONE);
 
 	lua_pop(lua, 3);
 
@@ -412,8 +415,8 @@ ifcore_fetchfast(lua_State *lua)
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 	luaL_checktype(lua, 2, LUA_TSTRING);
 
-	TRY(r = request_fetchfast((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2), &flags, &date, &size));
+	while ((r = request_fetchfast((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2), &flags, &date, &size)) == STATUS_NONE);
 
 	lua_pop(lua, 2);
 
@@ -453,8 +456,8 @@ ifcore_fetchflags(lua_State *lua)
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 	luaL_checktype(lua, 2, LUA_TSTRING);
 
-	TRY(r = request_fetchflags((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2), &flags));
+	while ((r = request_fetchflags((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2), &flags)) == STATUS_NONE);
 
 	lua_pop(lua, 2);
 
@@ -490,8 +493,8 @@ ifcore_fetchdate(lua_State *lua)
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 	luaL_checktype(lua, 2, LUA_TSTRING);
 
-	TRY(r = request_fetchdate((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2), &date));
+	while ((r = request_fetchdate((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2), &date)) == STATUS_NONE);
 
 	lua_pop(lua, 2);
 
@@ -527,8 +530,8 @@ ifcore_fetchsize(lua_State *lua)
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 	luaL_checktype(lua, 2, LUA_TSTRING);
 
-	TRY(r = request_fetchsize((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2), &size));
+	while ((r = request_fetchsize((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2), &size)) == STATUS_NONE);
 
 	lua_pop(lua, 2);
 
@@ -561,8 +564,8 @@ ifcore_fetchstructure(lua_State *lua)
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 	luaL_checktype(lua, 2, LUA_TSTRING);
 
-	TRY(r = request_fetchstructure((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2), &structure));
+	while ((r = request_fetchstructure((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2), &structure)) == STATUS_NONE);
 
 	lua_pop(lua, 3);
 
@@ -598,8 +601,8 @@ ifcore_fetchheader(lua_State *lua)
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 	luaL_checktype(lua, 2, LUA_TSTRING);
 
-	TRY(r = request_fetchheader((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2), &header, &len));
+	while ((r = request_fetchheader((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2), &header, &len)) == STATUS_NONE);
 
 	lua_pop(lua, 2);
 
@@ -635,8 +638,8 @@ ifcore_fetchtext(lua_State *lua)
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 	luaL_checktype(lua, 2, LUA_TSTRING);
 
-	TRY(r = request_fetchtext((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2), &text, &len));
+	while ((r = request_fetchtext((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2), &text, &len)) == STATUS_NONE);
 
 	lua_pop(lua, 2);
 
@@ -673,8 +676,9 @@ ifcore_fetchfields(lua_State *lua)
 	luaL_checktype(lua, 2, LUA_TSTRING);
 	luaL_checktype(lua, 3, LUA_TSTRING);
 
-	TRY(r = request_fetchfields((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2), lua_tostring(lua, 3), &fields, &len));
+	while ((r = request_fetchfields((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2), lua_tostring(lua, 3), &fields, &len)) ==
+	    STATUS_NONE);
 
 	lua_pop(lua, 3);
 
@@ -711,8 +715,9 @@ ifcore_fetchpart(lua_State *lua)
 	luaL_checktype(lua, 2, LUA_TSTRING);
 	luaL_checktype(lua, 3, LUA_TSTRING);
 
-	TRY(r = request_fetchpart((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2), lua_tostring(lua, 3), &part, &len));
+	while ((r = request_fetchpart((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2), lua_tostring(lua, 3), &part, &len)) ==
+	    STATUS_NONE);
 
 	lua_pop(lua, 3);
 
@@ -745,8 +750,9 @@ ifcore_store(lua_State *lua)
 	luaL_checktype(lua, 3, LUA_TSTRING);
 	luaL_checktype(lua, 4, LUA_TSTRING);
 
-	TRY(r = request_store((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2), lua_tostring(lua, 3), lua_tostring(lua, 4)));
+	while ((r = request_store((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2), lua_tostring(lua, 3),
+	    lua_tostring(lua, 4))) == STATUS_NONE);
 
 	lua_pop(lua, 4);
 
@@ -773,8 +779,8 @@ ifcore_copy(lua_State *lua)
 	luaL_checktype(lua, 2, LUA_TSTRING);
 	luaL_checktype(lua, 3, LUA_TSTRING);
 
-	TRY(r = request_copy((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2), lua_tostring(lua, 3)));
+	while ((r = request_copy((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2), lua_tostring(lua, 3))) == STATUS_NONE);
 
 	lua_pop(lua, 3);
 
@@ -805,7 +811,7 @@ ifcore_append(lua_State *lua)
 	if (lua_type(lua, 5) != LUA_TNIL)
 		luaL_checktype(lua, 5, LUA_TSTRING);
 
-	TRY(r = request_append((session *)(lua_topointer(lua, 1)),
+	while ((r = request_append((session *)(lua_topointer(lua, 1)),
 	    lua_tostring(lua, 2), lua_tostring(lua, 3),
 #if LUA_VERSION_NUM < 502
 	    lua_objlen(lua, 3),
@@ -814,7 +820,7 @@ ifcore_append(lua_State *lua)
 #endif
 	    lua_type(lua, 4) == LUA_TSTRING ?
 	    lua_tostring(lua, 4) : NULL, lua_type(lua, 5) == LUA_TSTRING ?
-	    lua_tostring(lua, 5) : NULL));
+	    lua_tostring(lua, 5) : NULL)) == STATUS_NONE);
 
 	lua_pop(lua, lua_gettop(lua));
 
@@ -840,8 +846,8 @@ ifcore_create(lua_State *lua)
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 	luaL_checktype(lua, 2, LUA_TSTRING);
 
-	TRY(r = request_create((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2)));
+	while ((r = request_create((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2))) == STATUS_NONE);
 
 	lua_pop(lua, 2);
 
@@ -867,8 +873,8 @@ ifcore_delete(lua_State *lua)
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 	luaL_checktype(lua, 2, LUA_TSTRING);
 
-	TRY(r = request_delete((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2)));
+	while ((r = request_delete((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2))) == STATUS_NONE);
 
 	lua_pop(lua, 2);
 
@@ -895,8 +901,8 @@ ifcore_rename(lua_State *lua)
 	luaL_checktype(lua, 2, LUA_TSTRING);
 	luaL_checktype(lua, 3, LUA_TSTRING);
 
-	TRY(r = request_rename((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2), lua_tostring(lua, 3)));
+	while ((r = request_rename((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2), lua_tostring(lua, 3))) == STATUS_NONE);
 
 	lua_pop(lua, 3);
 
@@ -922,8 +928,8 @@ ifcore_subscribe(lua_State *lua)
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 	luaL_checktype(lua, 2, LUA_TSTRING);
 
-	TRY(r = request_subscribe((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2)));
+	while ((r = request_subscribe((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2))) == STATUS_NONE);
 
 	lua_pop(lua, 2);
 
@@ -949,8 +955,8 @@ ifcore_unsubscribe(lua_State *lua)
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 	luaL_checktype(lua, 2, LUA_TSTRING);
 
-	TRY(r = request_unsubscribe((session *)(lua_topointer(lua, 1)),
-	    lua_tostring(lua, 2)));
+	while ((r = request_unsubscribe((session *)(lua_topointer(lua, 1)),
+	    lua_tostring(lua, 2))) == STATUS_NONE);
 
 	lua_pop(lua, 2);
 
@@ -975,7 +981,8 @@ ifcore_idle(lua_State *lua)
 		luaL_error(lua, "wrong number of arguments");
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 
-	TRY(r = request_idle((session *)(lua_topointer(lua, 1))));
+	while ((r = request_idle((session *)(lua_topointer(lua, 1)))) ==
+	    STATUS_NONE);
 
 	lua_pop(lua, 1);
 
