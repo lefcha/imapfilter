@@ -267,13 +267,21 @@ request_logout(session *ssn)
 {
 	int t, r;
 
-	t = send_request(ssn, "LOGOUT");
-	r = response_generic(ssn, t);
+	if ((t = send_request(ssn, "LOGOUT")) == -1)
+		goto fail;
+	if ((r = response_generic(ssn, t)) == -1)
+		goto fail;
 
-	close_connection(ssn);
-	session_destroy(ssn);
+	if (r == STATUS_OK) {
+		close_connection(ssn);
+		session_destroy(ssn);
+	}
 
 	return r;
+fail:
+	session_destroy(ssn);
+
+	return STATUS_OK;
 }
 
 

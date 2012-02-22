@@ -151,8 +151,7 @@ ifcore_logout(lua_State *lua)
 		luaL_error(lua, "wrong number of arguments");
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 
-	while ((r = request_logout((session *)(lua_topointer(lua, 1)))) ==
-	    STATUS_NONE);
+	r = request_logout((session *)(lua_topointer(lua, 1)));
 
 	lua_pop(lua, 1);
 
