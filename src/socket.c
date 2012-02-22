@@ -187,6 +187,8 @@ close_secure_connection(session *ssn)
 {
 
 	if (ssn->sslsocket) {
+		SSL_set_shutdown(ssn->sslsocket, SSL_SENT_SHUTDOWN |
+		    SSL_RECEIVED_SHUTDOWN);
 		SSL_shutdown(ssn->sslsocket);
 		SSL_free(ssn->sslsocket);
 		ssn->sslsocket = NULL;
