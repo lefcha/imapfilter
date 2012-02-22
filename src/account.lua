@@ -42,39 +42,60 @@ Account._mt.__call = function (self, arg)
 end
 
 
+function Account._get_details(self, mailbox)
+    if mailbox then
+        return self._account.username .. '@' .. self._account.server .. '/' ..
+               mailbox
+    else
+        return self._account.username .. '@' .. self._account.server
+    end
+end
+
+function Account._check_connection(self)
+    if not self._account.session then
+        error('not connected to ' .. self._get_details(self), 0)
+    end
+end
+
+function Account._check_result(self, request, result)
+    if result == nil then
+        self._account.session = nil
+        self._account.selected = nil
+        error(request .. ' request to ' .. self._get_details(self) ..
+              'failed', 0)
+    end
+end
+
+
 function Account._login_user(self)
     if self._account.password == nil then
         self._account.password = get_password('Enter password for ' ..
-            self._account.username .. '@' .. self._account.server .. ': ')
+            self._get_details(self) .. ': ')
     end
 
     if self._account.session then return true end
     local r, s = ifcore.login(self._account.server, self._account.port,
                               self._account.ssl, self._account.username,
                               self._account.password)
+    self._check_result(self, 'login', r)
+    if r == false then return true end
 
-    if r == true then
-        self._account.session = s
-        self._account.selected = nil
-        return true
-    elseif r == false then
-        return true
-    elseif r == nil then
-        error("login request failed", 0)
-    end
+    self._account.session = s
+    self._account.selected = nil
+
+    return true
 end
 
 function Account._logout_user(self)
-    if not self._account.session then error("not connected", 0) end
+    self._check_connection(self)
     local r = ifcore.logout(self._account.session)
-    if r == true then
-        self._account.session = nil
-        self._account.selected = nil
-    elseif r == nil then
-        self._account.session = nil
-        self._account.selected = nil
-        error("logout request failed", 0)
-    end
+    self._check_result(self, 'logout', r)
+    if r == false then return false end
+
+    self._account.session = nil
+    self._account.selected = nil
+
+    return true
 end
 
 
@@ -102,17 +123,11 @@ function Account.list_all(self, folder, mbox)
     end
     if mbox == nil then mbox = '%' end
 
-    if not self._account.session then error("not connected", 0) end
+    self._check_connection(self)
     local r, mailboxes, folders = ifcore.list(self._account.session, '',
                                               folder .. mbox)
-
-    if r == false then
-        return false
-    elseif r == nil then
-        self._account.session = nil
-        self._account.selected = nil
-        error("list request failed", 0)
-    end
+    self._check_result(self, 'list', r)
+    if r == false then return false end
 
     local m = {}
     for s in string.gmatch(mailboxes, '%C+') do table.insert(m, s) end
@@ -143,17 +158,11 @@ function Account.list_subscribed(self, folder, mbox)
     end
     if mbox == nil then mbox = '*' end
 
-    if not self._account.session then error("not connected", 0) end
+    self._check_connection(self)
     local r, mailboxes, folders = ifcore.lsub(self._account.session, '',
                                               folder .. mbox)
-
-    if r == false then
-        return false
-    elseif r == nil then
-        self._account.session = nil
-        self._account.selected = nil
-        error("lsub request failed", 0)
-    end
+    self._check_result(self, 'lsub', r)
+    if r == false then return false end
 
     local m = {}
     for s in string.gmatch(mailboxes, '%C+') do table.insert(m, s) end
@@ -172,18 +181,14 @@ end
 function Account.create_mailbox(self, name)
     _check_required(name, 'string')
 
-    if not self._account.session then error("not connected", 0) end
+    self._check_connection(self)
     local r = ifcore.create(self._account.session, name)
-
-    if r == nil then
-        self._account.session = nil
-        self._account.selected = nil
-        error("create request failed", 0)
-    end
+    self._check_result(self, 'create', r)
+    if r == false then return false end
 
     if options.info == true then
-        print(string.format("Created mailbox %s@%s/%s.",
-                            self._account.username, self._account.server, name))
+        print(string.format("Created mailbox %s.",
+                            self._get_details(self, name)))
     end
 
     return r
@@ -192,18 +197,14 @@ end
 function Account.delete_mailbox(self, name)
     _check_required(name, 'string')
 
-    if not self._account.session then error("not connected", 0) end
+    self._check_connection(self)
     local r = ifcore.delete(self._account.session, name)
-
-    if r == nil then
-        self._account.session = nil
-        self._account.selected = nil
-        error("delete request failed", 0)
-    end
+    self._check_result(self, 'delete', r)
+    if r == false then return false end
 
     if options.info == true then
-        print(string.format("Deleted mailbox %s@%s/%s.",
-                            self._account.username, self._account.server, name))
+        print(string.format("Deleted mailbox %s.",
+                            self._get_details(self, name)))
     end
 
     return r
@@ -213,20 +214,15 @@ function Account.rename_mailbox(self, oldname, newname)
     _check_required(oldname, 'string')
     _check_required(newname, 'string')
 
-    if not self._account.session then error("not connected", 0) end
+    self._check_connection(self)
     local r = ifcore.rename(self._account.session, oldname, newname)
-
-    if r == nil then
-        self._account.session = nil
-        self._account.selected = nil
-        error("rename request failed", 0)
-    end
+    self._check_result(self, 'rename', r)
+    if r == false then return false end
 
     if options.info == true then
-        print(string.format("Renamed mailbox %s@%s/%s to %s@%s/%s.",
-                            self._account.username, self._account.server,
-                            oldname, self._account.username,
-                            self._account.server, newname))
+        print(string.format("Renamed mailbox %s to %s.",
+                            self._get_details(self, oldname),
+                            self._get_details(self, newname)))
     end
 
     return r
@@ -235,18 +231,14 @@ end
 function Account.subscribe_mailbox(self, name)
     _check_required(name, 'string')
 
-    if not self._account.session then error("not connected", 0) end
+    self._check_connection(self)
     local r = ifcore.subscribe(self._account.session, name)
-
-    if r == nil then
-        self._account.session = nil
-        self._account.selected = nil
-        error("subscribe request failed", 0)
-    end
+    self._check_result(self, 'subscribe', r)
+    if r == false then return false end
 
     if options.info == true then
-        print(string.format("Subscribed mailbox %s@%s/%s.",
-                            self._account.username, self._account.server, name))
+        print(string.format("Subscribed mailbox %s.",
+                            self._get_details(self, name)))
     end
 
     return r
@@ -255,18 +247,14 @@ end
 function Account.unsubscribe_mailbox(self, name)
     _check_required(name, 'string')
 
-    if not self._account.session then error("not connected", 0) end
+    self._check_connection(self)
     local r = ifcore.unsubscribe(self._account.session, name)
-
-    if r == nil then
-        self._account.session = nil
-        self._account.selected = nil
-        error("unsubscribe request failed", 0)
-    end
+    self._check_result(self, 'unsubscribe', r)
+    if r == false then return false end
 
     if options.info == true then
-        print(string.format("Unsubscribed mailbox %s@%s/%s.",
-                            self._account.username, self._account.server, name))
+        print(string.format("Unsubscribed mailbox %s.",
+                            self._get_details(self, name)))
     end
 
     return r
