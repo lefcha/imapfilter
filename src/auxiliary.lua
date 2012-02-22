@@ -2,7 +2,7 @@
 
 function form_date(days)
     _check_required(days, 'number')
-    return os.date("%d-%b-%Y", os.time() - days * 60 * 60 * 24)
+    return os.date('%d-%b-%Y', os.time() - days * 60 * 60 * 24)
 end
 
 
@@ -26,7 +26,7 @@ function pipe_to(command, data)
     _check_required(command, 'string')
     _check_required(data, 'string')
 
-    f = ifsys.popen(command, "w")
+    f = ifsys.popen(command, 'w')
     ifsys.write(f, data)
 
     return ifsys.pclose(f)
@@ -35,7 +35,7 @@ end
 function pipe_from(command)
     _check_required(command, 'string')
 
-    f = ifsys.popen(command, "r")
+    f = ifsys.popen(command, 'r')
     local string = ''
     while true do
         s = ifsys.read(f)

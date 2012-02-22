@@ -405,13 +405,13 @@ function Mailbox._fetch_fields(self, fields, messages)
                 if r == false then break end
 
                 if field ~= nil then
-                    field = string.gsub(field, "\r\n\r\n$", "\n")
+                    field = string.gsub(field, '\r\n\r\n$', '\n')
                     results[m] = results[m] .. field
                     if options.cache == true then self[m]._fields[f] = field end
                 end
             end
         end
-        results[m] = string.gsub(results[m], "\n$", "")
+        results[m] = string.gsub(results[m], '\n$', '')
     end
 
     if options.close == true then self._cached_close(self) end
@@ -951,7 +951,7 @@ function Mailbox.match_field(self, field, pattern, messages)
     if #mesgs == 0 or fields == nil then return Set({}) end
     local results = {}
     for m, f in pairs(fields) do
-        if regex_search(pattern, (string.gsub(f, "^[^:]*: ?(.*)$", "%1"))) then
+        if regex_search(pattern, (string.gsub(f, '^[^:]*: ?(.*)$', '%1'))) then
             table.insert(results, {self, m})
         end
     end
