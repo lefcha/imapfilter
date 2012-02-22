@@ -279,8 +279,8 @@ socket_secure_read(session *ssn, char *buf, size_t len)
 
 		switch (SSL_get_error(ssn->sslsocket, r)) {
 		case SSL_ERROR_ZERO_RETURN:
-			error("reading data; the connection has been closed "
-			    "cleanly\n");
+			error("reading data through SSL; the connection has been "
+			    "closed cleanly\n");
 			return -1;
 		case SSL_ERROR_NONE:
 		case SSL_ERROR_WANT_READ:
@@ -292,16 +292,16 @@ socket_secure_read(session *ssn, char *buf, size_t len)
 		case SSL_ERROR_SYSCALL:
 			e = ERR_get_error();
 			if (e == 0 && r == 0)
-				error("reading data; EOF in violation of the "
-				    "protocol\n");
+				error("reading data through SSL; EOF in violation of "
+				    "the protocol\n");
 			else if (e == 0 && r == -1)
-				error("reading data; %s\n", strerror(errno));
+				error("reading data through SSL; %s\n", strerror(errno));
 			else
-				error("reading data; %s\n", ERR_error_string(e,
-				    NULL));
+				error("reading data through SSL; %s\n",
+				    ERR_error_string(e, NULL));
 			return -1;
 		case SSL_ERROR_SSL:
-			error("reading data; %s\n",
+			error("reading data through SSL; %s\n",
 			    ERR_error_string(ERR_get_error(), NULL));
 			return -1;
 		default:
@@ -387,8 +387,8 @@ socket_secure_write(session *ssn, const char *buf, size_t len)
 
 		switch (SSL_get_error(ssn->sslsocket, r)) {
 		case SSL_ERROR_ZERO_RETURN:
-			error("writing data; the connection has been closed "
-			    "cleanly\n");
+			error("writing data through SSL; the connection has been "
+			    "closed cleanly\n");
 			return -1;
 		case SSL_ERROR_NONE:
 		case SSL_ERROR_WANT_READ:
@@ -400,16 +400,16 @@ socket_secure_write(session *ssn, const char *buf, size_t len)
 		case SSL_ERROR_SYSCALL:
 			e = ERR_get_error();
 			if (e == 0 && r == 0)
-				error("writing data; EOF in violation of the "
-				    "protocol\n");
+				error("writing data through SSL; EOF in violation of "
+				    "the protocol\n");
 			else if (e == 0 && r == -1)
-				error("writing data; %s\n", strerror(errno));
+				error("writing data through SSL; %s\n", strerror(errno));
 			else
-				error("writing data; %s\n", ERR_error_string(e,
-				    NULL));
+				error("writing data through SSL; %s\n",
+				    ERR_error_string(e, NULL));
 			return -1;
 		case SSL_ERROR_SSL:
-			error("writing data; %s\n",
+			error("writing data through SSL; %s\n",
 			    ERR_error_string(ERR_get_error(), NULL));
 			return -1;
 		default:
