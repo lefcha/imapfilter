@@ -13,6 +13,9 @@ Message._mt.__call = function (self, account, mailbox, uid)
     object._account = account
     object._mailbox = mailbox
     object._uid = uid
+    object._string = account._account.username .. '@' ..
+                     account._account.server .. '/' .. mailbox._mailbox ..
+                     '[' .. uid .. ']'
 
     object._structure = nil
     object._header = nil
@@ -33,19 +36,11 @@ Message._mt.__call = function (self, account, mailbox, uid)
 end
 
 
-function Message._get_details(self)
-    return self._account._account.username .. '@' ..
-           self._account._account.server .. '/' .. self._mailbox._mailbox ..
-           '[' .. self._uid .. ']'
-end
-
-
 function Message.fetch_structure(self)
     local r = self._mailbox._fetch_structure(self._mailbox, { self._uid })
     if not r or not r[self._uid] then return end
     if options.info == true then
-        print(string.format("Fetched the structure of %s.",
-                            self._get_details(self)))
+        print('Fetched the structure of ' .. self._string .. '.')
     end
     return r[self._uid]
 end
@@ -54,8 +49,7 @@ function Message.fetch_header(self)
     local r = self._mailbox._fetch_header(self._mailbox, { self._uid })
     if not r or not r[self._uid] then return end
     if options.info == true then
-        print(string.format("Fetched the header of %s.",
-                            self._get_details(self)))
+        print('Fetched the header of ' .. self._string .. '.')
     end
     return r[self._uid]
 end
@@ -64,7 +58,7 @@ function Message.fetch_body(self)
     local r = self._mailbox._fetch_body(self._mailbox, { self._uid })
     if not r or not r[self._uid] then return end
     if options.info == true then
-        print(string.format("Fetched the body of %s.", self._get_details(self)))
+        print('Fetched the body of ' .. self._string .. '.')
     end
     return r[self._uid]
 end
@@ -73,7 +67,7 @@ function Message.fetch_message(self)
     local r = self._mailbox._fetch_message(self._mailbox, { self._uid })
     if not r or not r[self._uid] then return end
     if options.info == true then
-        print(string.format("Fetched message %s.", self._get_details(self)))
+        print('Fetched message ' .. self._string .. '.')
     end
     return r[self._uid]
 end
@@ -83,8 +77,7 @@ function Message.fetch_field(self, field)
         { self._uid })
     if not r or not r[self._uid] then return end
     if options.info == true then
-        print(string.format("Fetched field \"%s\" of %s.", field,
-                            self._get_details(self)))
+        print('Fetched field "' .. field .. '" of ' .. self._string .. '.')
     end
     return r[self._uid]
 end
@@ -93,8 +86,7 @@ function Message.fetch_fields(self, fields)
     local r = self._mailbox._fetch_fields(self._mailbox, fields, { self._uid })
     if not r or not r[self._uid] then return end
     if options.info == true then
-        print(string.format("Fetched some of the fields of %s.",
-                            self._get_details(self)))
+        print('Fetched some of the fields of ' .. self._string .. '.')
     end
     return r[self._uid]
 end
@@ -103,8 +95,7 @@ function Message.fetch_part(self, part)
     local r = self._mailbox._fetch_parts(self._mailbox, { part }, self._uid)
     if not r or not r[part] then return end
     if options.info == true then
-        print(string.format("Fetched part \"%s\" of %s.", part,
-                            self._get_details(self)))
+        print('Fetched part "' .. part .. '" of ' .. self._string .. '.')
     end
     return r[part]
 end
@@ -113,7 +104,7 @@ function Message.fetch_size(self)
     local r = self._mailbox._fetch_size(self._mailbox, { self._uid })
     if not r or not r[self._uid] then return end
     if options.info == true then
-        print(string.format("Fetched the size of %s.", self._get_details(self)))
+        print('Fetched the size of ' .. self._string .. '.')
     end
     return r[self._uid]
 end
@@ -122,7 +113,7 @@ function Message.fetch_date(self)
     local r = self._mailbox._fetch_date(self._mailbox, { self._uid })
     if not r or not r[self._uid] then return end
     if options.info == true then
-        print(string.format("Fetched the date of %s.", self._get_details(self)))
+        print('Fetched the date of ' .. self._string .. '.')
     end
     return r[self._uid]
 end
@@ -131,8 +122,7 @@ function Message.fetch_flags(self)
     local r = self._mailbox._fetch_flags(self._mailbox, { self._uid })
     if not r or not r[self._uid] then return end
     if options.info == true then
-        print(string.format("Fetched the flags of %s.",
-                            self._get_details(self)))
+        print('Fetched the flags of ' .. self._string .. '.')
     end
     return r[self._uid]
 end

@@ -26,6 +26,7 @@ Account._mt.__call = function (self, arg)
     object._account.ssl = arg.ssl or ''
     object._account.session = nil
     object._account.selected = nil
+    object._string = arg.username .. '@' .. arg.server
 
     for key, value in pairs(Account) do
         if type(value) == 'function' then object[key] = value end
@@ -42,18 +43,9 @@ Account._mt.__call = function (self, arg)
 end
 
 
-function Account._get_details(self, mailbox)
-    if mailbox then
-        return self._account.username .. '@' .. self._account.server .. '/' ..
-               mailbox
-    else
-        return self._account.username .. '@' .. self._account.server
-    end
-end
-
 function Account._check_connection(self)
     if not self._account.session then
-        error('not connected to ' .. self._get_details(self), 0)
+        error('not connected to ' .. self._string, 0)
     end
 end
 
@@ -61,8 +53,7 @@ function Account._check_result(self, request, result)
     if result == nil then
         self._account.session = nil
         self._account.selected = nil
-        error(request .. ' request to ' .. self._get_details(self) ..
-              'failed', 0)
+        error(request .. ' request to ' .. self._string ..  ' failed', 0)
     end
 end
 
@@ -70,7 +61,7 @@ end
 function Account._login_user(self)
     if self._account.password == nil then
         self._account.password = get_password('Enter password for ' ..
-            self._get_details(self) .. ': ')
+                                              self._string .. ': ')
     end
 
     if self._account.session then return true end
@@ -187,8 +178,7 @@ function Account.create_mailbox(self, name)
     if r == false then return false end
 
     if options.info == true then
-        print(string.format("Created mailbox %s.",
-                            self._get_details(self, name)))
+        print('Created mailbox ' .. self._string .. '/' .. name .. '.')
     end
 
     return r
@@ -203,8 +193,7 @@ function Account.delete_mailbox(self, name)
     if r == false then return false end
 
     if options.info == true then
-        print(string.format("Deleted mailbox %s.",
-                            self._get_details(self, name)))
+        print('Deleted mailbox ' .. self._string .. '/' .. name .. '.')
     end
 
     return r
@@ -220,9 +209,8 @@ function Account.rename_mailbox(self, oldname, newname)
     if r == false then return false end
 
     if options.info == true then
-        print(string.format("Renamed mailbox %s to %s.",
-                            self._get_details(self, oldname),
-                            self._get_details(self, newname)))
+        print('Renamed mailbox ' .. self._string .. '/' .. oldname .. ' to ' ..
+              self._string .. '/' .. newname .. '.')
     end
 
     return r
@@ -237,8 +225,7 @@ function Account.subscribe_mailbox(self, name)
     if r == false then return false end
 
     if options.info == true then
-        print(string.format("Subscribed mailbox %s.",
-                            self._get_details(self, name)))
+        print('Subscribed mailbox ' .. self._string .. '/' .. name .. '.')
     end
 
     return r
@@ -253,8 +240,7 @@ function Account.unsubscribe_mailbox(self, name)
     if r == false then return false end
 
     if options.info == true then
-        print(string.format("Unsubscribed mailbox %s.",
-                            self._get_details(self, name)))
+        print('Unsubscribed mailbox ' .. self._string .. '/' .. name .. '.')
     end
 
     return r

@@ -12,6 +12,8 @@ Mailbox._mt.__call = function (self, account, mailbox)
     object._type = 'mailbox'
     object._account = account
     object._mailbox = mailbox
+    object._string =  account._account.username .. '@' ..
+                      account._account.server .. '/' .. mailbox
 
     for key, value in pairs(Mailbox) do
         if type(value) == 'function' then object[key] = value end
@@ -25,15 +27,9 @@ Mailbox._mt.__call = function (self, account, mailbox)
 end
 
 
-function Mailbox._get_details(self)
-    return self._account._account.username .. '@' ..
-           self._account._account.server .. '/' .. self._mailbox
-end
-
 function Mailbox._check_connection(self)
     if not self._account._account.session then
-        error('not connected to ' ..
-              self._account._get_details(self._account), 0)
+        error('not connected to ' .. self._account._string, 0)
     end
 end
 
@@ -41,8 +37,8 @@ function Mailbox._check_result(self, request, result)
     if result == nil then
         self._account._account.session = nil
         self._account._account.selected = nil
-        error(request .. ' request to ' ..
-              self._account._get_details(self._account) .. 'failed', 0)
+        error(request .. ' request to ' .. self._account._string ..
+              ' failed', 0)
     end
 end
 
@@ -491,8 +487,8 @@ function Mailbox.check_status(self)
     if r == false then return false end
 
     if options.info == true then
-        print(string.format("%d messages, %d recent, %d unseen, in %s.",
-                            exist, recent, unseen, self._get_details(self)))
+        print(exist .. ' messages, ' .. recent .. ' recent, ' .. unseen ..
+              ' unseen, in ' .. self._string .. '.')
     end
 
     return exist, recent, unseen, uidnext
@@ -515,8 +511,7 @@ function Mailbox.add_flags(self, flags, messages)
     local mesgs = _extract_messages(self, messages)
     local r = self._flag_messages(self, 'add', flags, mesgs)
     if options.info == true and r == true then
-        print(string.format("%d messages flagged in %s.", #mesgs,
-                            self._get_details(self)))
+        print(#mesgs .. ' messages flagged in ' .. self._string .. '.')
     end
 
     return r
@@ -529,8 +524,7 @@ function Mailbox.remove_flags(self, flags, messages)
     local mesgs = _extract_messages(self, messages)
     local r = self._flag_messages(self, 'remove', flags, mesgs)
     if options.info == true and r == true then
-        print(string.format("%d messages flagged in %s.", #mesgs,
-                            self._get_details(self)))
+        print(#mesgs .. ' messages flagged in ' .. self._string .. '.')
     end
 
     return r
@@ -543,8 +537,7 @@ function Mailbox.replace_flags(self, flags, messages)
     local mesgs = _extract_messages(self, messages)
     local r = self._flag_messages(self, 'replace', flags, mesgs)
     if options.info == true and r == true then
-        print(string.format("%d messages flagged in %s.", #mesgs,
-                            self._get_details(self)))
+        print(#mesgs .. ' messages flagged in ' .. self._string .. '.')
     end
 
     return r
@@ -557,8 +550,7 @@ function Mailbox.mark_answered(self, messages)
     local mesgs = _extract_messages(self, messages)
     local r = self._flag_messages(self, 'add', { '\\Answered' }, mesgs)
     if options.info == true and r == true then
-        print(string.format("%d messages marked answered in %s.", #mesgs,
-                            self._get_details(self)))
+        print(#mesgs .. ' messages marked answered in ' .. self._string .. '.')
     end
 
     return r
@@ -571,8 +563,7 @@ function Mailbox.mark_deleted(self, messages)
     local mesgs = _extract_messages(self, messages)
     local r = self._flag_messages(self, 'add', { '\\Deleted' }, mesgs)
     if options.info == true and r == true then
-        print(string.format("%d messages marked deleted in %s.", #mesgs,
-                            self._get_details(self)))
+        print(#mesgs .. ' messages marked deleted in ' .. self._string .. '.')
     end
 
     return r
@@ -584,8 +575,7 @@ function Mailbox.mark_draft(self, messages)
     local mesgs = _extract_messages(self, messages)
     local r = self._flag_messages(self, 'add', { '\\Draft' }, mesgs)
     if options.info == true and r == true then
-        print(string.format("%d messages marked draft in %s.", #mesgs,
-                            self._get_details(self)))
+        print(#mesgs .. ' messages marked draft in ' .. self._string .. '.')
     end
 
     return r
@@ -597,8 +587,7 @@ function Mailbox.mark_flagged(self, messages)
     local mesgs = _extract_messages(self, messages)
     local r = self._flag_messages(self, 'add', { '\\Flagged' }, mesgs)
     if options.info == true and r == true then
-        print(string.format("%d messages marked flagged in %s.", #mesgs,
-                            self._get_details(self)))
+        print(#mesgs .. ' messages marked flagged in ' .. self._string .. '.')
     end
 
     return r
@@ -610,8 +599,7 @@ function Mailbox.mark_seen(self, messages)
     local mesgs = _extract_messages(self, messages)
     local r = self._flag_messages(self, 'add', { '\\Seen' }, mesgs)
     if options.info == true and r == true then
-        print(string.format("%d messages marked seen in %s.", #mesgs,
-                            self._get_details(self)))
+        print(#mesgs .. ' messages marked seen in ' .. self._string .. '.')
     end
 
     return r
@@ -623,8 +611,8 @@ function Mailbox.unmark_answered(self, messages)
     local mesgs = _extract_messages(self, messages)
     local r = self._flag_messages(self, 'remove', { '\\Answered' }, mesgs)
     if options.info == true and r == true then
-        print(string.format("%d messages unmarked answered in %s.", #mesgs,
-                            self._get_details(self)))
+        print(#mesgs .. ' messages unmarked answered in ' .. self._string ..
+              '.')
     end
 
     return r
@@ -636,8 +624,7 @@ function Mailbox.unmark_deleted(self, messages)
     local mesgs = _extract_messages(self, messages)
     local r = self._flag_messages(self, 'remove', { '\\Deleted' }, mesgs)
     if options.info == true and r == true then
-        print(string.format("%d messages unmarked deleted in %s.", #mesgs,
-                            self._get_details(self)))
+        print(#mesgs .. ' messages unmarked deleted in ' .. self._string .. '.')
     end
 
     return r
@@ -649,8 +636,7 @@ function Mailbox.unmark_draft(self, messages)
     local mesgs = _extract_messages(self, messages)
     local r = self._flag_messages(self, 'remove', { '\\Draft' }, mesgs)
     if options.info == true and r == true then
-        print(string.format("%d messages unmarked draft in %s.", #mesgs,
-                            self._get_details(self)))
+        print(#mesgs .. ' messages unmarked draft in ' .. self._string .. '.')
     end
 
     return r
@@ -662,8 +648,7 @@ function Mailbox.unmark_flagged(self, messages)
     local mesgs = _extract_messages(self, messages)
     local r = self._flag_messages(self, 'remove', { '\\Flagged' }, mesgs)
     if options.info == true and r == true then
-        print(string.format("%d messages unmarked flagged in %s.", #mesgs,
-                            self._get_details(self)))
+        print(#mesgs .. ' messages unmarked flagged in ' .. self._string .. '.')
     end
 
     return r
@@ -675,8 +660,7 @@ function Mailbox.unmark_seen(self, messages)
     local mesgs = _extract_messages(self, messages)
     local r = self._flag_messages(self, 'remove', { '\\Seen' }, mesgs)
     if options.info == true and r == true then
-        print(string.format("%d messages unmarked seen in %s.", #mesgs,
-                            self._get_details(self)))
+        print(#mesgs .. ' messages unmarked seen in ' .. self._string .. '.')
     end
 
     return r
@@ -689,8 +673,7 @@ function Mailbox.delete_messages(self, messages)
     local mesgs = _extract_messages(self, messages)
     local r = self._flag_messages(self, 'add', { '\\Deleted' }, mesgs)
     if options.info == true and r == true then
-        print(string.format("%d messages deleted in %s.", #mesgs,
-                            self._get_details(self)))
+        print(#mesgs .. ' messages deleted in ' .. self._string .. '.')
     end
 
     return r
@@ -704,8 +687,8 @@ function Mailbox.copy_messages(self, dest, messages)
     local mesgs = _extract_messages(self, messages)
     local r = self._copy_messages(self, dest, mesgs)
     if options.info == true and r == true then
-        print(string.format("%d messages copied from %s to %s.", #mesgs,
-                            self._get_details(self), self._get_details(dest)))
+        print(#mesgs .. ' messages copied from ' .. self._string .. ' to ' ..
+              dest._string .. '.')
     end
 
     return r
@@ -722,10 +705,9 @@ function Mailbox.move_messages(self, dest, messages)
     if rc == true then
         rf = self._flag_messages(self, 'add', { '\\Deleted' }, mesgs)
     end
-    if options.info == true and
-        rc == true and rf == true then
-        print(string.format("%d messages moved from %s to %s.", #mesgs,
-                            self._get_details(self), self._get_details(dest)))
+    if options.info == true and rc == true and rf == true then
+        print(#mesgs .. ' messages moved from ' .. self._string .. ' to ' ..
+              dest._string .. '.')
     end
 
     return rc == true and rf == true
@@ -793,8 +775,8 @@ function Mailbox.append_message(self, message, flags, date)
     if r == false then return false end
 
     if options.info == true and r == true then
-        print(string.format("Appended message of %d octets to %s.", #message,
-                            self._get_details(self)))
+        print('Appended message of ' .. #message .. ' octets to ' ..
+              self._string .. '.')
     end
     
     return true
