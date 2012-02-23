@@ -1,3 +1,21 @@
+IMAPFilter 2.5 - 23 Feb 2012
+  - Support for recovery of a session when a network failure is encountered,
+    and other robustness improvements.
+  - Informational messages are printed also for the fetch and append methods.
+  - Lua 5.2 compatibility, while the codebase can still be compiled with
+    version 5.1.
+  - The OpenSSL library is now a mandatory build requirement.
+  - Bug fix; unrecoverable login failures did not result in aborting of the
+    execution of the configuration.
+  - Bug fix; when messages were appended to a mailbox that did not exist, it
+    failed to create the mailbox and then retry the appending.
+  - Bug fix; misleading errors were printed on some SSL failures.
+  - Bug fix; protected call of the commands to execute in the daemon function
+    could hide important failures.
+  - Bug fix; the man page had an incorrect description of the -d option.
+  * Support for the old deprecated 1.x configuration format has been removed,
+    and the current 2.x format can only be executed from now on.
+
 IMAPFilter 2.4.2 - 19 Jan 2012
   - Bug fix; some ASCII characters in mailbox names were incorrectly converted
     to UTF-7.
