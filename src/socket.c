@@ -187,8 +187,6 @@ close_secure_connection(session *ssn)
 {
 
 	if (ssn->sslsocket) {
-		SSL_set_shutdown(ssn->sslsocket, SSL_SENT_SHUTDOWN |
-		    SSL_RECEIVED_SHUTDOWN);
 		SSL_shutdown(ssn->sslsocket);
 		SSL_free(ssn->sslsocket);
 		ssn->sslsocket = NULL;
@@ -283,7 +281,7 @@ socket_secure_read(session *ssn, char *buf, size_t len)
 		case SSL_ERROR_ZERO_RETURN:
 			error("reading data through SSL; the connection has been "
 			    "closed cleanly\n");
-			return -1;
+			goto fail;
 		case SSL_ERROR_NONE:
 		case SSL_ERROR_WANT_READ:
 		case SSL_ERROR_WANT_WRITE:
@@ -301,17 +299,22 @@ socket_secure_read(session *ssn, char *buf, size_t len)
 			else
 				error("reading data through SSL; %s\n",
 				    ERR_error_string(e, NULL));
-			return -1;
+			goto fail;
 		case SSL_ERROR_SSL:
 			error("reading data through SSL; %s\n",
 			    ERR_error_string(ERR_get_error(), NULL));
-			return -1;
+			goto fail;
 		default:
 			break;
 		}
 	}
 
 	return r;
+fail:
+	SSL_set_shutdown(ssn->sslsocket, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
+
+	return -1;
+
 }
 
 
@@ -391,7 +394,7 @@ socket_secure_write(session *ssn, const char *buf, size_t len)
 		case SSL_ERROR_ZERO_RETURN:
 			error("writing data through SSL; the connection has been "
 			    "closed cleanly\n");
-			return -1;
+			goto fail;
 		case SSL_ERROR_NONE:
 		case SSL_ERROR_WANT_READ:
 		case SSL_ERROR_WANT_WRITE:
@@ -409,15 +412,19 @@ socket_secure_write(session *ssn, const char *buf, size_t len)
 			else
 				error("writing data through SSL; %s\n",
 				    ERR_error_string(e, NULL));
-			return -1;
+			goto fail;
 		case SSL_ERROR_SSL:
 			error("writing data through SSL; %s\n",
 			    ERR_error_string(ERR_get_error(), NULL));
-			return -1;
+			goto fail;
 		default:
 			break;
 		}
 	}
 
 	return r;
+fail:
+	SSL_set_shutdown(ssn->sslsocket, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
+
+	return -1;
 }
