@@ -9,11 +9,11 @@
 typedef struct session {
 	const char *server;	/* Server hostname. */
 	const char *port;	/* Server port. */ 
-	const char *ssl;	/* SSL protocol. */
+	const char *sslproto;	/* SSL protocol. */
 	const char *username;	/* User name. */
 	const char *password;	/* User password. */
 	int socket;		/* Socket. */
-	SSL *sslsocket;		/* SSL socket. */
+	SSL *sslconn;		/* SSL connection. */
 	unsigned int protocol;	/* IMAP protocol.  Currently IMAP4rev1 and
 				 * IMAP4 are supported. */
 	unsigned int capabilities;	/* Capabilities of the mail server. */

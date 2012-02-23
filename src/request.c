@@ -158,11 +158,11 @@ request_login(session **ssnptr, const char *server, const char *port, const
 		if ((!strncasecmp(ssl, "tls1", 4) ||
 		    !strncasecmp(ssl, "ssl3", 4) ||
 		    !strncasecmp(ssl, "ssl2", 4)))
-			ssn->ssl = ssl;
+			ssn->sslproto = ssl;
 	} else {
-		debug("recovering connection: %s://%s@%s:%s/%s\n", ssn->ssl ?
-		    "imaps" : "imap", ssn->username, ssn->server, ssn->port,
-		    ssn->selected ? ssn->selected : "");
+		debug("recovering connection: %s://%s@%s:%s/%s\n",
+		    ssn->sslproto ?"imaps" : "imap", ssn->username, ssn->server,
+		    ssn->port, ssn->selected ? ssn->selected : "");
 	}
 
 	if (open_connection(ssn) == -1)
@@ -181,7 +181,7 @@ request_login(session **ssnptr, const char *server, const char *port, const
 	if (response_capability(ssn, t) == -1)
 		goto fail;
 
-	if (!ssn->ssl && ssn->capabilities & CAPABILITY_STARTTLS &&
+	if (!ssn->sslproto && ssn->capabilities & CAPABILITY_STARTTLS &&
 	    get_option_boolean("starttls")) {
 		t = send_request(ssn, "STARTTLS");
 		switch (response_generic(ssn, t)) {
