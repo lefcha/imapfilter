@@ -36,7 +36,7 @@ get_cert(session *ssn)
 
 	mdlen = 0;
 
-	if (!(cert = SSL_get_peer_certificate(ssn->sslsocket)))
+	if (!(cert = SSL_get_peer_certificate(ssn->sslconn)))
 		return -1;
 
 	if (!(X509_digest(cert, EVP_md5(), md, &mdlen)))

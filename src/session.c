@@ -37,11 +37,11 @@ session_init(session *ssn)
 
 	ssn->server = NULL;
 	ssn->port = NULL;
-	ssn->ssl = NULL;
+	ssn->sslproto = NULL;
 	ssn->username = NULL;
 	ssn->password = NULL;
 	ssn->socket = -1;
-	ssn->sslsocket = NULL;
+	ssn->sslconn = NULL;
 	ssn->protocol = PROTOCOL_NONE;
 	ssn->capabilities = CAPABILITY_NONE;
 	ssn->ns.prefix = NULL;
