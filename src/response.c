@@ -304,8 +304,9 @@ response_capability(session *ssn, int tag)
 	char *s;
 	regexp *re;
 
-	if ((r = response_generic(ssn, tag)) == -1)
-		return -1;
+	r = response_generic(ssn, tag);
+	if (r == -1 || r == STATUS_BYE)
+		return r;
 
 	ssn->protocol = PROTOCOL_NONE;
 
@@ -376,8 +377,9 @@ response_namespace(session *ssn, int tag)
 	int r, n;
 	regexp *re;
 
-	if ((r = response_generic(ssn, tag)) == -1)
-		return -1;
+	r = response_generic(ssn, tag);
+	if (r == -1 || r == STATUS_BYE)
+		return r;
 
 	ssn->ns.prefix = NULL;
 	ssn->ns.delim = '\0';
@@ -409,8 +411,9 @@ response_status(session *ssn, int tag, unsigned int *exist,
 	char *s;
 	regexp *re;
 
-	if ((r = response_generic(ssn, tag)) == -1)
-		return -1;
+	r = response_generic(ssn, tag);
+	if (r == -1 || r == STATUS_BYE)
+		return r;
 
 	re = &responses[RESPONSE_STATUS];
 
@@ -451,8 +454,9 @@ response_examine(session *ssn, int tag, unsigned int *exist,
 	int r;
 	regexp *re;
 
-	if ((r = response_generic(ssn, tag)) == -1)
-		return -1;
+	r = response_generic(ssn, tag);
+	if (r == -1 || r == STATUS_BYE)
+		return r;
 
 	re = &responses[RESPONSE_EXAMINE_EXISTS];
 	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0))
@@ -474,8 +478,9 @@ response_select(session *ssn, int tag)
 {
 	int r;
 
-	if ((r = response_generic(ssn, tag)) == -1)
-		return -1;
+	r = response_generic(ssn, tag);
+	if (r == -1 || r == STATUS_BYE)
+		return r;
 
 	if (xstrcasestr(ibuf.data, "[READ-ONLY]"))
 		return STATUS_READONLY;
@@ -496,8 +501,9 @@ response_list(session *ssn, int tag, char **mboxs, char **folders)
 	const char *v;
 	regexp *re;
 
-	if ((r = response_generic(ssn, tag)) == -1)
-		return -1;
+	r = response_generic(ssn, tag);
+	if (r == -1 || r == STATUS_BYE)
+		return r;
 
 	m = *mboxs = (char *)xmalloc((ibuf.len + 1) * sizeof(char));
 	f = *folders = (char *)xmalloc((ibuf.len + 1) * sizeof(char));
@@ -563,8 +569,9 @@ response_search(session *ssn, int tag, char **mesgs)
 	regexp *re;
 	char *b, *m;
 
-	if ((r = response_generic(ssn, tag)) == -1)
-		return -1;
+	r = response_generic(ssn, tag);
+	if (r == -1 || r == STATUS_BYE)
+		return r;
 
 	re = &responses[RESPONSE_SEARCH];
 
@@ -604,8 +611,9 @@ response_fetchfast(session *ssn, int tag, char **flags, char **date,
 	char *s;
 	regexp *re;
 
-	if ((r = response_generic(ssn, tag)) == -1)
-		return -1;
+	r = response_generic(ssn, tag);
+	if (r == -1 || r == STATUS_BYE)
+		return r;
 
 	re = &responses[RESPONSE_FETCH];
 	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) { 
@@ -644,8 +652,9 @@ response_fetchflags(session *ssn, int tag, char **flags)
 	char *s;
 	regexp *re;
 
-	if ((r = response_generic(ssn, tag)) == -1)
-		return -1;
+	r = response_generic(ssn, tag);
+	if (r == -1 || r == STATUS_BYE)
+		return r;
 
 	re = &responses[RESPONSE_FETCH];
 	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) { 
@@ -675,8 +684,9 @@ response_fetchdate(session *ssn, int tag, char **date)
 	char *s;
 	regexp *re;
 
-	if ((r = response_generic(ssn, tag)) == -1)
-		return -1;
+	r = response_generic(ssn, tag);
+	if (r == -1 || r == STATUS_BYE)
+		return r;
 
 	re = &responses[RESPONSE_FETCH];
 	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) { 
@@ -706,8 +716,9 @@ response_fetchsize(session *ssn, int tag, char **size)
 	char *s;
 	regexp *re;
 
-	if ((r = response_generic(ssn, tag)) == -1)
-		return -1;
+	r = response_generic(ssn, tag);
+	if (r == -1 || r == STATUS_BYE)
+		return r;
 
 	re = &responses[RESPONSE_FETCH];
 	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) { 
@@ -737,8 +748,9 @@ response_fetchstructure(session *ssn, int tag, char **structure)
 	char *s;
 	regexp *re;
 
-	if ((r = response_generic(ssn, tag)) == -1)
-		return -1;
+	r = response_generic(ssn, tag);
+	if (r == -1 || r == STATUS_BYE)
+		return r;
 
 	re = &responses[RESPONSE_FETCH];
 	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) { 
