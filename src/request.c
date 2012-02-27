@@ -21,6 +21,13 @@ int send_request(session *ssn, const char *fmt,...);
 int send_continuation(session *ssn, const char *data, size_t len);
 
 
+#define CHECK(F)							       \
+	switch ((F)) {							       \
+	case -1:							       \
+	case STATUS_BYE:						       \
+		goto fail;						       \
+	}
+
 #define TRY(F)								       \
 	switch ((F)) {							       \
 	case -1:							       \
@@ -145,7 +152,7 @@ int
 request_login(session **ssnptr, const char *server, const char *port, const
     char *ssl, const char *user, const char *pass)
 {
-	int t, r = -1, rg = -1;
+	int t, r, rg = -1, rl = -1; 
 	session *ssn = *ssnptr;
 	
 	if (*ssnptr && (*ssnptr)->socket != -1)
@@ -172,33 +179,25 @@ request_login(session **ssnptr, const char *server, const char *port, const
 	if (open_connection(ssn) == -1)
 		goto fail;
 
-	if ((rg = response_greeting(ssn)) == -1)
-		goto fail;
+	CHECK(rg = response_greeting(ssn));
 
 	if (opts.debug) {
-		t = send_request(ssn, "NOOP");
-		if (response_generic(ssn, t) == -1)
-			goto fail;
+		CHECK(t = send_request(ssn, "NOOP"));
+		CHECK(response_generic(ssn, t));
 	}
 
-	t = send_request(ssn, "CAPABILITY");
-	if (response_capability(ssn, t) == -1)
-		goto fail;
+	CHECK(t = send_request(ssn, "CAPABILITY"));
+	CHECK(response_capability(ssn, t));
 
 	if (!ssn->sslproto && ssn->capabilities & CAPABILITY_STARTTLS &&
 	    get_option_boolean("starttls")) {
-		t = send_request(ssn, "STARTTLS");
-		switch (response_generic(ssn, t)) {
-		case STATUS_OK:
+		CHECK(t = send_request(ssn, "STARTTLS"));
+		CHECK(r = response_generic(ssn, t));
+		if (r == STATUS_OK) {
 			if (open_secure_connection(ssn) == -1)
 				goto fail;
-			t = send_request(ssn, "CAPABILITY");
-			if (response_capability(ssn, t) == -1)
-				goto fail;
-			break;
-		case -1:
-			goto fail;
-			break;
+			CHECK(t = send_request(ssn, "CAPABILITY"));
+			CHECK(response_capability(ssn, t));
 		}
 	}
 
@@ -206,56 +205,49 @@ request_login(session **ssnptr, const char *server, const char *port, const
 		if (ssn->capabilities & CAPABILITY_CRAMMD5 &&
 		    get_option_boolean("crammd5")) {
 			unsigned char *in, *out;
-			if ((t = send_request(ssn, "AUTHENTICATE CRAM-MD5"))
-			    == -1)
-				goto fail;
-			if (response_authenticate(ssn, t, &in) ==
-			    STATUS_CONTINUE) {
+			CHECK(t = send_request(ssn, "AUTHENTICATE CRAM-MD5"));
+			CHECK(r = response_authenticate(ssn, t, &in));
+			if (r == STATUS_CONTINUE) {
 				if ((out = auth_cram_md5(user, pass, in)) ==
 				    NULL)
 					goto fail;
-				send_continuation(ssn, (char *)(out),
-				    strlen((char *)(out)));
+				CHECK(send_continuation(ssn, (char *)(out),
+				    strlen((char *)(out))));
 				xfree(out);
-				if ((r = response_generic(ssn, t)) == -1)
-					goto fail;
+				CHECK(rl = response_generic(ssn, t));
 			} else
 				goto fail;
 		}
-		if (r != STATUS_OK) {
-			t = send_request(ssn, "LOGIN \"%s\" \"%s\"",
-			    ssn->username, ssn->password);
-			if ((r = response_generic(ssn, t)) == -1)
-				goto fail;
+		if (rl != STATUS_OK) {
+			CHECK(t = send_request(ssn, "LOGIN \"%s\" \"%s\"",
+			    ssn->username, ssn->password));
+			CHECK(rl = response_generic(ssn, t));
 		}
 
-		if (r == STATUS_NO) {
+		if (rl == STATUS_NO) {
 			error("username %s or password rejected at %s\n",
 			    ssn->username, ssn->server);
 			goto fail;
 		}
 	} else {
-		r = STATUS_PREAUTH;
+		rl = STATUS_PREAUTH;
 	}
 
-	t = send_request(ssn, "CAPABILITY");
-	if (response_capability(ssn, t) == -1)
-		goto fail;
+	CHECK(t = send_request(ssn, "CAPABILITY"));
+	CHECK(response_capability(ssn, t));
 
 	if (!ssn->ns.delim && ssn->capabilities & CAPABILITY_NAMESPACE &&
 	    get_option_boolean("namespace")) {
-		t = send_request(ssn, "NAMESPACE");
-		if (response_namespace(ssn, t) == -1)
-			goto fail;
+		CHECK(t = send_request(ssn, "NAMESPACE"));
+		CHECK(response_namespace(ssn, t));
 	}
 
 	if (ssn->selected) {
-		t = send_request(ssn, "SELECT \"%s\"", ssn->selected);
-		if (response_select(ssn, t) == -1)
-			goto fail;
+		CHECK(t = send_request(ssn, "SELECT \"%s\"", ssn->selected));
+		CHECK(response_select(ssn, t));
 	}
 
-	return r;
+	return rl;
 fail:
 	session_destroy(ssn);
 
@@ -271,10 +263,8 @@ request_logout(session *ssn)
 {
 	int t, r;
 
-	if ((t = send_request(ssn, "LOGOUT")) == -1)
-		goto fail;
-	if ((r = response_generic(ssn, t)) == -1)
-		goto fail;
+	CHECK(t = send_request(ssn, "LOGOUT"));
+	CHECK(r = response_generic(ssn, t));
 
 	if (r == STATUS_OK) {
 		close_connection(ssn);
