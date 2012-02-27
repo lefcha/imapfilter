@@ -1,4 +1,4 @@
-.Dd February 19, 2012
+.Dd February 26, 2012
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -155,6 +155,19 @@ personal namespace mailboxes).  This variable takes
 .Vt boolean
 as a value.  Default is
 .Dq true .
+.It Va recover
+With this option it is possible to control the recovery functionality, which
+restores a session (the connection to the server and state at the time), after
+some unexpected event took place.  Currently there are two type of events that
+can cause a session to be terminated: network errors and the IMAP BYE response
+that the server can send anytime.  When this option is set to
+.Dq all ,
+both types of events trigger the recovery function, when it is set to
+.Dq errors ,
+only network errors trigger it, and when it is set to
+.Dq none ,
+it is never triggered.  Default is
+.Dq all .
 .It Va starttls
 When this option is enabled and the server supports the IMAP STARTTLS
 extension, a TLS connection will be negotiated with the mail server in the

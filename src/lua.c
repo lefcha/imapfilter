@@ -113,6 +113,7 @@ init_options(void)
 	set_table_boolean("expunge", 1);
 	set_table_number("keepalive", 29);
 	set_table_boolean("namespace", 1);
+	set_table_string("recover", "all");
 	set_table_boolean("starttls", 1);
 	set_table_boolean("subscribe", 0);
 	set_table_number("timeout", 60);
@@ -194,6 +195,9 @@ get_option_string(const char *opt)
 	s = lua_tostring(lua, -1);
 	lua_pop(lua, 2);
 
+	if (!s)
+		return "";
+
 	return s;
 }
 
@@ -226,3 +230,19 @@ set_table_number(const char *key, lua_Number value)
 
 	return 0;
 }
+
+/*
+ * Set a table's element value to the specified string.
+ */
+int
+set_table_string(const char *key, const char *value)
+{
+
+	lua_pushstring(lua, key);
+	lua_pushstring(lua, value);
+	lua_settable(lua, -3);
+
+	return 0;
+}
+
+

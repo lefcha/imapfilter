@@ -21,19 +21,23 @@ int send_request(session *ssn, const char *fmt,...);
 int send_continuation(session *ssn, const char *data, size_t len);
 
 
-#define TRY(F)								     \
-	switch ((F)) {							     \
-	case -1:							     \
-		if (request_login(&ssn, NULL, NULL, NULL, NULL, NULL) != -1) \
-			return STATUS_NONE;				     \
-		else							     \
-			return -1;					     \
-		break;							     \
-	case STATUS_BYE:						     \
-		close_connection(ssn);					     \
-		session_destroy(ssn);					     \
-		return -1;						     \
-		break;							     \
+#define TRY(F)								       \
+	switch ((F)) {							       \
+	case -1:							       \
+		if ((!strcasecmp(get_option_string("recover"), "all") ||       \
+		    !strcasecmp(get_option_string("recover"), "errors")) &&    \
+		    request_login(&ssn, NULL, NULL, NULL, NULL, NULL) != -1)   \
+			return STATUS_NONE;				       \
+		return -1;						       \
+	case STATUS_BYE:						       \
+		close_connection(ssn);					       \
+		if (!strcasecmp(get_option_string("recover"), "all")) {	       \
+			if (request_login(&ssn, NULL, NULL, NULL, NULL,	       \
+			    NULL) != -1)				       \
+				return STATUS_NONE;			       \
+		} else							       \
+			session_destroy(ssn);				       \
+		return -1;						       \
 	}
 
 

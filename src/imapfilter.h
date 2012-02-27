@@ -117,7 +117,7 @@ const char *get_option_string(const char *opt);
 
 int set_table_boolean(const char *key, int value);
 int set_table_number(const char *key, lua_Number value);
-int set_table_lightuserdata(const char *key, void *value);
+int set_table_string(const char *key, const char *value);
 
 /*	memory.c	*/
 void *xmalloc(size_t size);
