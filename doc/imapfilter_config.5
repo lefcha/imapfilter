@@ -1,4 +1,4 @@
-.Dd February 26, 2012
+.Dd February 27, 2012
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -157,16 +157,17 @@ as a value.  Default is
 .Dq true .
 .It Va recover
 With this option it is possible to control the recovery functionality, which
-restores a session (the connection to the server and state at the time), after
-some unexpected event took place.  Currently there are two type of events that
-can cause a session to be terminated: network errors and the IMAP BYE response
-that the server can send anytime.  When this option is set to
-.Dq all ,
-both types of events trigger the recovery function, when it is set to
-.Dq errors ,
-only network errors trigger it, and when it is set to
-.Dq none ,
-it is never triggered.  Default is
+restores a session (the connection to the server and the IMAP state at the
+time), after some unexpected event takes place.  Currently there are two types
+of events that can close abnormally a session, and finally cause the program to
+terminate: network errors, and the IMAP BYE response which a server can send
+anytime.  When this option is set to
+.Dq all
+the recovery function is triggered by both types of events, when set to
+.Dq errors
+only in the case of network errors, and when set to
+.Dq none
+the mechanism is completely disabled.  Default is
 .Dq all .
 .It Va starttls
 When this option is enabled and the server supports the IMAP STARTTLS
