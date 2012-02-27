@@ -1,3 +1,8 @@
+IMAPFilter 2.5.1 - 27 Feb 2012
+  - Support for recovery of a session after a BYE response is received.
+  - Option to control in which cases a terminated session will be restored.
+  - Bug fix; a BYE response could sometimes get incorrectly ignored.
+
 IMAPFilter 2.5 - 23 Feb 2012
   - Support for recovery of a session when a network failure is encountered,
     and other robustness improvements.
