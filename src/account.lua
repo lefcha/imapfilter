@@ -69,7 +69,9 @@ function Account._login_user(self)
                               self._account.ssl, self._account.username,
                               self._account.password)
     self._check_result(self, 'login', r)
-    if r == false then return true end
+    if r == false then
+        error('failed to authenticate to ' .. self._string .. '.', 0)
+    end
 
     self._account.session = s
     self._account.selected = nil

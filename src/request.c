@@ -24,8 +24,9 @@ int send_continuation(session *ssn, const char *data, size_t len);
 #define CHECK(F)							       \
 	switch ((F)) {							       \
 	case -1:							       \
-	case STATUS_BYE:						       \
 		goto fail;						       \
+	case STATUS_BYE:						       \
+		goto abort;						       \
 	}
 
 #define TRY(F)								       \
@@ -156,7 +157,7 @@ request_login(session **ssnptr, const char *server, const char *port, const
 	session *ssn = *ssnptr;
 	
 	if (*ssnptr && (*ssnptr)->socket != -1)
-		return STATUS_NONE;
+		return STATUS_PREAUTH;
 
 	if (!*ssnptr) {
 		ssn = *ssnptr = session_new();
@@ -210,13 +211,13 @@ request_login(session **ssnptr, const char *server, const char *port, const
 			if (r == STATUS_CONTINUE) {
 				if ((out = auth_cram_md5(user, pass, in)) ==
 				    NULL)
-					goto fail;
+					goto abort;
 				CHECK(send_continuation(ssn, (char *)(out),
 				    strlen((char *)(out))));
 				xfree(out);
 				CHECK(rl = response_generic(ssn, t));
 			} else
-				goto fail;
+				goto abort;
 		}
 		if (rl != STATUS_OK) {
 			CHECK(t = send_request(ssn, "LOGIN \"%s\" \"%s\"",
@@ -227,7 +228,9 @@ request_login(session **ssnptr, const char *server, const char *port, const
 		if (rl == STATUS_NO) {
 			error("username %s or password rejected at %s\n",
 			    ssn->username, ssn->server);
-			goto fail;
+			close_connection(ssn);
+			session_destroy(ssn);
+			return STATUS_NO;
 		}
 	} else {
 		rl = STATUS_PREAUTH;
@@ -248,6 +251,8 @@ request_login(session **ssnptr, const char *server, const char *port, const
 	}
 
 	return rl;
+abort:
+	close_connection(ssn);
 fail:
 	session_destroy(ssn);
 
@@ -261,20 +266,13 @@ fail:
 int
 request_logout(session *ssn)
 {
-	int t, r;
 
-	CHECK(t = send_request(ssn, "LOGOUT"));
-	CHECK(r = response_generic(ssn, t));
-
-	if (r == STATUS_OK) {
+	if (response_generic(ssn, send_request(ssn, "LOGOUT")) == -1) {
+		session_destroy(ssn);
+	} else {
 		close_connection(ssn);
 		session_destroy(ssn);
 	}
-
-	return r;
-fail:
-	session_destroy(ssn);
-
 	return STATUS_OK;
 }
 
