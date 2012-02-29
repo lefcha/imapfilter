@@ -1,3 +1,8 @@
+IMAPFilter 2.5.2 - 29 Feb 2012
+  - Persistent errors or connection failures are now ignored when running in
+    daemon mode, and a reconnection is attempted during the next loop iteration.
+  - Bug fix; problems with failure handling during login/logout.
+
 IMAPFilter 2.5.1 - 27 Feb 2012
   - Support for recovery of a session after a BYE response is received.
   - Option to control in which cases a terminated session will be restored.
