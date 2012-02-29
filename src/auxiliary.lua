@@ -59,8 +59,15 @@ function become_daemon(interval, commands, nochdir, noclose)
     if nochdir == nil then nochdir = false end
     if noclose == nil then noclose = false end
     ifsys.daemon(nochdir, noclose)
+    _daemon = true
     repeat
+        for _, account in pairs(_imap) do
+            if not account._account.session then
+                account:_login_user(account)
+            end
+        end
         commands()
+        collectgarbage()
     until ifsys.sleep(interval) ~= 0
 end
 
