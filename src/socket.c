@@ -85,7 +85,11 @@ open_secure_connection(session *ssn)
 {
 	int r, e;
 	SSL_CTX *ctx;
+#if OPENSSL_VERSION_NUMBER >= 0x1000000fL
 	const SSL_METHOD *method;
+#else		
+	SSL_METHOD *method;
+#endif
 
 	method = NULL;
 
