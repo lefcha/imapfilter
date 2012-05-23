@@ -77,7 +77,7 @@ results:delete_messages()
 all = myaccount.mymailbox:select_all()
 
 for _, mesg in ipairs(all) do
-    mbox, uid = table.unpack(all)
+    mbox, uid = table.unpack(mesg)
     header = mbox[uid]:fetch_header()
     body = mbox[uid]:fetch_body()
     message = header:gsub('[\r\n]+$', '\r\n') ..
