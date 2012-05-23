@@ -21,6 +21,5 @@ gmail = IMAP {
 -- Gmail Config for IMAPFilter by Neil Smithline is licensed under a
 -- Creative Commons Attribution-ShareAlike 3.0 Unported License.
 --
--- See https://github.com/Neil-Smithline/imapfilter-gmail2gcal for
--- more details.
+-- See https://github.com/Neil-Smithline/imapfilter for more details.
 ------------------------------------------------------------------------
