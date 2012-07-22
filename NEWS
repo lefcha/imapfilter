@@ -1,3 +1,8 @@
+IMAPFilter 2.5.3 - 22 Jul 2012
+  - New implementation for international mailbox names.
+  - Bug fix; wrong variable name in one of the examples on extending.
+  - Bug fix; an OpenSSL compilation warning.
+
 IMAPFilter 2.5.2 - 29 Feb 2012
   - Persistent errors or connection failures are now ignored when running in
     daemon mode, and a reconnection is attempted during the next loop iteration.
