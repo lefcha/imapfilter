@@ -51,7 +51,7 @@ debug(const char *fmt,...)
 {
 	va_list args;
 
-	if (opts.debug <= 0 || !debugfp)
+	if (!opts.debug || !debugfp)
 		return;
 
 	va_start(args, fmt);
@@ -68,7 +68,7 @@ void
 debugc(char c)
 {
 
-	if (opts.debug <= 0 || !debugfp)
+	if (!opts.debug || !debugfp)
 		return;
 
 	fputc(c, debugfp);

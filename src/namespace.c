@@ -308,12 +308,12 @@ reverse_conversion(const char *mbox)
 			}
 
 			/* Convert from Unicode to UTF-8. */
-			if (ucp[0] >= 0x00 && ucp[0] <= 0x07) {
+			if (ucp[0] <= 0x07) {
 				*out++ = 0xC0 | (ucp[0] << 2 & 0x1C) |
 				    (ucp[1] >> 6 & 0x03);
 				*out++ = 0x80 | (ucp[1] & 0x3F);
 			} else if ((ucp[0] >= 0x08 && ucp[0] <= 0xD7) ||
-			    (ucp[0] >= 0xE0 && ucp[0] <= 0xFF)) {
+			    ucp[0] >= 0xE0) {
 				*out++ = 0xE0 | (ucp[0] >> 4 & 0x0F);
 				*out++ = 0x80 | (ucp[0] << 2 & 0x1C) |
 				    (ucp[1] >> 6 & 0x03);

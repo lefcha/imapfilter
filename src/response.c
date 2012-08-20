@@ -168,7 +168,7 @@ int
 check_preauth(char *buf)
 {
 
-	if (xstrcasestr(ibuf.data, "* PREAUTH"))
+	if (xstrcasestr(buf, "* PREAUTH"))
 		return 1;
 	else
 		return 0;
