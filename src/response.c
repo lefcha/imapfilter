@@ -39,31 +39,31 @@ enum {				/* Server data responses to be parsed;
 };
 regexp responses[] = {		/* Server data responses to be parsed;
 				 * regular expressions patterns. */
-	{ "([[:xdigit:]]{4,4}) (OK|NO|BAD) [^[:cntrl:]]*\r\n", NULL, 0, NULL },
-	{ "\\* CAPABILITY ([[:print:]]*)\r\n", NULL, 0, NULL },
-	{ "\\+ ([[:graph:]]*)\r\n", NULL, 0, NULL },
+	{ "([[:xdigit:]]{4,4}) (OK|NO|BAD) [^[:cntrl:]]*\r+\n+", NULL, 0, NULL },
+	{ "\\* CAPABILITY ([[:print:]]*)\r+\n+", NULL, 0, NULL },
+	{ "\\+ ([[:graph:]]*)\r+\n+", NULL, 0, NULL },
 	{ "\\* NAMESPACE (NIL|\\(\\(\"([[:graph:]]*)\" \"([[:print:]])\"\\)"
-	  "[[:print:]]*\\)) (NIL|\\([[:print:]]*\\)) (NIL|\\([[:print:]]*\\))"
-	  "\r\n", NULL, 0, NULL },
-	{ "\\* STATUS [[:print:]]* \\(([[:alnum:] ]*)\\) *\r\n", NULL, 0, NULL },
+	  "[[:print:]]*\\)) (NIL|\\([[:print:]]*\\)) (NIL|\\([[:print:]]*\\)) *"
+	  "\r+\n+", NULL, 0, NULL },
+	{ "\\* STATUS [[:print:]]* \\(([[:alnum:] ]*)\\) *\r+\n+", NULL, 0, NULL },
 	{ "MESSAGES ([[:digit:]]+)", NULL, 0, NULL },
 	{ "RECENT ([[:digit:]]+)", NULL, 0, NULL },
 	{ "UNSEEN ([[:digit:]]+)", NULL, 0, NULL },
 	{ "UIDNEXT ([[:digit:]]+)", NULL, 0, NULL },
-	{ "\\* ([[:digit:]]+) EXISTS\r\n", NULL, 0, NULL },
-	{ "\\* ([[:digit:]]+) RECENT\r\n", NULL, 0, NULL },
+	{ "\\* ([[:digit:]]+) EXISTS *\r+\n+", NULL, 0, NULL },
+	{ "\\* ([[:digit:]]+) RECENT *\r+\n+", NULL, 0, NULL },
 	{ "\\* (LIST|LSUB) \\(([[:print:]]*)\\) (\"[[:print:]]\"|NIL) "
-	  "(\"([[:print:]]+)\"|([[:print:]]+)|\\{([[:digit:]]+)\\}\r\n"
-	  "([[:print:]]*))\r\n", NULL, 0, NULL },
-	{ "\\* SEARCH ?([[:digit:] ]*)\r\n", NULL, 0, NULL },
-	{ "\\* [[:digit:]]+ FETCH \\(([[:print:]]*)\\)\r\n", NULL, 0, NULL },
+	  "(\"([[:print:]]+)\"|([[:print:]]+)|\\{([[:digit:]]+)\\} *\r+\n+"
+	  "([[:print:]]*))\r+\n+", NULL, 0, NULL },
+	{ "\\* SEARCH ?([[:digit:] ]*)\r+\n+", NULL, 0, NULL },
+	{ "\\* [[:digit:]]+ FETCH \\(([[:print:]]*)\\) *\r+\n+", NULL, 0, NULL },
 	{ "FLAGS \\(([[:print:]]*)\\)", NULL, 0, NULL },
 	{ "INTERNALDATE \"([[:print:]]*)\"", NULL, 0, NULL },
 	{ "RFC822.SIZE ([[:digit:]]+)", NULL, 0, NULL },
 	{ "BODYSTRUCTURE (\\([[:print:]]+\\))", NULL, 0, NULL },
 	{ "\\* [[:digit:]]+ FETCH \\([[:print:]]*BODY\\[[[:print:]]*\\] "
-	  "(\\{([[:digit:]]+)\\}\r\n|\"([[:print:]]*)\")", NULL, 0, NULL },
-	{ "\\* [[:digit:]]+ (RECENT|EXISTS)\r\n", NULL, 0, NULL },
+	  "(\\{([[:digit:]]+)\\} *\r+\n+|\"([[:print:]]*)\")", NULL, 0, NULL },
+	{ "\\* [[:digit:]]+ (RECENT|EXISTS) *\r+\n+", NULL, 0, NULL },
 	{ NULL, NULL, 0, NULL }
 };
 
