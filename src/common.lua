@@ -19,7 +19,7 @@ function _check_optional(arg, argtype)
     if type(arg) ~= 'nil' then
         if type(argtype) == 'string' then
             if type(arg) ~= argtype then
-                error(argtype .. ' argument expected, got ' .. type(arg), 3)
+                error(argtype .. ' argument expected, got ' .. type(arg), 4)
             end
         elseif type(argtype) == 'table' then
             local b = false
@@ -27,7 +27,7 @@ function _check_optional(arg, argtype)
                 if type(arg) == t then b = true end
             end
             if b == false then
-                error(argtype .. ' argument expected, got ' .. type(arg), 3)
+                error(argtype .. ' argument expected, got ' .. type(arg), 4)
             end
         end
     end
