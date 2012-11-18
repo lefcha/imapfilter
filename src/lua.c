@@ -16,6 +16,7 @@ extern struct sessionhead sessions;
 static lua_State *lua;		/* Lua interpreter state. */
 
 
+static int traceback_handler(lua_State *lua);
 void init_options(void);
 void interactive_mode(void);
 
@@ -77,13 +78,28 @@ start_lua()
 		    "=<command line>") || lua_pcall(lua, 0, LUA_MULTRET, 0))
 			fatal(ERROR_CONFIG, "%s\n", lua_tostring(lua, -1));
 	} else {
-		if (luaL_loadfile(lua, opts.config) ||
-		    lua_pcall(lua, 0, LUA_MULTRET, 0))
+		if (luaL_loadfile(lua, opts.config))
+			fatal(ERROR_CONFIG, "%s\n", lua_tostring(lua, -1));
+		lua_pushcfunction(lua, traceback_handler);
+		lua_insert(lua, 1);
+		if (lua_pcall(lua, 0, LUA_MULTRET, -2))
 			fatal(ERROR_CONFIG, "%s\n", lua_tostring(lua, -1));
 	}
 
 	if (opts.interactive)
 		interactive_mode();
+}
+
+
+/*
+ * Add a stack traceback to the error message.
+ */
+static int
+traceback_handler(lua_State *lua)
+{
+
+	luaL_traceback(lua, lua, lua_tostring(lua, 1), 0);
+	return 1;
 }
 
 
