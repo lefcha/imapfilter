@@ -98,7 +98,15 @@ static int
 traceback_handler(lua_State *lua)
 {
 
+#if LUA_VERSION_NUM < 502
+	lua_getfield(lua, LUA_GLOBALSINDEX, "debug");
+	lua_getfield(lua, -1, "traceback");
+	lua_pushvalue(lua, 1);
+	lua_pushinteger(lua, 2);
+	lua_call(lua, 2, 1);
+#else
 	luaL_traceback(lua, lua, lua_tostring(lua, 1), 0);
+#endif
 	return 1;
 }
 
