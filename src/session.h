@@ -21,7 +21,7 @@ typedef struct session {
 		char *prefix;	/* Namespace prefix. */
 		char delim;	/* Namespace delimiter. */
 	} ns;
-	const char *selected;	/* Selected mailbox. */
+	char *selected;	/* Selected mailbox. */
 } session;
 
 

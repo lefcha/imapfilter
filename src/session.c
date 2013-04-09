@@ -64,5 +64,7 @@ session_destroy(session *ssn)
 
 	if (ssn->ns.prefix)
 		xfree(ssn->ns.prefix);
+	if (ssn->selected)
+		xfree(ssn->selected);
 	xfree(ssn);
 }

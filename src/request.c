@@ -209,8 +209,8 @@ request_login(session **ssnptr, const char *server, const char *port, const
 			CHECK(t = send_request(ssn, "AUTHENTICATE CRAM-MD5"));
 			CHECK(r = response_authenticate(ssn, t, &in));
 			if (r == STATUS_CONTINUE) {
-				if ((out = auth_cram_md5(user, pass, in)) ==
-				    NULL)
+				if ((out = auth_cram_md5(ssn->username,
+				    ssn->password, in)) == NULL)
 					goto abort;
 				CHECK(send_continuation(ssn, (char *)(out),
 				    strlen((char *)(out))));
@@ -239,14 +239,16 @@ request_login(session **ssnptr, const char *server, const char *port, const
 	CHECK(t = send_request(ssn, "CAPABILITY"));
 	CHECK(response_capability(ssn, t));
 
-	if (!ssn->ns.delim && ssn->capabilities & CAPABILITY_NAMESPACE &&
+	if (ssn->capabilities & CAPABILITY_NAMESPACE &&
 	    get_option_boolean("namespace")) {
 		CHECK(t = send_request(ssn, "NAMESPACE"));
 		CHECK(response_namespace(ssn, t));
 	}
 
 	if (ssn->selected) {
-		CHECK(t = send_request(ssn, "SELECT \"%s\"", ssn->selected));
+		CHECK(t = send_request(ssn, "SELECT \"%s\"",
+		    apply_namespace(ssn->selected, ssn->ns.prefix,
+		    ssn->ns.delim)));
 		CHECK(response_select(ssn, t));
 	}
 
@@ -318,7 +320,7 @@ request_select(session *ssn, const char *mbox)
 	TRY(r = response_select(ssn, t));
 
 	if (r == STATUS_OK)
-		ssn->selected = mbox;
+		ssn->selected = xstrdup(mbox);
 	
 	return r;
 }
@@ -335,8 +337,10 @@ request_close(session *ssn)
 	TRY(t = send_request(ssn, "CLOSE"));
 	TRY(r = response_generic(ssn, t));
 
-	if (r == STATUS_OK && ssn->selected)
+	if (r == STATUS_OK && ssn->selected) {
+		xfree(ssn->selected);
 		ssn->selected = NULL;
+	}
 
 	return r;
 }

@@ -381,6 +381,8 @@ response_namespace(session *ssn, int tag)
 	if (r == -1 || r == STATUS_BYE)
 		return r;
 
+	if (ssn->ns.prefix != NULL)
+		xfree(ssn->ns.prefix);
 	ssn->ns.prefix = NULL;
 	ssn->ns.delim = '\0';
 
@@ -576,13 +578,13 @@ response_search(session *ssn, int tag, char **mesgs)
 	re = &responses[RESPONSE_SEARCH];
 
 	b = ibuf.data;
-	m = NULL;
 	while (!regexec(re->preg, b, re->nmatch, re->pmatch, 0)) {
 		if (!*mesgs) {
-			m = *mesgs = (char *)xmalloc((ibuf.len + 1) *
+			*mesgs = (char *)xmalloc((ibuf.len + 1) *
 			    sizeof(char));
-			*m = '\0';
 		}
+		m = *mesgs;
+		*m = '\0';
 
 		min = (unsigned int)(re->pmatch[1].rm_eo -
 		    re->pmatch[1].rm_so) < ibuf.len ?
