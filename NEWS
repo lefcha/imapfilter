@@ -1,3 +1,8 @@
+IMAPFilter 2.5.4 - 9 Apr 2013
+  - Some server responses are now parsed less stricly.
+  - More detailed information is now printed when there's an error.
+  - Bug fix; various corrections in the recovery mechanism.
+
 IMAPFilter 2.5.3 - 22 Jul 2012
   - New implementation for international mailbox names.
   - Bug fix; wrong variable name in one of the examples on extending.
