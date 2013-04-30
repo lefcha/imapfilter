@@ -636,10 +636,14 @@ request_append(session *ssn, const char *mbox, const char *mesg, size_t
 	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
 
 	TRY(t = send_request(ssn, "APPEND \"%s\"%s%s%s%s%s%s {%d}", m,
-		(flags ? " (" : ""), (flags ? flags : ""),
-		(flags ? ")" : ""), (date ? " \"" : ""),
-		(date ? date : ""), (date ? "\"" : ""), mesglen));
+	    (flags ? " (" : ""), (flags ? flags : ""),
+	    (flags ? ")" : ""), (date ? " \"" : ""),
+	    (date ? date : ""), (date ? "\"" : ""), mesglen));
 	TRY(r = response_continuation(ssn, t));
+	if (r == STATUS_CONTINUE) {
+		TRY(send_continuation(ssn, mesg, mesglen)); 
+		TRY(r = response_generic(ssn, t));
+	}
 
 	if (r == STATUS_TRYCREATE) {
 		TRY(t = send_request(ssn, "CREATE \"%s\"", m));
@@ -649,15 +653,14 @@ request_append(session *ssn, const char *mbox, const char *mesg, size_t
 			TRY(response_generic(ssn, t));
 		}
 		TRY(t = send_request(ssn, "APPEND \"%s\"%s%s%s%s%s%s {%d}", m,
-			(flags ? " (" : ""), (flags ? flags : ""),
-			(flags ? ")" : ""), (date ? " \"" : ""),
-			(date ? date : ""), (date ? "\"" : ""), mesglen));
+		    (flags ? " (" : ""), (flags ? flags : ""),
+		    (flags ? ")" : ""), (date ? " \"" : ""),
+		    (date ? date : ""), (date ? "\"" : ""), mesglen));
 		TRY(r = response_continuation(ssn, t));
-	}
-
-	if (r == STATUS_CONTINUE) {
-		TRY(send_continuation(ssn, mesg, mesglen)); 
-		TRY(r = response_generic(ssn, t));
+		if (r == STATUS_CONTINUE) {
+			TRY(send_continuation(ssn, mesg, mesglen)); 
+			TRY(r = response_generic(ssn, t));
+		}
 	}
 
 	return r;
