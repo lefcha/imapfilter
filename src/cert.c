@@ -19,6 +19,7 @@ extern environment env;
 
 int check_cert(X509 *pcert, unsigned char *pmd, unsigned int *pmdlen);
 void print_cert(X509 *cert, unsigned char *md, unsigned int *mdlen);
+char *get_serial(X509 *cert);
 int write_cert(X509 *cert);
 int mismatch_cert(void);
 
@@ -100,7 +101,7 @@ check_cert(X509 *pcert, unsigned char *pmd, unsigned int *pmdlen)
 
 	while ((cert = PEM_read_X509(fd, &cert, NULL, NULL)) != NULL) {
 		if (X509_subject_name_cmp(cert, pcert) != 0 ||
-		    X509_issuer_name_cmp(cert, pcert) != 0)
+		    X509_issuer_and_serial_cmp(cert, pcert) != 0)
 			continue;
 
 		if (!X509_digest(cert, EVP_md5(), md, &mdlen) ||
@@ -129,19 +130,59 @@ void
 print_cert(X509 *cert, unsigned char *md, unsigned int *mdlen)
 {
 	unsigned int i;
-	char *c;
+	char *s;
 
-	c = X509_NAME_oneline(X509_get_subject_name(cert), NULL, 0);
-	printf("Server certificate subject: %s\n", c);
-	xfree(c);
+	s = X509_NAME_oneline(X509_get_subject_name(cert), NULL, 0);
+	printf("Server certificate subject: %s\n", s);
+	xfree(s);
 
-	c = X509_NAME_oneline(X509_get_issuer_name(cert), NULL, 0);
-	printf("Server certificate issuer: %s\n", c);
-	xfree(c);
+	s = X509_NAME_oneline(X509_get_issuer_name(cert), NULL, 0);
+	printf("Server certificate issuer: %s\n", s);
+	xfree(s);
+
+	s = get_serial(cert);
+	printf("Server certificate serial: %s\n", s);
+	xfree(s);
 
 	printf("Server key fingerprint: ");
 	for (i = 0; i < *mdlen; i++)
 		printf(i != *mdlen - 1 ? "%02X:" : "%02X\n", md[i]);
+}
+
+
+/*
+ * Extract certificate serial number as a string.
+ */
+char *
+get_serial(X509 *cert)
+{
+	ASN1_INTEGER* serial;
+	char *buf;
+	long num;
+	int  i;
+	size_t len;
+
+	serial = X509_get_serialNumber(cert);
+	buf = xmalloc(LINE_MAX);
+	*buf = '\0';
+	if (serial->length <= (int)sizeof(long)) {
+		num = ASN1_INTEGER_get(serial);
+		if (serial->type == V_ASN1_NEG_INTEGER) {
+			snprintf(buf, LINE_MAX, "-%lX", -num);
+		} else {
+			snprintf(buf, LINE_MAX, "%lX", num);
+		}
+	} else {
+		if (serial->type == V_ASN1_NEG_INTEGER) {
+			snprintf(buf, LINE_MAX, "-");
+		}
+		for (i = 0; i < serial->length; i++) {
+			len = strlen(buf);
+			snprintf(buf + len, LINE_MAX - len, "%02X",
+			    serial->data[i]);
+		}
+	}
+	return buf;
 }
 
 
@@ -152,13 +193,14 @@ int
 write_cert(X509 *cert)
 {
 	FILE *fd;
-	char c, buf[64];
+	char c, buf[LINE_MAX];
 	char *certf;
+	char *s;
 
 	do {
 		printf("(R)eject, accept (t)emporarily or "
 		    "accept (p)ermanently? ");
-		if (fgets(buf, sizeof(buf), stdin) == NULL)
+		if (fgets(buf, LINE_MAX, stdin) == NULL)
 			return -1;
 		c = tolower((int)(*buf));
 	} while (c != 'r' && c != 't' && c != 'p');
@@ -175,8 +217,19 @@ write_cert(X509 *cert)
 	if (fd == NULL)
 		return -1;
 
+	s = X509_NAME_oneline(X509_get_subject_name(cert), NULL, 0);
+	fprintf(fd, "Subject: %s\n", s);
+	xfree(s);
+	s = X509_NAME_oneline(X509_get_issuer_name(cert), NULL, 0);
+	fprintf(fd, "Issuer: %s\n", s);
+	xfree(s);
+	s = get_serial(cert);
+	fprintf(fd, "Serial: %s\n", s);
+	xfree(s);
+
 	PEM_write_X509(fd, cert);
 
+	fprintf(fd, "\n");
 	fclose(fd);
 
 	return 0;
@@ -190,12 +243,12 @@ write_cert(X509 *cert)
 int
 mismatch_cert(void)
 {
-	char c, buf[64];
+	char c, buf[LINE_MAX];
 
 	do {
 		printf("ATTENTION: SSL/TLS certificate fingerprint mismatch.\n"
 		    "Proceed with the connection (y/n)? ");
-		if (fgets(buf, sizeof(buf), stdin) == NULL)
+		if (fgets(buf, LINE_MAX, stdin) == NULL)
 			return -1;
 		c = tolower((int)(*buf));
 	} while (c != 'y' && c != 'n');
