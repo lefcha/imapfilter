@@ -21,6 +21,7 @@
 
 extern buffer ibuf, obuf, nbuf, cbuf;
 extern regexp responses[];
+extern SSL_CTX *ssl3ctx, *ssl23ctx, *tls1ctx, *tls11ctx, *tls12ctx;
 
 options opts;			/* Program options. */
 environment env;		/* Environment variables. */
@@ -100,6 +101,11 @@ main(int argc, char *argv[])
 
 	SSL_library_init();
 	SSL_load_error_strings();
+	ssl3ctx = SSL_CTX_new(SSLv3_client_method());
+	ssl23ctx = SSL_CTX_new(SSLv23_client_method());
+	tls1ctx = SSL_CTX_new(TLSv1_client_method());
+	tls11ctx = SSL_CTX_new(TLSv1_1_client_method());
+	tls12ctx = SSL_CTX_new(TLSv1_2_client_method());
 
 	start_lua();
 #if LUA_VERSION_NUM < 502
@@ -118,6 +124,11 @@ main(int argc, char *argv[])
 #endif
 	stop_lua();
 
+	SSL_CTX_free(ssl3ctx);
+	SSL_CTX_free(ssl23ctx);
+	SSL_CTX_free(tls1ctx);
+	SSL_CTX_free(tls11ctx);
+	SSL_CTX_free(tls12ctx);
 	ERR_free_strings();
 
 	regexp_free(responses);

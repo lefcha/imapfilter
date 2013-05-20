@@ -17,6 +17,9 @@
 #include "session.h"
 
 
+SSL_CTX *ssl3ctx, *ssl23ctx, *tls1ctx, *tls11ctx, *tls12ctx;
+
+
 /*
  * Connect to mail server.
  */
@@ -85,22 +88,20 @@ open_secure_connection(session *ssn)
 {
 	int r, e;
 	SSL_CTX *ctx;
-#if OPENSSL_VERSION_NUMBER >= 0x1000000fL
-	const SSL_METHOD *method;
-#else		
-	SSL_METHOD *method;
-#endif
 
-	method = NULL;
-
-	if (ssn->sslproto && (!strncasecmp(ssn->sslproto, "ssl3", 4) ||
-	    !strncasecmp(ssn->sslproto, "ssl2", 4)))
-		method = SSLv23_client_method();
-	else
-		method = TLSv1_client_method();
-
-	if (!(ctx = SSL_CTX_new(method)))
-		goto fail;
+	if (!ssn->sslproto) {
+		ctx = ssl23ctx;
+	} else if (!strcasecmp(ssn->sslproto, "ssl3")) {
+		ctx = ssl3ctx;
+	} else if (!strcasecmp(ssn->sslproto, "tls1")) {
+		ctx = tls1ctx;
+	} else if (!strcasecmp(ssn->sslproto, "tls11")) {
+		ctx = tls11ctx;
+	} else if (!strcasecmp(ssn->sslproto, "tls12")) {
+		ctx = tls12ctx;
+	} else {
+		ctx = ssl23ctx;
+	}
 
 	if (!(ssn->sslconn = SSL_new(ctx)))
 		goto fail;
@@ -148,13 +149,10 @@ open_secure_connection(session *ssn)
 	if (get_option_boolean("certificates") && get_cert(ssn) == -1)
 		goto fail;
 
-	SSL_CTX_free(ctx);
-
 	return 0;
 
 fail:
 	ssn->sslconn = NULL;
-	SSL_CTX_free(ctx);
 
 	return -1;
 }

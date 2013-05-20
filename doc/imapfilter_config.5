@@ -1,4 +1,4 @@
-.Dd April 25, 2012
+.Dd May 20, 2013
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -241,9 +241,11 @@ Forces an imaps connection and specifies the SSL/TLS protocol to be used.  It
 takes a
 .Vt string
 as a value, specifically one of:
-.Dq ssl2 ,
 .Dq ssl3 ,
-.Dq tls1 .
+.Dq ssl23 ,
+.Dq tls1 ,
+.Dq tls11 ,
+.Dq tls12 .
 .El
 .Pp
 .Ss LISTING

@@ -167,9 +167,7 @@ request_login(session **ssnptr, const char *server, const char *port, const
 		ssn->username = user;
 		ssn->password = pass;
 
-		if ((!strncasecmp(ssl, "tls1", 4) ||
-		    !strncasecmp(ssl, "ssl3", 4) ||
-		    !strncasecmp(ssl, "ssl2", 4)))
+		if (strlen(ssl) != 0)
 			ssn->sslproto = ssl;
 	} else {
 		debug("recovering connection: %s://%s@%s:%s/%s\n",
