@@ -24,7 +24,7 @@ account2 = IMAP {
     server = 'imap2.mail.server',
     username = 'user2',
     password = 'secret2',
-    ssl = 'ssl3',
+    ssl = 'ssl23',
 }
 
 -- Get a list of the available mailboxes and folders

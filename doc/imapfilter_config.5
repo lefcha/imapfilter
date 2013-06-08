@@ -201,7 +201,7 @@ myaccount = IMAP {
     server = 'imap.mail.server',
     username = 'me',
     password = 'secret',
-    ssl = 'ssl3'
+    ssl = 'ssl23'
 }
 .Ed
 .Pp
@@ -237,15 +237,15 @@ for imap and
 .Dq 993
 for imaps.
 .It Va ssl
-Forces an imaps connection and specifies the SSL/TLS protocol to be used.  It
-takes a
+Forces an imaps connection and specifies the SSL/TLS protocol/version to be
+used.  It takes a
 .Vt string
 as a value, specifically one of:
 .Dq ssl3 ,
 .Dq ssl23 ,
 .Dq tls1 ,
-.Dq tls11 ,
-.Dq tls12 .
+.Dq tls1.1 ,
+.Dq tls1.2 .
 .El
 .Pp
 .Ss LISTING

@@ -95,9 +95,9 @@ open_secure_connection(session *ssn)
 		ctx = ssl3ctx;
 	} else if (!strcasecmp(ssn->sslproto, "tls1")) {
 		ctx = tls1ctx;
-	} else if (!strcasecmp(ssn->sslproto, "tls11")) {
+	} else if (!strcasecmp(ssn->sslproto, "tls1.1")) {
 		ctx = tls11ctx;
-	} else if (!strcasecmp(ssn->sslproto, "tls12")) {
+	} else if (!strcasecmp(ssn->sslproto, "tls1.2")) {
 		ctx = tls12ctx;
 	} else {
 		ctx = ssl23ctx;
