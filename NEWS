@@ -1,3 +1,11 @@
+IMAPFilter 2.5.5 - 8 Jun 2013
+  - Work-around for some servers that send an unexpected APPEND response.
+  - The serial number of the certificates is taken into account, because some
+    servers send different certificates with the same subject and issuer.
+  - Details of the stored certificates are written to the certificates file, in
+    order to make it easier to distinguish each of them.
+  - Support for TLS versions 1.1 and 1.2 for secure connections.
+
 IMAPFilter 2.5.4 - 9 Apr 2013
   - Some server responses are now parsed less stricly.
   - More detailed information is now printed when there's an error.
