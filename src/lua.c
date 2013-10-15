@@ -78,7 +78,8 @@ start_lua()
 		    "=<command line>") || lua_pcall(lua, 0, LUA_MULTRET, 0))
 			fatal(ERROR_CONFIG, "%s\n", lua_tostring(lua, -1));
 	} else {
-		if (luaL_loadfile(lua, opts.config))
+		if (luaL_loadfile(lua, strcmp(opts.config, "-") == 0 ? NULL :
+		    opts.config))
 			fatal(ERROR_CONFIG, "%s\n", lua_tostring(lua, -1));
 		lua_pushcfunction(lua, traceback_handler);
 		lua_insert(lua, 1);

@@ -1,4 +1,4 @@
-.Dd May 20, 2013
+.Dd Oct 15, 2013
 .Dt IMAPFILTER 1
 .Os
 .Sh NAME
@@ -24,7 +24,10 @@ The command line options of
 are as follows:
 .Bl -tag -width Ds
 .It Fl c Ar configfile
-Path to the configuration file.  The default is
+Path to the configuration file to read, or the
+.Sq -
+character to read the configuration from the standard input stream.  The
+default is
 .Pa $HOME/.imapfilter/config.lua .
 .It Fl d Ar debugfile
 File that contains debugging information about the full communication with the
