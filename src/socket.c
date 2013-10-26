@@ -17,7 +17,10 @@
 #include "session.h"
 
 
-SSL_CTX *ssl3ctx, *ssl23ctx, *tls1ctx, *tls11ctx, *tls12ctx;
+SSL_CTX *ssl3ctx, *ssl23ctx, *tls1ctx;
+#if OPENSSL_VERSION_NUMBER >= 0x01000100fL
+SSL_CTX *tls11ctx, *tls12ctx;
+#endif
 
 
 /*
@@ -96,9 +99,17 @@ open_secure_connection(session *ssn)
 	} else if (!strcasecmp(ssn->sslproto, "tls1")) {
 		ctx = tls1ctx;
 	} else if (!strcasecmp(ssn->sslproto, "tls1.1")) {
+#if OPENSSL_VERSION_NUMBER >= 0x01000100fL
 		ctx = tls11ctx;
+#else
+		ctx = tls1ctx;
+#endif
 	} else if (!strcasecmp(ssn->sslproto, "tls1.2")) {
+#if OPENSSL_VERSION_NUMBER >= 0x01000100fL
 		ctx = tls12ctx;
+#else
+		ctx = tls1ctx;
+#endif
 	} else {
 		ctx = ssl23ctx;
 	}
