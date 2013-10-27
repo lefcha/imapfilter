@@ -1,3 +1,9 @@
+IMAPFilter 2.5.6 - 27 Oct 2013
+  - Possible to build again with OpenSSL older than version 1.0.1 (was a
+    requirement for the previous release due to new protocols TLS 1.1/1.2).
+  - Support for reading the configuration from the standard input stream.
+  - New makefile dist target, which can be used to create distribution archives.
+
 IMAPFilter 2.5.5 - 8 Jun 2013
   - Work-around for some servers that send an unexpected APPEND response.
   - The serial number of the certificates is taken into account, because some
