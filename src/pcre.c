@@ -213,7 +213,7 @@ ifre_exec(lua_State *lua)
 #endif
 	    0, lua_tonumber(lua, 3), ovector, (ovecsize + 1) * 3);
 
-	if (n > 0)
+	if (n > 0) {
 		for (i = 1; i < n; i++)
 			if (ovector[2 * i] != -1 && ovector[2 * i + 1] != -1)
 				lua_pushlstring(lua, lua_tostring(lua, 2) +
@@ -221,6 +221,7 @@ ifre_exec(lua_State *lua)
 				    ovector[2 * i]);
 			else
 				lua_pushnil(lua);
+	}
 
 	xfree(ovector);
 
