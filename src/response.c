@@ -518,11 +518,11 @@ response_list(session *ssn, int tag, char **mboxs, char **folders)
 		a = xstrndup(b + re->pmatch[2].rm_so,
 		    re->pmatch[2].rm_eo - re->pmatch[2].rm_so);
 
-		if (re->pmatch[5].rm_so != -1 && re->pmatch[5].rm_so != -1)
+		if (re->pmatch[5].rm_so != -1 && re->pmatch[5].rm_eo != -1)
 			s = xstrndup(b + re->pmatch[5].rm_so,
 			    re->pmatch[5].rm_eo - re->pmatch[5].rm_so);
 		else if (re->pmatch[6].rm_so != -1 &&
-		    re->pmatch[6].rm_so != -1)
+		    re->pmatch[6].rm_eo != -1)
 			s = xstrndup(b + re->pmatch[6].rm_so,
 			    re->pmatch[6].rm_eo - re->pmatch[6].rm_so);
 		else
