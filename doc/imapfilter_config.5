@@ -1,4 +1,4 @@
-.Dd May 20, 2013
+.Dd Nov 29, 2013
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -674,7 +674,7 @@ and year is the year as decimal number including the century (eg. 2007):
 .Pp
 .Bl -tag -width Ds -compact
 .It Fn arrived_before date
-messages that have arrived before the 
+messages that have arrived earlier than the
 .Fa date
 .Pq Vt string ,
 where
@@ -684,7 +684,7 @@ is in the
 form.
 .Pp
 .It Fn arrived_on date
-Messages that have arrived on the
+Messages that have arrived within the
 .Fa date
 .Pq Vt string ,
 where
@@ -694,7 +694,7 @@ is in the
 form.
 .Pp
 .It Fn arrived_since date 
-Messages that have arrived after the
+Messages that have arrived within or later than the
 .Fa date
 .Pq Vt string ,
 where
@@ -704,7 +704,7 @@ is in the
 form.
 .Pp
 .It Fn sent_before date
-Messages that have been sent before the
+Messages that have been sent earlier than the
 .Fa date
 .Pq Vt string ,
 where
@@ -714,7 +714,7 @@ is in the
 form.
 .Pp
 .It Fn sent_on date
-Messages that have been sent on the
+Messages that have been sent within the
 .Fa date
 .Pq Vt string ,
 where
@@ -724,7 +724,7 @@ is in the
 form.
 .Pp
 .It Fn sent_since date
-Messages that have been sent after the
+Messages that have been sent within or later than the
 .Fa date
 .Pq Vt string ,
 where
