@@ -6,7 +6,7 @@
 #define VERSION		"2.5.6"
 
 /* Program's copyright. */
-#define COPYRIGHT	"Copyright (c) 2001-2013 Eleftherios Chatzimparmpas"
+#define COPYRIGHT	"Copyright (c) 2001-2014 Eleftherios Chatzimparmpas"
 
 
 #endif				/* VERSION_H */
