@@ -975,13 +975,16 @@ static int
 ifcore_idle(lua_State *lua)
 {
 	int r;
+	char *event;
+
+	event = NULL;
 
 	if (lua_gettop(lua) != 1)
 		luaL_error(lua, "wrong number of arguments");
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 
-	while ((r = request_idle((session *)(lua_topointer(lua, 1)))) ==
-	    STATUS_NONE);
+	while ((r = request_idle((session *)(lua_topointer(lua, 1)),
+	    &event)) ==	STATUS_NONE);
 
 	lua_pop(lua, 1);
 
@@ -990,7 +993,14 @@ ifcore_idle(lua_State *lua)
 
 	lua_pushboolean(lua, (r == STATUS_OK));
 
-	return 1;
+	if (!event)
+		return 1;
+
+	lua_pushstring(lua, event);
+
+	xfree(event);
+
+	return 2;
 }
 
 

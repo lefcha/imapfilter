@@ -1041,13 +1041,13 @@ function Mailbox.enter_idle(self)
     if self._cached_select(self) ~= true then return false end
    
     if not self._check_connection(self) then return end
-    local r = ifcore.idle(self._account._account.session)
+    local r, event = ifcore.idle(self._account._account.session)
     self._check_result(self, 'idle', r)
     if r == false then return false end
 
     if options.close == true then self._cached_close(self) end
 
-    return true
+    return true, string.upper(event)
 end
 
 

@@ -1,4 +1,4 @@
-.Dd Nov 29, 2013
+.Dd Feb 23, 2014
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -190,6 +190,22 @@ not set, the client will block indefinitely.  This variable takes a
 as a value.  Default is
 .Dq 60
 seconds.
+.It Va wakeonany
+By enabling this option the IDLE command will return on any event that is
+received from the server, and not just on the
+.Dq RECENT
+and
+.Dq EXISTS
+events, that normally indicate the arrival of a new message.  Examples of other
+events are
+.Dq FETCH ,
+which indicates that the details of a message (eg. its flags) have been
+modified, or
+.Dq EXPUNGE ,
+which indicates that a message has been deleted.  This variable takes a
+.Vt boolean
+as a value.  Default is
+.Dq false .
 .El
 .Sh ACCOUNTS
 Accounts are initialized using the
@@ -436,21 +452,31 @@ until an update is received, at which point the
 .Fn enter_idle
 method returns.  For the
 .Fn enter_idle
-to work, the IDLE extension has to be supported by the IMAP server.  The
+to work, the IDLE extension has to be supported by the IMAP server.
+.Pp
+The
 .Fn enter_idle
-method returns one value of type
+method returns a value of type
 .Vt boolean :
 .Dq true
 if the IDLE extension is supported and there was a update in the mailbox, and
 .Dq false
 if the IDLE extension is not supported, in which case the method returns
-immediately.
+immediately.  When the aforementioned return value was
+.Dq true ,
+an additional second value of type
+.Vt string
+is also returned, indicating the event received from the server, which is
+useful when the
+.Va wakeonany
+option has been enabled.
 .El
 .Pp
 Examples:
 .Bd -literal -offset 4n
 exist, unread, unseen, uidnext = myaccount.mymailbox:check_status()
 update = myaccount.mymailbox:enter_idle()
+update, event = myaccount.mymailbox:enter_idle()
 .Ed
 .Ss SEARCHING
 .Pp

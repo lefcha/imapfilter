@@ -17,6 +17,7 @@ buffer ibuf;			/* Input buffer. */
 enum {				/* Server data responses to be parsed;
 				 * regular expressions index. */
 	RESPONSE_TAGGED,
+	RESPONSE_UNTAGGED,
 	RESPONSE_CAPABILITY,
 	RESPONSE_AUTHENTICATE,
 	RESPONSE_NAMESPACE,
@@ -25,8 +26,8 @@ enum {				/* Server data responses to be parsed;
 	RESPONSE_STATUS_RECENT,
 	RESPONSE_STATUS_UNSEEN,
 	RESPONSE_STATUS_UIDNEXT,
-	RESPONSE_EXAMINE_EXISTS,
-	RESPONSE_EXAMINE_RECENT,
+	RESPONSE_EXISTS,
+	RESPONSE_RECENT,
 	RESPONSE_LIST,
 	RESPONSE_SEARCH,
 	RESPONSE_FETCH,
@@ -35,11 +36,11 @@ enum {				/* Server data responses to be parsed;
 	RESPONSE_FETCH_SIZE,
 	RESPONSE_FETCH_STRUCTURE,
 	RESPONSE_FETCH_BODY,
-	RESPONSE_IDLE,
 };
 regexp responses[] = {		/* Server data responses to be parsed;
 				 * regular expressions patterns. */
 	{ "([[:xdigit:]]{4,4}) (OK|NO|BAD) [^[:cntrl:]]*\r+\n+", NULL, 0, NULL },
+	{ "\\* [[:digit:]]+ ([[:graph:]]*)[^[:cntrl:]]*\r+\n+", NULL, 0, NULL },
 	{ "\\* CAPABILITY ([[:print:]]*)\r+\n+", NULL, 0, NULL },
 	{ "\\+ ([[:graph:]]*)\r+\n+", NULL, 0, NULL },
 	{ "\\* NAMESPACE (NIL|\\(\\(\"([[:graph:]]*)\" \"([[:print:]])\"\\)"
@@ -63,7 +64,6 @@ regexp responses[] = {		/* Server data responses to be parsed;
 	{ "BODYSTRUCTURE (\\([[:print:]]+\\))", NULL, 0, NULL },
 	{ "\\* [[:digit:]]+ FETCH \\([[:print:]]*BODY\\[[[:print:]]*\\] "
 	  "(\\{([[:digit:]]+)\\} *\r+\n+|\"([[:print:]]*)\")", NULL, 0, NULL },
-	{ "\\* [[:digit:]]+ (RECENT|EXISTS) *\r+\n+", NULL, 0, NULL },
 	{ NULL, NULL, 0, NULL }
 };
 
@@ -460,11 +460,11 @@ response_examine(session *ssn, int tag, unsigned int *exist,
 	if (r == -1 || r == STATUS_BYE)
 		return r;
 
-	re = &responses[RESPONSE_EXAMINE_EXISTS];
+	re = &responses[RESPONSE_EXISTS];
 	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0))
 		*exist = strtol(ibuf.data + re->pmatch[1].rm_so, NULL, 10);
 
-	re = &responses[RESPONSE_EXAMINE_RECENT];
+	re = &responses[RESPONSE_RECENT];
 	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0))
 		*recent = strtol(ibuf.data + re->pmatch[1].rm_so, NULL, 10);
 
@@ -838,16 +838,16 @@ response_fetchbody(session *ssn, int tag, char **body, size_t *len)
  * Process the data that server sent due to IMAP IDLE client request.
  */
 int
-response_idle(session *ssn, int tag)
+response_idle(session *ssn, int tag, char **event)
 {
 	regexp *re;
 
 	if (tag == -1)
 		return -1;
 
-	re = &responses[RESPONSE_IDLE];
+	re = &responses[RESPONSE_UNTAGGED];
 
-	do {
+	for (;;) {
 		buffer_reset(&ibuf);
 
 		switch (receive_response(ssn, ibuf.data,
@@ -865,7 +865,20 @@ response_idle(session *ssn, int tag)
 		if (check_bye(ibuf.data))
 			return STATUS_BYE;
 
-	} while (regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0));
+		if (regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0))
+			continue;
+		if (get_option_boolean("wakeonany"))
+			break;
+		if (!strncasecmp(ibuf.data + re->pmatch[1].rm_so,
+		    "RECENT", strlen("RECENT")))
+			break;
+		if (!strncasecmp(ibuf.data + re->pmatch[1].rm_so,
+		    "EXISTS", strlen("EXISTS")))
+			break;
+	}
+
+	*event = xstrndup(ibuf.data + re->pmatch[1].rm_so,
+	    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
 
 	return STATUS_UNTAGGED;
 }

@@ -757,7 +757,7 @@ request_unsubscribe(session *ssn, const char *mbox)
 
 
 int
-request_idle(session *ssn)
+request_idle(session *ssn, char **event)
 {
 	int t, r, ri;
 
@@ -770,7 +770,7 @@ request_idle(session *ssn)
 		TRY(t = send_request(ssn, "IDLE"));
 		TRY(r = response_continuation(ssn, t));
 		if (r == STATUS_CONTINUE) {
-			TRY(ri = response_idle(ssn, t));
+			TRY(ri = response_idle(ssn, t, event));
 			TRY(send_continuation(ssn, "DONE", strlen("DONE")));
 			TRY(r = response_generic(ssn, t));
 		}
