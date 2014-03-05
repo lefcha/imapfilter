@@ -4,9 +4,11 @@ BINDIR = $(PREFIX)/bin
 SHAREDIR = $(PREFIX)/share/imapfilter
 MANDIR = $(PREFIX)/man
 
-MYCFLAGS =
-MYLDFLAGS =
-MYLIBS =
+# Set the following variables in your enviornment to append to the corresponding
+# build variables.
+# MYCFLAGS
+# MYLDFLAGS
+# MYLIBS
 
 INCDIRS =
 LIBDIRS =
