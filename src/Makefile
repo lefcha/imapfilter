@@ -9,11 +9,12 @@ MANDIR = $(PREFIX)/man
 # MYCFLAGS
 # MYLDFLAGS
 # MYLIBS
+# MYLUAVER
 
 INCDIRS =
 LIBDIRS =
 
-LIBLUA = -llua
+LIBLUA = -llua$(MYLUAVER)
 LIBPCRE = -lpcre
 LIBSSL = -lssl
 LIBCRYPTO = -lcrypto
