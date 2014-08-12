@@ -150,7 +150,7 @@ function Mailbox._flag_messages(self, mode, flags, messages)
 
     if options.close == true then self._cached_close(self) end
 
-    return true
+    return r
 end
 
 
@@ -196,7 +196,7 @@ function Mailbox._copy_messages(self, dest, messages)
         end
     end
 
-    return true
+    return r
 end
 
 
