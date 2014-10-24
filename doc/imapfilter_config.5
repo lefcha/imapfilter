@@ -1,4 +1,4 @@
-.Dd Feb 23, 2014
+.Dd Oct 25, 2014
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -760,8 +760,8 @@ is in the
 form.
 .El
 .Pp
-The following methods can be used to search for messages that contain a
-specific word or phrase:
+The following methods can be used to do case-insensitive searching, for
+messages that contain a specific word or phrase:
 .Pp
 .Bl -tag -width Ds -compact
 .It Fn contain_bcc string
@@ -826,8 +826,8 @@ Messages that contain the
 in the message.
 .El
 .Pp
-The following methods can be used to search for messages that match a specific
-regular expression pattern.
+The following methods can be used to do case-sensitive searching, for messages
+that match a specific regular expression pattern.
 .Pp
 This way of searching is not supported by the IMAP protocol, and this means
 that what actually happens under the hood, is that the relevant parts of all
