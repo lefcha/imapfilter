@@ -251,6 +251,7 @@ ifsys_sleep(lua_State *lua)
 static int
 ifsys_daemon(lua_State *lua)
 {
+	int fd;
 
 	if (lua_gettop(lua) != 2)
 		luaL_error(lua, "wrong number of arguments");
@@ -277,16 +278,15 @@ ifsys_daemon(lua_State *lua)
 	}
 
 	if (lua_toboolean(lua, 1) == 0)
-		chdir("/");
+		if (chdir("/") == -1)
+			fprintf(stderr, "changing working directory; %s\n",
+			    strerror(errno));
 
 	if (lua_toboolean(lua, 2) == 0) {
-		close(STDIN_FILENO);
-		close(STDOUT_FILENO);
-		close(STDERR_FILENO);
-
-		if (open("/dev/null", O_RDWR) == -1 ||
-		    dup(STDIN_FILENO) == -1 ||
-		    dup(STDIN_FILENO) == -1)
+		if ((fd = open("/dev/null", O_RDWR)) == -1 ||
+		    dup2(fd, STDIN_FILENO) == -1 ||
+		    dup2(fd, STDOUT_FILENO) == -1 ||
+		    dup2(fd, STDERR_FILENO) == -1)
 			fprintf(stderr, "duplicating file descriptors; %s\n",
 			    strerror(errno));
 	}
