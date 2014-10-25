@@ -4,14 +4,17 @@ BINDIR = $(PREFIX)/bin
 SHAREDIR = $(PREFIX)/share/imapfilter
 MANDIR = $(PREFIX)/man
 
-MYCFLAGS =
-MYLDFLAGS =
-MYLIBS =
+# Set the following variables in your enviornment to append to the corresponding
+# build variables.
+# MYCFLAGS
+# MYLDFLAGS
+# MYLIBS
+# MYLUAVER
 
 INCDIRS =
 LIBDIRS =
 
-LIBLUA = -llua
+LIBLUA = -llua$(MYLUAVER)
 LIBPCRE = -lpcre
 LIBSSL = -lssl
 LIBCRYPTO = -lcrypto
