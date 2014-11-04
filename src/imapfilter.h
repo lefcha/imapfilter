@@ -13,6 +13,8 @@
 
 #include "session.h"
 
+/* Truststore where SSL certs will be verified	*/
+#define SSL_TRUSTSTORE			"/etc/ssl/certs"
 
 /* Fatal error exit codes. */
 #define ERROR_SIGNAL			1

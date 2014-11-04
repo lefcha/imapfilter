@@ -34,34 +34,54 @@ get_cert(session *ssn)
 	X509 *cert;
 	unsigned char md[EVP_MAX_MD_SIZE];
 	unsigned int mdlen;
+	long verify;
 
 	mdlen = 0;
 
 	if (!(cert = SSL_get_peer_certificate(ssn->sslconn)))
 		return -1;
 
-	if (!(X509_digest(cert, EVP_md5(), md, &mdlen)))
-		return -1;
+	/* If certificate validated normally, accept it */
+	verify = SSL_get_verify_result(ssn->sslconn);
+	verbose("SSL: Certificate subject = %s\n", X509_NAME_oneline(X509_get_subject_name(cert), NULL, 0));
+	verbose("SSL: Certificate verify result = %d\n", verify);
+	
+	/* Verify results:
+	 * 0	X509_V_OK					Accept certificate
+	 * 18	X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT		Self signed - verify against .imapfilter/certificates
+	 * 20	X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY	Non std issuer (or no truststore)
+	 * Anything else					Reject
+	 */
+	if (!((verify == X509_V_OK) 
+	   || (verify == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT)
+	   || (verify == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY)))
+		goto fail;
+	
+	if (verify != X509_V_OK)
+	{
+		if (!(X509_digest(cert, EVP_md5(), md, &mdlen)))
+			return -1;
 
-	switch (check_cert(cert, md, &mdlen)) {
-	case 0:
-		if (isatty(STDIN_FILENO) == 0)
-			fatal(ERROR_CERTIFICATE, "%s\n",
-			    "can't accept certificate in non-interactive mode");
-		print_cert(cert, md, &mdlen);
-		if (write_cert(cert) == -1)
-			goto fail;
-		break;
-	case -1:
-		if (isatty(STDIN_FILENO) == 0)
-			fatal(ERROR_CERTIFICATE, "%s\n",
-			    "certificate mismatch in non-interactive mode");
-		print_cert(cert, md, &mdlen);
-		if (mismatch_cert() == -1)
-			goto fail;
-		break;
+		switch (check_cert(cert, md, &mdlen)) {
+		case 0:
+			if (isatty(STDIN_FILENO) == 0)
+				fatal(ERROR_CERTIFICATE, "%s\n",
+				    "can't accept certificate in non-interactive mode");
+			print_cert(cert, md, &mdlen);
+			if (write_cert(cert) == -1)
+				goto fail;
+			break;
+		case -1:
+			if (isatty(STDIN_FILENO) == 0)
+				fatal(ERROR_CERTIFICATE, "%s\n",
+				    "certificate mismatch in non-interactive mode");
+			print_cert(cert, md, &mdlen);
+			if (mismatch_cert() == -1)
+				goto fail;
+			break;
+		}
 	}
-
+	
 	X509_free(cert);
 
 	return 0;
