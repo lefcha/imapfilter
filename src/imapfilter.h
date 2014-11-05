@@ -13,7 +13,6 @@
 
 #include "session.h"
 
-
 /* Fatal error exit codes. */
 #define ERROR_SIGNAL			1
 #define ERROR_CONFIG			2
@@ -65,6 +64,7 @@ typedef struct options {
 	int interactive;	/* Act as an interpreter. */
 	char *log;		/* Log file for error messages. */
 	char *config;		/* Configuration file. */
+	char *ca_dir;		/* CA truststore */
 	char *oneline;		/* One line of program/configuration. */
 	char *debug;		/* Debug file. */
 } options;

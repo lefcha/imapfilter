@@ -23,6 +23,13 @@ The command line options of
 .Xr imapfilter 1
 are as follows:
 .Bl -tag -width Ds
+.It Fl a Ar directory
+The directory containing the SSL CA files.  Most Linux distributions come with the
+ca-certificates package already installed.  Any certificate which cannot be validated
+using the CA certificates in this directory will be validated using the certificates
+file.  The default is
+.Pa /etc/ssl/certs
+which is suitable for most Linux systems.
 .It Fl c Ar configfile
 Path to the configuration file to read, or the
 .Sq -
