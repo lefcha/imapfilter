@@ -160,6 +160,8 @@ open_secure_connection(session *ssn)
 	if (get_option_boolean("certificates") && get_cert(ssn) == -1)
 		goto fail;
 
+	verbose("SSL: Connected to '%s:%s' as '%s' using %s\n", ssn->server, ssn->port, ssn->username, SSL_get_version(ssn->sslconn));
+	
 	return 0;
 
 fail:

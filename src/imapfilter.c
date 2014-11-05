@@ -49,17 +49,21 @@ main(int argc, char *argv[])
 	opts.interactive = 0;
 	opts.log = NULL;
 	opts.config = NULL;
+	opts.ca_dir = "/etc/ssl/certs";
 	opts.oneline = NULL;
 	opts.debug = NULL;
 
 	env.home = NULL;
 	env.pathmax = -1;
 
-	while ((c = getopt(argc, argv, "Vc:d:e:il:v?")) != -1) {
+	while ((c = getopt(argc, argv, "Va:c:d:e:il:v?")) != -1) {
 		switch (c) {
 		case 'V':
 			version();
 			/* NOTREACHED */
+			break;
+		case 'a':
+			opts.ca_dir = optarg;
 			break;
 		case 'c':
 			opts.config = optarg;
@@ -111,16 +115,16 @@ main(int argc, char *argv[])
 	tls11ctx = SSL_CTX_new(TLSv1_1_client_method());
 	tls12ctx = SSL_CTX_new(TLSv1_2_client_method());
 #endif
-	if (exists_dir((char *)SSL_TRUSTSTORE) == 0)
+	if (exists_dir(opts.ca_dir) == 1)
 	{
-		SSL_CTX_load_verify_locations(ssl3ctx, NULL, SSL_TRUSTSTORE);
-		SSL_CTX_load_verify_locations(ssl23ctx, NULL, SSL_TRUSTSTORE);
-		SSL_CTX_load_verify_locations(tls1ctx, NULL, SSL_TRUSTSTORE);
+		SSL_CTX_load_verify_locations(ssl3ctx, NULL, opts.ca_dir);
+		SSL_CTX_load_verify_locations(ssl23ctx, NULL, opts.ca_dir);
+		SSL_CTX_load_verify_locations(tls1ctx, NULL, opts.ca_dir);
 #if OPENSSL_VERSION_NUMBER >= 0x01000100fL
-		SSL_CTX_load_verify_locations(tls11ctx, NULL, SSL_TRUSTSTORE);
-		SSL_CTX_load_verify_locations(tls12ctx, NULL, SSL_TRUSTSTORE);
+		SSL_CTX_load_verify_locations(tls11ctx, NULL, opts.ca_dir);
+		SSL_CTX_load_verify_locations(tls12ctx, NULL, opts.ca_dir);
 #endif
-		verbose("SSL: Certicates will be verified against issuers in '%s'\n", SSL_TRUSTSTORE);
+		verbose("SSL: Certicates will be verified against issuers in '%s'\n", opts.ca_dir);
 	}
 
 

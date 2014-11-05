@@ -44,7 +44,7 @@ get_cert(session *ssn)
 	/* If certificate validated normally, accept it */
 	verify = SSL_get_verify_result(ssn->sslconn);
 	verbose("SSL: Certificate subject = %s\n", X509_NAME_oneline(X509_get_subject_name(cert), NULL, 0));
-	verbose("SSL: Certificate verify result = %d\n", verify);
+	verbose("SSL: Certificate verify result = %d\t%s\n", verify, X509_verify_cert_error_string(verify));
 	
 	/* Verify results:
 	 * 0	X509_V_OK					Accept certificate
@@ -80,8 +80,10 @@ get_cert(session *ssn)
 				goto fail;
 			break;
 		}
+
+		verbose("SSL: Certificate matched against '%s'\n", get_filepath("certificates"));
 	}
-	
+
 	X509_free(cert);
 
 	return 0;
