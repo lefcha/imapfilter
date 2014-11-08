@@ -67,6 +67,7 @@ typedef struct options {
 	char *config;		/* Configuration file. */
 	char *oneline;		/* One line of program/configuration. */
 	char *debug;		/* Debug file. */
+        char *truststore;       /* CA TrustStore. */
 } options;
 
 /* Environment variables. */

@@ -51,11 +51,12 @@ main(int argc, char *argv[])
 	opts.config = NULL;
 	opts.oneline = NULL;
 	opts.debug = NULL;
+	opts.truststore = "/etc/ssl/certs";
 
 	env.home = NULL;
 	env.pathmax = -1;
 
-	while ((c = getopt(argc, argv, "Vc:d:e:il:v?")) != -1) {
+	while ((c = getopt(argc, argv, "Vc:d:e:il:t:v?")) != -1) {
 		switch (c) {
 		case 'V':
 			version();
@@ -75,6 +76,9 @@ main(int argc, char *argv[])
 			break;
 		case 'l':
 			opts.log = optarg;
+			break;
+		case 't':
+			opts.truststore = optarg;
 			break;
 		case 'v':
 			opts.verbose = 1;
@@ -111,6 +115,15 @@ main(int argc, char *argv[])
 	tls11ctx = SSL_CTX_new(TLSv1_1_client_method());
 	tls12ctx = SSL_CTX_new(TLSv1_2_client_method());
 #endif
+	if (exists_dir(opts.truststore)) {
+		SSL_CTX_load_verify_locations(ssl3ctx, NULL, opts.truststore);
+		SSL_CTX_load_verify_locations(ssl23ctx, NULL, opts.truststore);
+		SSL_CTX_load_verify_locations(tls1ctx, NULL, opts.truststore);
+#if OPENSSL_VERSION_NUMBER >= 0x01000100fL
+		SSL_CTX_load_verify_locations(tls11ctx, NULL, opts.truststore);
+		SSL_CTX_load_verify_locations(tls12ctx, NULL, opts.truststore);
+#endif
+	}
 
 	start_lua();
 #if LUA_VERSION_NUM < 502
