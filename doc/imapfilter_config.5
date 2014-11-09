@@ -1,4 +1,4 @@
-.Dd Oct 25, 2014
+.Dd Nov 9, 2014
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -169,6 +169,17 @@ only in the case of network errors, and when set to
 .Dq none
 the mechanism is completely disabled.  Default is
 .Dq all .
+.It Va reenter
+When this option is enabled and the connection is recovered after some
+unexpected event while in IDLE mode (see also the
+.Va recover
+option), the client will re-enter IDLE mode.  But when this option is disabled,
+and after the connection is recovered, the client will not re-enter IDLE mode,
+and instead will continue to execute the next line in the configuration file,
+ie. the one after
+.Fn enter_idle .
+Default is
+.Dq true .
 .It Va starttls
 When this option is enabled and the server supports the IMAP STARTTLS
 extension, a TLS connection will be negotiated with the mail server in the

@@ -762,7 +762,7 @@ request_idle(session *ssn, char **event)
 	int t, r, ri;
 
 	if (!(ssn->capabilities & CAPABILITY_IDLE))
-		return -1;
+		return STATUS_BAD;
 
 	do {
 		ri = 0;
