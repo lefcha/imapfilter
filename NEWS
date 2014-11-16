@@ -1,3 +1,18 @@
+IMAPFilter 2.5.7 - 16 Nov 2014
+  - Support for automatic validation of SSL connections, using the operating
+    system's installed trusted CA certificates (usually from authorities that
+    are shipped with web browsers).
+  - A new "wakeonany" option makes it possible to end IDLE mode on any event,
+    not just on new messages.
+  - A new "reenter" option controls whether IDLE mode should be re-entered,
+    after the recovery of the session, which makes it possible to continue with
+    the execution of the next line in the configuration file.
+  - The documentation now mentions that the contain_*() methods do
+    case-insensitive searching (an IMAP limitation).
+  - The documentation now has a better explanation of the arrived_*() and
+    sent_*() methods.
+  - Bug fix; the value returned by the copy method was incorrect in some cases.
+
 IMAPFilter 2.5.6 - 27 Oct 2013
   - Possible to build again with OpenSSL older than version 1.0.1 (was a
     requirement for the previous release due to new protocols TLS 1.1/1.2).
