@@ -491,7 +491,7 @@ function Mailbox.check_status(self)
     local r, exist, recent, unseen, uidnext =
         ifcore.status(self._account._account.session,self._mailbox)
     self._check_result(self, 'status', r)
-    if r == false then return false end
+    if r == false then return -1, -1, -1, -1 end
 
     if options.info == true then
         print(exist .. ' messages, ' .. recent .. ' recent, ' .. unseen ..
