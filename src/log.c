@@ -6,6 +6,7 @@
 #include <stdarg.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <syslog.c>
 #include <time.h>
 
 #include "imapfilter.h"
@@ -24,7 +25,21 @@ static FILE *logfp = NULL;	/* Pointer to log file. */
 
 
 char *log_time(void);
+char *strip(char *buff, const char *fmt, va_list args);
 
+/*
+ * Substitute values in a message and strip any trailing NL/CRLF
+ */
+char *strip(char *buff, const char *fmt, va_list args) {
+        vsprintf(buff, fmt, args);
+        int len = strlen(buff);
+        if (buff[len - 2] == '\r')
+                buff[len - 2] = '\000';
+        else
+        if (buff[len - 1] == '\n')
+                buff[len - 1] = '\000';
+        return buff;
+}
 
 /*
  * Print message if in verbose mode.
@@ -38,7 +53,14 @@ verbose(const char *fmt,...)
 		return;
 
 	va_start(args, fmt);
-	vprintf(fmt, args);
+        // handle output to syslog
+        if (strcmp(opts.log, "syslog") == 0) {
+                // strip any trailing \n or \r\n
+                char buff[400];
+                syslog(LOG_MAIL | LOG_INFO, "%s", strip(buff,fmt,args));
+        } else {
+                vprintf(fmt, args);
+        }
 	va_end(args);
 }
 
@@ -87,13 +109,17 @@ error(const char *fmt,...)
 	fprintf(stderr, "imapfilter: ");
 	vfprintf(stderr, fmt, args);
 	va_end(args);
-	if (logfp) {
-		va_start(args, fmt);
-		fprintf(logfp, "%s: ", log_time());
-		vfprintf(logfp, fmt, args);
-		fflush(logfp);
-		va_end(args);
-	}
+        va_start(args, fmt);
+        if (logfp) {
+                fprintf(logfp, "%s: ", log_time());
+                vfprintf(logfp, fmt, args);
+                fflush(logfp);
+        } else
+        if (strcmp(opts.log, "syslog") == 0) {
+                char buff[400];
+                syslog(LOG_MAIL | LOG_ERR, "%s", strip(buff,fmt,args));
+        }
+	va_end(args);
 }
 
 
@@ -112,13 +138,17 @@ fatal(unsigned int errnum, const char *fmt,...)
 	vfprintf(stderr, fmt, args);
 	va_end(args);
 
-	if (logfp) {
-		va_start(args, fmt);
-		fprintf(logfp, "%s: ", log_time());
-		vfprintf(logfp, fmt, args);
-		fflush(logfp);
-		va_end(args);
-	}
+        va_start(args, fmt);
+        if (logfp) {
+                fprintf(logfp, "%s: ", log_time());
+                vfprintf(logfp, fmt, args);
+                fflush(logfp);
+        } else
+        if (strcmp(opts.log, "syslog") == 0) {
+                char buff[400];
+                syslog(LOG_MAIL | LOG_CRIT, "%s", strip(buff,fmt,args));
+        }
+        va_end(args);
 
 	for (l = sessions; l; l = l->next) {
 		s = l->data;
