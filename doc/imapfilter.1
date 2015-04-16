@@ -41,8 +41,9 @@ string.
 When this options is used, a configuration file will not be loaded.
 .It Fl i
 Enters interactive mode after executing the configuration file.
-.It Fl l Ar logfile
-File that contains logs of error messages produced.
+.It Fl l Ar logfile | syslog
+File that contains logs of error messages produced.  A value of "syslog" will
+cause output to be sent to the system log.
 .It Fl t Ar truststore
 The path to the system's SSL CA TrustStore directory. SSL connections will be
 validated using the CA certificates found in this directory, and when this is
