@@ -55,7 +55,7 @@ verbose(const char *fmt, ...)
 
 	va_start(args, fmt);
 	// handle output to syslog
-	if (strcmp(opts.log, "syslog") == 0) {
+	if (opts.log && strcmp(opts.log, "syslog") == 0) {
 		// strip any trailing \n or \r\n
 		char buff[400];
 		syslog(LOG_MAIL | LOG_INFO, "%s", strip(buff,fmt,args));
@@ -116,7 +116,7 @@ error(const char *fmt,...)
 		vfprintf(logfp, fmt, args);
 		fflush(logfp);
 	} else
-	if (strcmp(opts.log, "syslog") == 0) {
+	if (opts.log && strcmp(opts.log, "syslog") == 0) {
 		char buff[400];
 		syslog(LOG_MAIL | LOG_ERR, "%s", strip(buff,fmt,args));
 	}
@@ -146,7 +146,7 @@ fatal(unsigned int errnum, const char *fmt,...)
 		fflush(logfp);
 		va_end(args);
 	} else
-	if (strcmp(opts.log, "syslog") == 0) {
+	if (opts.log && strcmp(opts.log, "syslog") == 0) {
 		va_start(args, fmt);
 		char buff[400];
 		syslog(LOG_MAIL | LOG_CRIT, "%s", strip(buff,fmt,args));
@@ -241,7 +241,7 @@ close_log(void)
 	if (logfp == NULL)
 		return 0;
 	else {
-		if (strcmp(opts.log, "syslog") == 0) {
+		if (opts.log && strcmp(opts.log, "syslog") == 0) {
 			closelog();
 			return 0;
 		} else
