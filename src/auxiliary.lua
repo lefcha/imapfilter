@@ -14,6 +14,7 @@ function get_password(prompt)
     else
         io.write('Enter password: ')
     end
+    io.flush()
     ifsys.noecho()
     local p = io.read()
     ifsys.echo()
