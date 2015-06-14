@@ -68,13 +68,15 @@ send_request(session *ssn, const char *fmt,...)
 	va_start(args, fmt);
 	n = vsnprintf(obuf.data + obuf.len, obuf.size - obuf.len -
 	    strlen("\r\n") + 1, fmt, args);
+	va_end(args);
 	if (n > (int)obuf.size) {
 		buffer_check(&obuf, n);
+		va_start(args, fmt);
 		vsnprintf(obuf.data + obuf.len, obuf.size - obuf.len -
 		    strlen("\r\n") + 1, fmt, args);
+		va_end(args);
 	}
 	obuf.len = strlen(obuf.data);
-	va_end(args);
 
 	snprintf(obuf.data + obuf.len, obuf.size - obuf.len + 1, "\r\n");
 	obuf.len = strlen(obuf.data);
