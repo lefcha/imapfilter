@@ -86,27 +86,38 @@ function Mailbox._cached_close(self)
 end
 
 
-function Mailbox._send_query(self, criteria, charset)
+function Mailbox._send_query(self, criteria, messages)
     _check_optional(criteria, { 'string', 'table' })
-    _check_optional(charset, 'string')
+    _check_optional(messages, 'table')
 
     if self._cached_select(self) ~= true then return {} end
 
-    local query
-    if criteria == nil then
-        query = 'ALL'
-    elseif type(criteria) == 'string' then
-        query = 'ALL ' .. criteria
-    else 
-        query = _make_query(criteria)
+    local mesgs
+    if messages == nil then
+        mesgs = nil
+    else
+        mesgs = _extract_messages(self, messages)
+    end
+    if mesgs == nil or #mesgs == 0 or #mesgs > 50 then
+        mesgs = 'ALL'
+    else
+        mesgs = _make_range(mesgs)
+        mesgs = 'UID ' .. table.concat(mesgs, ',')
     end
 
-    if charset == nil then
-        if type(options.charset) == 'string' then
-            charset = options.charset
-        else
-            charset = ''
-        end
+    local query
+    if criteria == nil then
+        query = mesgs
+    elseif type(criteria) == 'string' then
+        query = mesgs .. ' ' .. criteria
+    else 
+        query = _make_query(criteria, mesgs)
+    end
+
+    if type(options.charset) == 'string' then
+        charset = options.charset
+    else
+        charset = ''
     end
 
     if not self._check_connection(self) then return end
@@ -502,8 +513,8 @@ function Mailbox.check_status(self)
 end
 
 
-function Mailbox.send_query(self, criteria, charset)
-    return Set(self._send_query(self, criteria, charset))
+function Mailbox.send_query(self, criteria, messages)
+    return Set(self._send_query(self, criteria, messages))
 end
 
 function Mailbox.select_all(self)
@@ -790,161 +801,164 @@ function Mailbox.append_message(self, message, flags, date)
 end
 
 
-function Mailbox.is_answered(self)
-    return self.send_query(self, 'ANSWERED')
+function Mailbox.is_answered(self, messages)
+    return self.send_query(self, 'ANSWERED', messages)
 end
 
-function Mailbox.is_deleted(self)
-    return self.send_query(self, 'DELETED')
+function Mailbox.is_deleted(self, messages)
+    return self.send_query(self, 'DELETED', messages)
 end
 
-function Mailbox.is_draft(self)
-    return self.send_query(self, 'DRAFT')
+function Mailbox.is_draft(self, messages)
+    return self.send_query(self, 'DRAFT', messages)
 end
 
-function Mailbox.is_flagged(self)
-    return self.send_query(self, 'FLAGGED')
+function Mailbox.is_flagged(self, messages)
+    return self.send_query(self, 'FLAGGED', messages)
 end
 
-function Mailbox.is_new(self)
-    return self.send_query(self, 'NEW')
+function Mailbox.is_new(self, messages)
+    return self.send_query(self, 'NEW', messages)
 end
 
-function Mailbox.is_old(self)
-    return self.send_query(self, 'OLD')
+function Mailbox.is_old(self, messages)
+    return self.send_query(self, 'OLD', messages)
 end
 
-function Mailbox.is_recent(self)
-    return self.send_query(self, 'RECENT')
+function Mailbox.is_recent(self, messages)
+    return self.send_query(self, 'RECENT', messages)
 end
 
-function Mailbox.is_seen(self)
-    return self.send_query(self, 'SEEN')
+function Mailbox.is_seen(self, messages)
+    return self.send_query(self, 'SEEN', messages)
 end
 
-function Mailbox.is_unanswered(self)
-    return self.send_query(self, 'UNANSWERED')
+function Mailbox.is_unanswered(self, messages)
+    return self.send_query(self, 'UNANSWERED', messages)
 end
 
-function Mailbox.is_undeleted(self)
-    return self.send_query(self, 'UNDELETED')
+function Mailbox.is_undeleted(self, messages)
+    return self.send_query(self, 'UNDELETED', messages)
 end
 
-function Mailbox.is_undraft(self)
-    return self.send_query(self, 'UNDRAFT')
+function Mailbox.is_undraft(self, messages)
+    return self.send_query(self, 'UNDRAFT', messages)
 end
 
-function Mailbox.is_unflagged(self)
-    return self.send_query(self, 'UNFLAGGED')
+function Mailbox.is_unflagged(self, messages)
+    return self.send_query(self, 'UNFLAGGED', messages)
 end
 
-function Mailbox.is_unseen(self)
-    return self.send_query(self, 'UNSEEN')
+function Mailbox.is_unseen(self, messages)
+    return self.send_query(self, 'UNSEEN', messages)
 end
 
-function Mailbox.is_larger(self, size)
+function Mailbox.is_larger(self, size, messages)
     _check_required(size, 'number')
-    return self.send_query(self, 'LARGER ' .. tostring(size))
+    _check_optional(messages, 'table')
+    return self.send_query(self, 'LARGER ' .. tostring(size), messages)
 end
 
-function Mailbox.is_smaller(self, size)
+function Mailbox.is_smaller(self, size, messages)
     _check_required(size, 'number')
-    return self.send_query(self, 'SMALLER ' .. tostring(size))
+    _check_optional(messages, 'table')
+    return self.send_query(self, 'SMALLER ' .. tostring(size), messages)
 end
 
 
-function Mailbox.arrived_on(self, date)
+function Mailbox.arrived_on(self, date, messages)
     _check_required(date, 'string')
-    return self.send_query(self, 'ON ' .. date)
+    return self.send_query(self, 'ON ' .. date, messages)
 end
 
-function Mailbox.arrived_before(self, date)
+function Mailbox.arrived_before(self, date, messages)
     _check_required(date, 'string')
-    return self.send_query(self, 'BEFORE ' .. date)
+    return self.send_query(self, 'BEFORE ' .. date, messages)
 end
 
-function Mailbox.arrived_since(self, date)
+function Mailbox.arrived_since(self, date, messages)
     _check_required(date, 'string')
-    return self.send_query(self, 'SINCE ' .. date)
+    return self.send_query(self, 'SINCE ' .. date, messages)
 end
 
-function Mailbox.sent_on(self, date)
+function Mailbox.sent_on(self, date, messages)
     _check_required(date, 'string')
-    return self.send_query(self, 'SENTON ' .. date)
+    return self.send_query(self, 'SENTON ' .. date, messages)
 end
 
-function Mailbox.sent_before(self, date)
+function Mailbox.sent_before(self, date, messages)
     _check_required(date, 'string')
-    return self.send_query(self, 'SENTBEFORE ' .. date)
+    return self.send_query(self, 'SENTBEFORE ' .. date, messages)
 end
 
-function Mailbox.sent_since(self, date)
+function Mailbox.sent_since(self, date, messages)
     _check_required(date, 'string')
-    return self.send_query(self, 'SENTSINCE ' .. date)
+    return self.send_query(self, 'SENTSINCE ' .. date, messages)
 end
 
-function Mailbox.is_newer(self, days)
+function Mailbox.is_newer(self, days, messages)
     _check_required(days, 'number')
-    return self.send_query(self, 'SINCE ' .. form_date(days))
+    return self.send_query(self, 'SINCE ' .. form_date(days), messages)
 end
 
-function Mailbox.is_older(self, days)
+function Mailbox.is_older(self, days, messages)
     _check_required(days, 'number')
-    return self.send_query(self, 'BEFORE ' .. form_date(days))
+    return self.send_query(self, 'BEFORE ' .. form_date(days), messages)
 end
 
 
-function Mailbox.has_flag(self, flag)
+function Mailbox.has_flag(self, flag, messages)
     _check_required(flag, 'string')
-    return self.send_query(self, 'KEYWORD "' .. flag .. '"')
+    return self.send_query(self, 'KEYWORD "' .. flag .. '"', messages)
 end
 
 
-function Mailbox.contain_field(self, field, string)
+function Mailbox.contain_field(self, field, string, messages)
     _check_required(field, 'string')
     _check_required(string, 'string')
-    return self.send_query(self, 'HEADER ' .. field .. ' "' .. string .. '"')
+    return self.send_query(self, 'HEADER ' .. field .. ' "' .. string .. '"',
+                           messages)
 end
 
-function Mailbox.contain_bcc(self, string)
+function Mailbox.contain_bcc(self, string, messages)
     _check_required(string, 'string')
-    return self.send_query(self, 'BCC "' .. string .. '"')
+    return self.send_query(self, 'BCC "' .. string .. '"', messages)
 end
 
-function Mailbox.contain_cc(self, string)
+function Mailbox.contain_cc(self, string, messages)
     _check_required(string, 'string')
-    return self.send_query(self, 'CC "' .. string .. '"')
+    return self.send_query(self, 'CC "' .. string .. '"', messages)
 end
 
-function Mailbox.contain_from(self, string)
+function Mailbox.contain_from(self, string, messages)
     _check_required(string, 'string')
-    return self.send_query(self, 'FROM "' .. string .. '"')
+    return self.send_query(self, 'FROM "' .. string .. '"', messages)
 end
 
-function Mailbox.contain_subject(self, string)
+function Mailbox.contain_subject(self, string, messages)
     _check_required(string, 'string')
-    return self.send_query(self, 'SUBJECT "' .. string .. '"')
+    return self.send_query(self, 'SUBJECT "' .. string .. '"', messages)
 end
 
-function Mailbox.contain_to(self, string)
+function Mailbox.contain_to(self, string, messages)
     _check_required(string, 'string')
-    return self.send_query(self, 'TO "' .. string .. '"')
+    return self.send_query(self, 'TO "' .. string .. '"', messages)
 end
 
-function Mailbox.contain_header(self, string)
+function Mailbox.contain_header(self, string, messages)
     _check_required(string, 'string')
     return self.send_query(self, 'TEXT "' .. string .. '" NOT BODY "' ..
-        string .. '"')
+        string .. '"', messages)
 end
 
-function Mailbox.contain_body(self, string)
+function Mailbox.contain_body(self, string, messages)
     _check_required(string, 'string')
-    return self.send_query(self, 'BODY "' .. string .. '"')
+    return self.send_query(self, 'BODY "' .. string .. '"', messages)
 end
 
-function Mailbox.contain_message(self, string)
+function Mailbox.contain_message(self, string, messages)
     _check_required(string, 'string')
-    return self.send_query(self, 'TEXT "' .. string .. '"')
+    return self.send_query(self, 'TEXT "' .. string .. '"', messages)
 end
 
 

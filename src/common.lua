@@ -91,8 +91,8 @@ function _make_range(messages)
 end
 
 
-function _make_query(criteria)
-    local s = 'ALL '
+function _make_query(criteria, messages)
+    local s = messages .. ' '
 
     if criteria.invert ~= true then
         for ka, va in ipairs(criteria) do

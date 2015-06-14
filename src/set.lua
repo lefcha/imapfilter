@@ -244,7 +244,7 @@ end
 function Set.send_query(self, criteria)
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.send_query(mbox, criteria)
+        set = set + mbox.send_query(mbox, criteria, self)
     end
     return self * set
 end
@@ -252,7 +252,7 @@ end
 function Set.is_answered(self)
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.is_answered(mbox)
+        set = set + mbox.is_answered(mbox, self)
     end
     return self * set
 end
@@ -260,7 +260,7 @@ end
 function Set.is_deleted(self)
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.is_deleted(mbox)
+        set = set + mbox.is_deleted(mbox, self)
     end
     return self * set
 end
@@ -268,7 +268,7 @@ end
 function Set.is_draft(self)
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.is_draft(mbox)
+        set = set + mbox.is_draft(mbox, self)
     end
     return self * set
 end
@@ -276,7 +276,7 @@ end
 function Set.is_flagged(self)
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.is_flagged(mbox)
+        set = set + mbox.is_flagged(mbox, self)
     end
     return self * set
 end
@@ -284,7 +284,7 @@ end
 function Set.is_new(self)
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.is_new(mbox)
+        set = set + mbox.is_new(mbox, self)
     end
     return self * set
 end
@@ -292,7 +292,7 @@ end
 function Set.is_old(self)
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.is_old(mbox)
+        set = set + mbox.is_old(mbox, self)
     end
     return self * set
 end
@@ -300,7 +300,7 @@ end
 function Set.is_recent(self)
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.is_recent(mbox)
+        set = set + mbox.is_recent(mbox, self)
     end
     return self * set
 end
@@ -308,7 +308,7 @@ end
 function Set.is_seen(self)
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.is_seen(mbox)
+        set = set + mbox.is_seen(mbox, self)
     end
     return self * set
 end
@@ -316,7 +316,7 @@ end
 function Set.is_unanswered(self)
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.is_unanswered(mbox)
+        set = set + mbox.is_unanswered(mbox, self)
     end
     return self * set
 end
@@ -324,7 +324,7 @@ end
 function Set.is_undeleted(self)
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.is_undeleted(mbox)
+        set = set + mbox.is_undeleted(mbox, self)
     end
     return self * set
 end
@@ -332,7 +332,7 @@ end
 function Set.is_undraft(self)
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.is_undraft(mbox)
+        set = set + mbox.is_undraft(mbox, self)
     end
     return self * set
 end
@@ -340,7 +340,7 @@ end
 function Set.is_unflagged(self)
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.is_unflagged(mbox)
+        set = set + mbox.is_unflagged(mbox, self)
     end
     return self * set
 end
@@ -348,7 +348,7 @@ end
 function Set.is_unseen(self)
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.is_unseen(mbox)
+        set = set + mbox.is_unseen(mbox, self)
     end
     return self * set
 end
@@ -358,7 +358,7 @@ function Set.is_larger(self, size)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.is_larger(mbox, size)
+        set = set + mbox.is_larger(mbox, size, self)
     end
     return self * set
 end
@@ -368,7 +368,7 @@ function Set.is_smaller(self, size)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.is_smaller(mbox, size)
+        set = set + mbox.is_smaller(mbox, size, self)
     end
     return self * set
 end
@@ -379,7 +379,7 @@ function Set.arrived_on(self, date)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.arrived_on(mbox, date)
+        set = set + mbox.arrived_on(mbox, date, self)
     end
     return self * set
 end
@@ -389,7 +389,7 @@ function Set.arrived_before(self, date)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.arrived_before(mbox, date)
+        set = set + mbox.arrived_before(mbox, date, self)
     end
     return self * set
 end
@@ -399,7 +399,7 @@ function Set.arrived_since(self, date)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.arrived_since(mbox, date)
+        set = set + mbox.arrived_since(mbox, date, self)
     end
     return self * set
 end
@@ -409,7 +409,7 @@ function Set.sent_on(self, date)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.sent_on(mbox, date)
+        set = set + mbox.sent_on(mbox, date, self)
     end
     return self * set
 end
@@ -419,7 +419,7 @@ function Set.sent_before(self, date)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.sent_before(mbox, date)
+        set = set + mbox.sent_before(mbox, date, self)
     end
     return self * set
 end
@@ -429,7 +429,7 @@ function Set.sent_since(self, date)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.sent_since(mbox, date)
+        set = set + mbox.sent_since(mbox, date, self)
     end
     return self * set
 end
@@ -439,7 +439,7 @@ function Set.is_newer(self, days)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.is_newer(mbox, days)
+        set = set + mbox.is_newer(mbox, days, self)
     end
     return self * set
 end
@@ -449,7 +449,7 @@ function Set.is_older(self, days)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.is_older(mbox, days)
+        set = set + mbox.is_older(mbox, days, self)
     end
     return self * set
 end
@@ -460,7 +460,7 @@ function Set.has_flag(self, flag)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.has_flag(mbox, flag)
+        set = set + mbox.has_flag(mbox, flag, self)
     end
     return self * set
 end
@@ -472,7 +472,7 @@ function Set.contain_field(self, field, string)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.contain_field(mbox, field, string)
+        set = set + mbox.contain_field(mbox, field, string, self)
     end
     return self * set
 end
@@ -482,7 +482,7 @@ function Set.contain_bcc(self, string)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.contain_bcc(mbox, string)
+        set = set + mbox.contain_bcc(mbox, string, self)
     end
     return self * set
 end
@@ -492,7 +492,7 @@ function Set.contain_cc(self, string)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.contain_cc(mbox, string)
+        set = set + mbox.contain_cc(mbox, string, self)
     end
     return self * set
 end
@@ -502,7 +502,7 @@ function Set.contain_from(self, string)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.contain_from(mbox, string)
+        set = set + mbox.contain_from(mbox, string, self)
     end
     return self * set
 end
@@ -512,7 +512,7 @@ function Set.contain_subject(self, string)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.contain_subject(mbox, string)
+        set = set + mbox.contain_subject(mbox, string, self)
     end
     return self * set
 end
@@ -522,7 +522,7 @@ function Set.contain_to(self, string)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.contain_to(mbox, string)
+        set = set + mbox.contain_to(mbox, string, self)
     end
     return self * set
 end
@@ -532,7 +532,7 @@ function Set.contain_header(self, string)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.contain_header(mbox, string)
+        set = set + mbox.contain_header(mbox, string, self)
     end
     return self * set
 end
@@ -542,7 +542,7 @@ function Set.contain_body(self, string)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.contain_body(mbox, string)
+        set = set + mbox.contain_body(mbox, string, self)
     end
     return self * set
 end
@@ -552,7 +552,7 @@ function Set.contain_message(self, string)
 
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.contain_message(mbox, string)
+        set = set + mbox.contain_message(mbox, string, self)
     end
     return self * set
 end
