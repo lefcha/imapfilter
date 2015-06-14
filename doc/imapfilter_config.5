@@ -1,4 +1,4 @@
-.Dd Nov 9, 2014
+.Dd Jun 14, 2015
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -196,7 +196,7 @@ as a value.  Default is
 .Dq false .
 .It Va timeout
 The time in seconds for the program to wait for a mail server's response.  If
-not set, the client will block indefinitely.  This variable takes a
+set to 0, the client will block indefinitely.  This variable takes a
 .Vt number
 as a value.  Default is
 .Dq 60
