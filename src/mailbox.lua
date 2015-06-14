@@ -98,7 +98,8 @@ function Mailbox._send_query(self, criteria, messages)
     else
         mesgs = _extract_messages(self, messages)
     end
-    if mesgs == nil or #mesgs == 0 or #mesgs > 50 then
+    if mesgs == nil or #mesgs == 0 or
+       options.sequenceset > 0 and #mesgs > options.sequenceset then
         mesgs = 'ALL'
     else
         mesgs = _make_range(mesgs)
