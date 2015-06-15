@@ -146,26 +146,19 @@ function Mailbox._flag_messages(self, mode, flags, messages)
     local f = ''
     if #flags ~= 0 then f = table.concat(flags, ' ') end
 
+    local r = false
     local m = _make_range(messages)
     local n = #m
-    local r = false
-    if options.limit == 0 or n < options.limit then
+    local l = n
+    if options.limit > 0 then l = options.limit end
+    for i = 1, n, l do
+        j = i + l - 1
+        if n < j then j = n end
         if not self._check_connection(self) then return end
-        r = ifcore.store(self._account._account.session, table.concat(m, ','),
-                         mode, f)
+        r = ifcore.store(self._account._account.session, table.concat(m, ',',
+                         i, j), mode, f)
         self._check_result(self, 'store', r)
-    else
-        for i = 1, n, options.limit do
-            j = i + options.limit - 1
-            if n < j then
-                j = n
-            end
-            if not self._check_connection(self) then return end
-            r = ifcore.store(self._account._account.session, table.concat(m, ',',
-                             i, j), mode, f)
-            self._check_result(self, 'store', r)
-            if r == false then break end
-        end
+        if r == false then break end
     end
 
     if options.close == true then self._cached_close(self) end
@@ -183,24 +176,16 @@ function Mailbox._copy_messages(self, dest, messages)
 
         local m = _make_range(messages)
         local n = #m
-        if options.limit == 0 or n < options.limit then
-                if not self._check_connection(self) then return end
-                r = ifcore.copy(self._account._account.session,
-                                table.concat(m, ','), dest._mailbox)
-                self._check_result(self, 'copy', r)
-
-        else
-            for i = 1, n, options.limit do
-                j = i + options.limit - 1
-                if n < j then
-                    j = n
-                end
-                if not self._check_connection(self) then return end
-                r = ifcore.copy(self._account._account.session,
-                                table.concat(m, ',', i, j), dest._mailbox)
-                self._check_result(self, 'copy', r)
-                if r == false then break end
-            end
+        local l = n
+        if options.limit > 0 then l = options.limit end
+        for i = 1, n, l do
+            j = i + l - 1
+            if n < j then j = n end
+            if not self._check_connection(self) then return end
+            r = ifcore.copy(self._account._account.session,
+                            table.concat(m, ',', i, j), dest._mailbox)
+            self._check_result(self, 'copy', r)
+            if r == false then break end
         end
 
         if options.close == true then self._cached_close(self) end
