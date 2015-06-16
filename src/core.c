@@ -190,10 +190,10 @@ ifcore_status(lua_State *lua)
 		return 0;
 
 	lua_pushboolean(lua, (r == STATUS_OK));
-	lua_pushnumber(lua, (lua_Number) (exists));
-	lua_pushnumber(lua, (lua_Number) (recent));
-	lua_pushnumber(lua, (lua_Number) (unseen));
-	lua_pushnumber(lua, (lua_Number) (uidnext));
+	lua_pushinteger(lua, (lua_Integer) (exists));
+	lua_pushinteger(lua, (lua_Integer) (recent));
+	lua_pushinteger(lua, (lua_Integer) (unseen));
+	lua_pushinteger(lua, (lua_Integer) (uidnext));
 
 	return 5;
 }
