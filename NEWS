@@ -1,3 +1,18 @@
+IMAPFilter 2.6 - 16 Jun 2014
+  - Optimizations that vastly improve performance of the meta-searching
+    functionality, by making subsequent search requests limit their scope based
+    on the results already returned by previous requests (previously this was
+    the case only for the match_*() methods).
+  - Lua 5.3 compatibility (the codebase can still be compiled with versions 5.2
+    and 5.1).
+  - A new "limit" option can be used as a work-around for problems that some
+    servers have with long requests.
+  - The documentation now clarifies how to make the client block indefinitely.
+  - Bug fix; the check_status() method now returns 4 numbers on error as
+    described in the documentation (just negative values in this case).
+  - Bug fix; flushing of default output on password prompt.
+  - Bug fix; program fault when very long requests were to be sent.
+
 IMAPFilter 2.5.7 - 16 Nov 2014
   - Support for automatic validation of SSL connections, using the operating
     system's installed trusted CA certificates (usually from authorities that
