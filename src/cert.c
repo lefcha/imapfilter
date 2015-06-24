@@ -34,20 +34,13 @@ get_cert(session *ssn)
 	X509 *cert;
 	unsigned char md[EVP_MAX_MD_SIZE];
 	unsigned int mdlen;
-	long verify;
 
 	mdlen = 0;
 
 	if (!(cert = SSL_get_peer_certificate(ssn->sslconn)))
 		return -1;
 
-	verify = SSL_get_verify_result(ssn->sslconn);
-	if (!((verify == X509_V_OK) ||
-	    (verify == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT) ||
-	    (verify == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY)))
-		goto fail;
-
-	if (verify != X509_V_OK) {
+	if (SSL_get_verify_result(ssn->sslconn) != X509_V_OK) {
 		if (!(X509_digest(cert, EVP_md5(), md, &mdlen)))
 			return -1;
 
