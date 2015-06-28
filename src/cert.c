@@ -20,8 +20,7 @@ extern environment env;
 int check_cert(X509 *pcert, unsigned char *pmd, unsigned int *pmdlen);
 void print_cert(X509 *cert, unsigned char *md, unsigned int *mdlen);
 char *get_serial(X509 *cert);
-int write_cert(X509 *cert);
-int mismatch_cert(void);
+int store_cert(X509 *cert);
 
 
 /*
@@ -34,13 +33,22 @@ get_cert(session *ssn)
 	X509 *cert;
 	unsigned char md[EVP_MAX_MD_SIZE];
 	unsigned int mdlen;
+	long verify;
 
 	mdlen = 0;
 
 	if (!(cert = SSL_get_peer_certificate(ssn->sslconn)))
 		return -1;
 
-	if (SSL_get_verify_result(ssn->sslconn) != X509_V_OK) {
+	verify = SSL_get_verify_result(ssn->sslconn);
+	if (!((verify == X509_V_OK) ||
+	    (verify == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT) ||
+	    (verify == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY))) {
+		error("certificate verification failed; %d\n", verify);
+		goto fail;
+	}
+
+	if (verify != X509_V_OK) {
 		if (!(X509_digest(cert, EVP_md5(), md, &mdlen)))
 			return -1;
 
@@ -51,17 +59,11 @@ get_cert(session *ssn)
 				    "can't accept certificate in "
 				    "non-interactive mode");
 			print_cert(cert, md, &mdlen);
-			if (write_cert(cert) == -1)
+			if (store_cert(cert) == -1)
 				goto fail;
 			break;
 		case -1:
-			if (isatty(STDIN_FILENO) == 0)
-				fatal(ERROR_CERTIFICATE, "%s\n",
-				    "certificate mismatch in non-interactive "
-				    "mode");
-			print_cert(cert, md, &mdlen);
-			if (mismatch_cert() == -1)
-				goto fail;
+			error("certificate mismatch occured\n", verify);
 			break;
 		}
 	}
@@ -191,10 +193,10 @@ get_serial(X509 *cert)
 
 
 /*
- * Write the SSL/TLS certificate after asking the user to accept/reject it.
+ * Store the SSL/TLS certificate after asking the user to accept/reject it.
  */
 int
-write_cert(X509 *cert)
+store_cert(X509 *cert)
 {
 	FILE *fd;
 	char c, buf[LINE_MAX];
@@ -237,28 +239,4 @@ write_cert(X509 *cert)
 	fclose(fd);
 
 	return 0;
-}
-
-
-/*
- * Ask user to proceed, while a fingerprint mismatch in the SSL/TLS certificate
- * was found.
- */
-int
-mismatch_cert(void)
-{
-	char c, buf[LINE_MAX];
-
-	do {
-		printf("ATTENTION: SSL/TLS certificate fingerprint mismatch.\n"
-		    "Proceed with the connection (y/n)? ");
-		if (fgets(buf, LINE_MAX, stdin) == NULL)
-			return -1;
-		c = tolower((int)(*buf));
-	} while (c != 'y' && c != 'n');
-
-	if (c == 'y')
-		return 0;
-	else
-		return -1;
 }

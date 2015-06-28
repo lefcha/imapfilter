@@ -65,8 +65,7 @@ exists_file(char *fname)
 
 	stat(fname, &fs);
 	if (!S_ISREG(fs.st_mode)) {
-		error("file %s not a regular file\n", fname);
-		return -1;
+		return 0;
 	}
 
 	return 1;
@@ -86,8 +85,7 @@ exists_dir(char *dname)
 
 	stat(dname, &ds);
 	if (!S_ISDIR(ds.st_mode)) {
-		error("file %s not a directory\n", dname);
-		return -1;
+		return 0;
 	}
 
 	return 1;
