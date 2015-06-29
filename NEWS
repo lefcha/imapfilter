@@ -1,3 +1,6 @@
+IMAPFilter 2.6.2 - 30 Jun 2015
+  - Bug fix; drop connection on local certificate mismatch.
+
 IMAPFilter 2.6.1 - 29 Jun 2015
   - Support for loading the system's CA certificates from a file.
   - Bug fix; flusing of standard output/error in a some cases.
