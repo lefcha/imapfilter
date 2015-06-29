@@ -3,7 +3,7 @@
 
 
 /* Program's version number. */
-#define VERSION		"2.6"
+#define VERSION		"2.6.1"
 
 /* Program's copyright. */
 #define COPYRIGHT	"Copyright (c) 2001-2015 Eleftherios Chatzimparmpas"

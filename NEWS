@@ -1,3 +1,7 @@
+IMAPFilter 2.6.1 - 29 Jun 2015
+  - Support for loading the system's CA certificates from a file.
+  - Bug fix; flusing of standard output/error in a some cases.
+
 IMAPFilter 2.6 - 16 Jun 2015
   - Optimizations that vastly improve performance of the meta-searching
     functionality, by making subsequent search requests limit their scope based
