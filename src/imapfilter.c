@@ -52,7 +52,12 @@ main(int argc, char *argv[])
 	opts.config = NULL;
 	opts.oneline = NULL;
 	opts.debug = NULL;
-	opts.truststore = "/etc/ssl/certs";
+
+	opts.truststore = NULL;
+	if (exists_dir("/etc/ssl/certs"))
+		opts.truststore = "/etc/ssl/certs";
+	else if (exists_file("/etc/ssl/cert.pem"))
+		opts.truststore = "/etc/ssl/cert.pem";
 
 	env.home = NULL;
 	env.pathmax = -1;
@@ -116,10 +121,9 @@ main(int argc, char *argv[])
 	tls11ctx = SSL_CTX_new(TLSv1_1_client_method());
 	tls12ctx = SSL_CTX_new(TLSv1_2_client_method());
 #endif
-
 	if (exists_dir(opts.truststore))
 		capath = opts.truststore;
-	if (exists_file(opts.truststore))
+	else if (exists_file(opts.truststore))
 		cafile = opts.truststore;
 	SSL_CTX_load_verify_locations(ssl3ctx, cafile, capath);
 	SSL_CTX_load_verify_locations(ssl23ctx, cafile, capath);
