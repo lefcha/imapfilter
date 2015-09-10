@@ -1,4 +1,4 @@
-.Dd Jun 14, 2015
+.Dd Sep 10, 2015
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -849,7 +849,10 @@ in the message.
 .El
 .Pp
 The following methods can be used to do case-sensitive searching, for messages
-that match a specific regular expression pattern.
+that match a specific regular expression pattern. The matching mechanism that
+is used to support this is based on the Perl-compatible regular expressions
+(PCRE), and more information about the patterns and modifiers that can be used,
+is available in the relevant documentation.
 .Pp
 This way of searching is not supported by the IMAP protocol, and this means
 that what actually happens under the hood, is that the relevant parts of all
@@ -1318,7 +1321,7 @@ password = get_password('Enter password: ')
 become_daemon(600, myfunction)
 status = pipe_to('mycommandline', 'mydata')
 status, data = pipe_from('mycommandline')
-success, capture = regex_search('^[PpCcRrEe]: (\e\ew)$', 'mystring')
+success, capture = regex_search('^(?i)pcre: (\e\ew)$', 'mystring')
 .Ed
 .Sh EXAMPLES
 See
@@ -1332,4 +1335,6 @@ in the source code distribution.
 User's home directory.
 .El
 .Sh SEE ALSO
-.Xr imapfilter 1
+.Xr imapfilter 1 ,
+.Ad http://www.lua.org/docs.html ,
+.Ad http://pcre.org/original/doc/html/
