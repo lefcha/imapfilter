@@ -1,4 +1,4 @@
-.Dd Sep 10, 2015
+.Dd Sep 30, 2015
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -662,11 +662,15 @@ Messages that have not been read.
 .El
 .Pp
 The following method can be used to search for messages that have a specific
-flag set:
+keyword flag set:
 .Pp
 .Bl -tag -width Ds -compact
-.It Fn has_flag keyword
+.It Fn has_keyword flag
 Messages with the specified keyword flag
+.Pq Vt string
+set.
+.It Fn has_unkeyword flag
+Messages without the specified keyword flag
 .Pq Vt string
 set.
 .El
@@ -953,7 +957,7 @@ results = myaccount.mymailbox:is_new()
 results = myaccount.mymailbox:is_recent()
 results = myaccount.mymailbox:is_larger(100000)
 results = myaccount.mymailbox:is_older(10)
-results = myaccount.mymailbox:has_flag('MyFlag')
+results = myaccount.mymailbox:has_keyword('MyFlag')
 results = myaccount.mymailbox:arrived_before('01-Jan-2007')
 results = myaccount.mymailbox:sent_since('01-Jan-2007')
 results = myaccount.mymailbox:contain_subject('test')

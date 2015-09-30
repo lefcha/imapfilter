@@ -855,6 +855,20 @@ function Mailbox.is_unseen(self, messages)
     return self.send_query(self, 'UNSEEN', messages)
 end
 
+
+function Mailbox.has_keyword(self, flag, message)
+    _check_required(flag, 'string')
+    return self.send_query(self, 'KEYWORD ' .. flag, messages)
+end
+
+Mailbox.has_flag = Mailbox.has_keyword
+
+function Mailbox.has_unkeyword(self, flag, message)
+    _check_required(flag, 'string')
+    return self.send_query(self, 'UNKEYWORD ' .. flag, messages)
+end
+
+
 function Mailbox.is_larger(self, size, messages)
     _check_required(size, 'number')
     _check_optional(messages, 'table')
@@ -906,12 +920,6 @@ end
 function Mailbox.is_older(self, days, messages)
     _check_required(days, 'number')
     return self.send_query(self, 'BEFORE ' .. form_date(days), messages)
-end
-
-
-function Mailbox.has_flag(self, flag, messages)
-    _check_required(flag, 'string')
-    return self.send_query(self, 'KEYWORD ' .. flag, messages)
 end
 
 

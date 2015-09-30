@@ -353,6 +353,30 @@ function Set.is_unseen(self)
     return self * set
 end
 
+
+function Set.has_keyword(self, flag)
+    _check_required(flag, 'string')
+
+    local set = Set()
+    for mbox in pairs(_extract_mailboxes(self)) do
+        set = set + mbox.has_keyword(mbox, flag, self)
+    end
+    return self * set
+end
+
+Set.has_flag = Set.has_keyword
+
+function Set.has_unkeyword(self, flag)
+    _check_required(flag, 'string')
+
+    local set = Set()
+    for mbox in pairs(_extract_mailboxes(self)) do
+        set = set + mbox.has_unkeyword(mbox, flag, self)
+    end
+    return self * set
+end
+
+
 function Set.is_larger(self, size)
     _check_required(size, 'number')
 
@@ -450,17 +474,6 @@ function Set.is_older(self, days)
     local set = Set()
     for mbox in pairs(_extract_mailboxes(self)) do
         set = set + mbox.is_older(mbox, days, self)
-    end
-    return self * set
-end
-
-
-function Set.has_flag(self, flag)
-    _check_required(flag, 'string')
-
-    local set = Set()
-    for mbox in pairs(_extract_mailboxes(self)) do
-        set = set + mbox.has_flag(mbox, flag, self)
     end
     return self * set
 end
