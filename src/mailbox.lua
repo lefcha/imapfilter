@@ -911,7 +911,7 @@ end
 
 function Mailbox.has_flag(self, flag, messages)
     _check_required(flag, 'string')
-    return self.send_query(self, 'KEYWORD "' .. flag .. '"', messages)
+    return self.send_query(self, 'KEYWORD ' .. flag, messages)
 end
 
 
