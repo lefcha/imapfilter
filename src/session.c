@@ -40,6 +40,7 @@ session_init(session *ssn)
 	ssn->sslproto = NULL;
 	ssn->username = NULL;
 	ssn->password = NULL;
+	ssn->oauth2 = NULL;
 	ssn->socket = -1;
 	ssn->sslconn = NULL;
 	ssn->protocol = PROTOCOL_NONE;

@@ -336,9 +336,10 @@ response_capability(session *ssn, int tag)
 			ssn->capabilities |= CAPABILITY_STARTTLS;
 		if (xstrcasestr(s, "CHILDREN"))
 			ssn->capabilities |= CAPABILITY_CHILDREN;
-
 		if (xstrcasestr(s, "IDLE"))
 			ssn->capabilities |= CAPABILITY_IDLE;
+		if (xstrcasestr(s, "AUTH=XOAUTH2"))
+			ssn->capabilities |= CAPABILITY_XOAUTH2;
 
 		xfree(s);
 	}

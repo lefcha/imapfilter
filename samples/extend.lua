@@ -120,3 +120,41 @@ account2 = IMAP {
     password = password2
 }
 
+
+-- An alternative way to authenticate to a server is by using a OAuth2 string,
+-- if the server supports the XOAUTH2 authentication mechanism.
+--
+-- In order to generate an OAuth2 string the oauth2.py script and library can
+-- be used, and instructions on how to use it and where to download it are
+-- available at:
+--
+--   https://github.com/google/gmail-oauth2-tools/wiki/OAuth2DotPyRunThrough
+--
+-- The generated OAuth2 string is then supplied to imapfilter in order to
+-- authenticate to the IMAP server using it instead of a login
+-- username/password pair.
+--
+-- Here we assume that imapfilter has the user, the cliend id, the client
+-- secret and the refresh token, and uses them to generate a new access token
+-- (access tokens expire after one hour), and then from the new access token to
+-- generate the OAuth2 string that is used with the IMAP server:
+user = 'xoauth@gmail.com'
+clientid = '364545978226.apps.googleusercontent.com'
+clientsecret = 'zNrNsBzOOnQy8_O-8LkofeTR'
+refreshtoken = '1/q4SaB2JMQB9I-an6F1rxJE9OkOMtfjaz1bPm1tfDpQM'
+
+status, output = pipe_from('oauth2.py --client_id=' .. clientid ..
+                 ' --client_secret=' .. clientsecret ..
+                 ' --refresh_token=' .. refreshtoken)
+_, _, accesstoken = string.find(output, 'Access Token: ([%w%p]+)\n')
+
+status, output = pipe_from('oauth2.py --generate_oauth2_string' ..
+                           ' --access_token=' .. accesstoken ..
+                           ' --user=' .. user)
+_, _, oauth2string = string.find(output, 'OAuth2 argument:\n([%w%p]+)\n')
+
+account3 = IMAP {
+    server = 'imap.gmail.com',
+    username = user,
+    oauth2 = oauth2string
+}

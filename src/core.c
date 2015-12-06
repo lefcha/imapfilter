@@ -114,18 +114,28 @@ static int
 ifcore_login(lua_State *lua)
 {
 	session *s = NULL;
-	int r;
+	int t, r;
 
-	if (lua_gettop(lua) != 5)
+	if (lua_gettop(lua) != 6)
 		luaL_error(lua, "wrong number of arguments");
 	luaL_checktype(lua, 1, LUA_TSTRING);
 	luaL_checktype(lua, 2, LUA_TSTRING);
-	luaL_checktype(lua, 3, LUA_TSTRING);
-	luaL_checktype(lua, 4, LUA_TSTRING);
-	luaL_checktype(lua, 5, LUA_TSTRING);
+	t = lua_type(lua, 3);
+	luaL_argcheck(lua, t == LUA_TSTRING || t == LUA_TNIL, 3,
+	    "string or nil expected");
+	t = lua_type(lua, 4);
+	luaL_argcheck(lua, t == LUA_TSTRING || t == LUA_TNIL, 4,
+	    "string or nil expected");
+	t = lua_type(lua, 5);
+	luaL_argcheck(lua, t == LUA_TSTRING || t == LUA_TNIL, 5,
+	    "string or nil expected");
+	t = lua_type(lua, 6);
+	luaL_argcheck(lua, t == LUA_TSTRING || t == LUA_TNIL, 6,
+	    "string or nil expected");
 
 	r = request_login(&s, lua_tostring(lua, 1), lua_tostring(lua, 2),
-	    lua_tostring(lua, 3), lua_tostring(lua, 4), lua_tostring(lua, 5));
+	    lua_tostring(lua, 3), lua_tostring(lua, 4), lua_tostring(lua, 5),
+	    lua_tostring(lua, 6));
 
 	lua_pop(lua, 5);
 

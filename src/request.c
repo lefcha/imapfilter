@@ -34,14 +34,15 @@ int send_continuation(session *ssn, const char *data, size_t len);
 	case -1:							       \
 		if ((!strcasecmp(get_option_string("recover"), "all") ||       \
 		    !strcasecmp(get_option_string("recover"), "errors")) &&    \
-		    request_login(&ssn, NULL, NULL, NULL, NULL, NULL) != -1)   \
+		    request_login(&ssn, NULL, NULL, NULL, NULL, NULL,	       \
+		    	NULL) != -1)   					       \
 			return STATUS_NONE;				       \
 		return -1;						       \
 	case STATUS_BYE:						       \
 		close_connection(ssn);					       \
 		if (!strcasecmp(get_option_string("recover"), "all")) {	       \
 			if (request_login(&ssn, NULL, NULL, NULL, NULL,	       \
-			    NULL) != -1)				       \
+			    NULL, NULL) != -1)				       \
 				return STATUS_NONE;			       \
 		} else							       \
 			session_destroy(ssn);				       \
@@ -153,7 +154,7 @@ request_noop(session *ssn)
  */
 int
 request_login(session **ssnptr, const char *server, const char *port, const
-    char *ssl, const char *user, const char *pass)
+    char *ssl, const char *user, const char *pass, const char *oauth2)
 {
 	int t, r, rg = -1, rl = -1; 
 	session *ssn = *ssnptr;
@@ -168,8 +169,9 @@ request_login(session **ssnptr, const char *server, const char *port, const
 		ssn->port = port;
 		ssn->username = user;
 		ssn->password = pass;
+		ssn->oauth2 = oauth2;
 
-		if (strlen(ssl) != 0)
+		if (ssl)
 			ssn->sslproto = ssl;
 	} else {
 		debug("recovering connection: %s://%s@%s:%s/%s\n",
@@ -203,7 +205,26 @@ request_login(session **ssnptr, const char *server, const char *port, const
 	}
 
 	if (rg != STATUS_PREAUTH) {
-		if (ssn->capabilities & CAPABILITY_CRAMMD5 &&
+		if (ssn->oauth2 && !ssn->password &&
+		   !(ssn->capabilities & CAPABILITY_XOAUTH2)) {
+			error("OAuth2 not supported at %s\n", ssn->server);
+			close_connection(ssn);
+			session_destroy(ssn);
+			return STATUS_NO;
+		}
+		if (ssn->capabilities & CAPABILITY_XOAUTH2 && ssn->oauth2) {
+			CHECK(t = send_request(ssn, "AUTHENTICATE XOAUTH2 %s",
+			    ssn->oauth2));
+			CHECK(rl = response_generic(ssn, t));
+		}
+		if (rl == STATUS_NO) {
+			error("oauth2 string rejected at %s\n", ssn->server);
+			close_connection(ssn);
+			session_destroy(ssn);
+			return STATUS_NO;
+		}
+		if (rl != STATUS_OK && ssn->password &&
+		    ssn->capabilities & CAPABILITY_CRAMMD5 &&
 		    get_option_boolean("crammd5")) {
 			unsigned char *in, *out;
 			CHECK(t = send_request(ssn, "AUTHENTICATE CRAM-MD5"));
@@ -219,12 +240,11 @@ request_login(session **ssnptr, const char *server, const char *port, const
 			} else
 				goto abort;
 		}
-		if (rl != STATUS_OK) {
+		if (rl != STATUS_OK && ssn->password) {
 			CHECK(t = send_request(ssn, "LOGIN \"%s\" \"%s\"",
 			    ssn->username, ssn->password));
 			CHECK(rl = response_generic(ssn, t));
 		}
-
 		if (rl == STATUS_NO) {
 			error("username %s or password rejected at %s\n",
 			    ssn->username, ssn->server);

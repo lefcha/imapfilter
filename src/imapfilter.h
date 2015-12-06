@@ -33,6 +33,7 @@
 #define CAPABILITY_STARTTLS		0x04
 #define CAPABILITY_CHILDREN		0x08
 #define CAPABILITY_IDLE			0x10
+#define CAPABILITY_XOAUTH2              0x20
 
 /* Status responses and response codes. */
 #define STATUS_NONE			0
@@ -141,7 +142,7 @@ LUALIB_API int luaopen_ifre(lua_State *lua);
 /*	request.c	*/
 int request_noop(session *ssn);
 int request_login(session **ssn, const char *server, const char *port, const
-    char *protocol, const char *user, const char *pass);
+    char *protocol, const char *user, const char *pass, const char *oauth2);
 int request_logout(session *ssn);
 int request_status(session *ssn, const char *mbox, unsigned int *exist,
     unsigned int *recent, unsigned int *unseen, unsigned int *uidnext);

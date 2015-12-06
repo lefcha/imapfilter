@@ -1,4 +1,4 @@
-.Dd Sep 30, 2015
+.Dd Dec 6, 2015
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -13,7 +13,9 @@ therefore the configuration file is a Lua script.
 .Pp
 Although knowledge of Lua is not required to use
 .Xr imapfilter 1 ,
-it is nonetheless recommended, especially if one wants to extend it.
+it is nonetheless recommended, especially if one wants to extend it.  For more
+information on Lua see
+.Ad http://www.lua.org/docs.html .
 .Sh CONVENTIONS
 .Pp
 A brief description of the Lua values and types mentioned hereafter in the
@@ -263,9 +265,28 @@ can also have the following optional elements:
 .Bl -tag -width Ds
 .It Va password
 User's secret keyword.  If a password wasn't supplied the user will be asked to
-enter one interactively the first time it will be needed.  It takes a
+enter one interactively the first time it will be needed (unless
+.Vt oauth2
+has been set).  It takes a
 .Vt string
 as a value.
+.It Va oauth2
+The OAuth2 string to use to authenticate if the server supports the XOAUTH2
+authentication mechanism.  If the server does not support it and a
+.Vt password
+has been also set, authentication will be attempted using the
+.Vt password .
+It takes a
+.Vt string
+as a value.
+.Pp
+Note that this requires that an OAuth client ID and client secret have been
+obtained, an OAuth2 token has been generated and authorized, a new access token
+has been generated using the refresh token if the last access token has
+expired, and an OAuth2 string has been generated from the access token.  The
+aforementioned OAuth2 string is a Base64 encoded string that should be set
+here.  For more information see
+.Ad https://developers.google.com/gmail/xoauth2_protocol .
 .It Va port
 The port to connect to.  It takes a
 .Vt number
@@ -856,7 +877,8 @@ The following methods can be used to do case-sensitive searching, for messages
 that match a specific regular expression pattern. The matching mechanism that
 is used to support this is based on the Perl-compatible regular expressions
 (PCRE), and more information about the patterns and modifiers that can be used,
-is available in the relevant documentation.
+is available in the relevant documentation at
+.Ad http://pcre.org/original/doc/html/ .
 .Pp
 This way of searching is not supported by the IMAP protocol, and this means
 that what actually happens under the hood, is that the relevant parts of all
@@ -1315,7 +1337,9 @@ that denotes if the match was successful, and any captures which are of
 type.  Note that due to Lua using backslash
 .Sq \e
 as an escape character for its strings, one has to double backslashes in order
-to insert a single backslash inside a regular expression pattern.
+to insert a single backslash inside a regular expression pattern.  For more
+information on PCRE see 
+.Ad http://pcre.org/original/doc/html/ .
 .El
 .Pp
 Examples:
@@ -1339,6 +1363,4 @@ in the source code distribution.
 User's home directory.
 .El
 .Sh SEE ALSO
-.Xr imapfilter 1 ,
-.Ad http://www.lua.org/docs.html ,
-.Ad http://pcre.org/original/doc/html/
+.Xr imapfilter 1

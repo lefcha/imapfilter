@@ -12,8 +12,12 @@ Mailbox._mt.__call = function (self, account, mailbox)
     object._type = 'mailbox'
     object._account = account
     object._mailbox = mailbox
-    object._string =  account._account.username .. '@' ..
-                      account._account.server .. '/' .. mailbox
+    if account._account.username then
+        object._string =  account._account.username .. '@' ..
+                          account._account.server .. '/' .. mailbox
+    else
+        object._string =  account._account.server .. '/' .. mailbox
+    end
 
     for key, value in pairs(Mailbox) do
         if type(value) == 'function' then object[key] = value end
@@ -110,9 +114,17 @@ function Mailbox._send_query(self, criteria, messages)
     if criteria == nil then
         query = mesgs
     elseif type(criteria) == 'string' then
-        query = mesgs .. ' ' .. criteria
+        if mesgs == 'ALL' then
+            query = criteria
+        else
+            query = mesgs .. ' ' .. criteria
+        end
     else 
-        query = _make_query(criteria, mesgs)
+        if mesgs == 'ALL' then
+            query = _make_query(criteria, '')
+        else
+            query = _make_query(criteria, mesgs)
+        end
     end
 
     if type(options.charset) == 'string' then
