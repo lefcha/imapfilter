@@ -1,3 +1,6 @@
+IMAPFilter 2.6.4 - 8 Dec 2015
+  - Support for OAuth 2.0 and the XOAUTH2 authentication mechanism.
+
 IMAPFilter 2.6.3 - 30 Sep 2015
   - Support for loading a default CA certificates file.
   - A new has_unkeyword() method to search messages without a keyword flag set.
