@@ -114,17 +114,9 @@ function Mailbox._send_query(self, criteria, messages)
     if criteria == nil then
         query = mesgs
     elseif type(criteria) == 'string' then
-        if mesgs == 'ALL' then
-            query = criteria
-        else
-            query = mesgs .. ' ' .. criteria
-        end
+        query = mesgs .. ' ' .. criteria
     else 
-        if mesgs == 'ALL' then
-            query = _make_query(criteria, '')
-        else
-            query = _make_query(criteria, mesgs)
-        end
+        query = _make_query(criteria, mesgs)
     end
 
     if type(options.charset) == 'string' then
