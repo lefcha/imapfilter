@@ -155,7 +155,7 @@ _, _, oauth2string = string.find(output, 'OAuth2 argument:\n([%w%p]+)\n')
 
 account3 = IMAP {
     server = 'imap.gmail.com',
-    ssl = 'tls1.2'
+    ssl = 'tls1.2',
     username = user,
     oauth2 = oauth2string
 }
