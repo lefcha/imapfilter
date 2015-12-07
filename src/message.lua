@@ -13,14 +13,9 @@ Message._mt.__call = function (self, account, mailbox, uid)
     object._account = account
     object._mailbox = mailbox
     object._uid = uid
-    if account._account.username then
-        object._string = account._account.username .. '@' ..
-                         account._account.server .. '/' .. mailbox._mailbox ..
-                         '[' .. uid .. ']'
-    else
-        object._string = account._account.server .. '/' .. mailbox._mailbox ..
-                         '[' .. uid .. ']'
-    end
+    object._string = account._account.username .. '@' ..
+                     account._account.server .. '/' .. mailbox._mailbox ..
+                     '[' .. uid .. ']'
 
     object._structure = nil
     object._header = nil

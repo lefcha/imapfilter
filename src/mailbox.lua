@@ -12,12 +12,8 @@ Mailbox._mt.__call = function (self, account, mailbox)
     object._type = 'mailbox'
     object._account = account
     object._mailbox = mailbox
-    if account._account.username then
-        object._string =  account._account.username .. '@' ..
-                          account._account.server .. '/' .. mailbox
-    else
-        object._string =  account._account.server .. '/' .. mailbox
-    end
+    object._string =  account._account.username .. '@' ..
+                      account._account.server .. '/' .. mailbox
 
     for key, value in pairs(Mailbox) do
         if type(value) == 'function' then object[key] = value end

@@ -207,7 +207,8 @@ request_login(session **ssnptr, const char *server, const char *port, const
 	if (rg != STATUS_PREAUTH) {
 		if (ssn->oauth2 && !ssn->password &&
 		   !(ssn->capabilities & CAPABILITY_XOAUTH2)) {
-			error("OAuth2 not supported at %s\n", ssn->server);
+			error("OAuth2 not supported at %s@%s\n", ssn->username,
+			    ssn->server);
 			close_connection(ssn);
 			session_destroy(ssn);
 			return STATUS_NO;
@@ -218,7 +219,8 @@ request_login(session **ssnptr, const char *server, const char *port, const
 			CHECK(rl = response_generic(ssn, t));
 		}
 		if (rl == STATUS_NO) {
-			error("oauth2 string rejected at %s\n", ssn->server);
+			error("oauth2 string rejected at %s@%s\n",
+			    ssn->username, ssn->server);
 			close_connection(ssn);
 			session_destroy(ssn);
 			return STATUS_NO;

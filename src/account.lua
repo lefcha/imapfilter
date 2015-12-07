@@ -12,6 +12,13 @@ _imap = {}
 setmetatable(_imap, { __mode = "v" })
 
 
+_undefined = 0
+function _next_undefined()
+    _undefined = _undefined + 1
+    return 'undefined' .. _undefined
+end
+
+
 Account._mt.__call = function (self, arg)
     _check_required(arg.server, 'string')
     if not arg.oauth2 then
@@ -29,18 +36,14 @@ Account._mt.__call = function (self, arg)
     object._type = 'account'
     object._account = {}
     object._account.server = arg.server
-    object._account.username = arg.username
+    object._account.username = arg.username or _next_undefined()
     object._account.password = arg.password
     object._account.oauth2 = arg.oauth2
     object._account.port = tostring(arg.port or arg.ssl and 993 or 143)
     object._account.ssl = arg.ssl
     object._account.session = nil
     object._account.selected = nil
-    if arg.username then
-        object._string = arg.username .. '@' .. arg.server
-    else
-        object._string = arg.server
-    end
+    object._string = object._account.username .. '@' .. object._account.server
 
     for key, value in pairs(Account) do
         if type(value) == 'function' then object[key] = value end
