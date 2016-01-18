@@ -1,3 +1,6 @@
+IMAPFilter 2.6.5 - 18 Jan 2016
+  - Possible to build again with OpenSSL when support for SSL 3.0 is disabled.
+
 IMAPFilter 2.6.4 - 8 Dec 2015
   - Support for OAuth 2.0 and the XOAUTH2 authentication mechanism.
 
