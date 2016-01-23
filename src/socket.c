@@ -16,8 +16,10 @@
 #include "imapfilter.h"
 #include "session.h"
 
-
-SSL_CTX *ssl3ctx, *ssl23ctx, *tls1ctx;
+SSL_CTX *ssl23ctx, *tls1ctx;
+#ifndef OPENSSL_NO_SSL3_METHOD
+SSL_CTX *ssl3ctx;
+#endif
 #if OPENSSL_VERSION_NUMBER >= 0x01000100fL
 SSL_CTX *tls11ctx, *tls12ctx;
 #endif
@@ -95,7 +97,12 @@ open_secure_connection(session *ssn)
 	if (!ssn->sslproto) {
 		ctx = ssl23ctx;
 	} else if (!strcasecmp(ssn->sslproto, "ssl3")) {
+#ifndef OPENSSL_NO_SSL3_METHOD
 		ctx = ssl3ctx;
+#else
+		error("protocol SSLv3 not supported by current build\n");
+		goto fail;
+#endif
 	} else if (!strcasecmp(ssn->sslproto, "tls1")) {
 		ctx = tls1ctx;
 	} else if (!strcasecmp(ssn->sslproto, "tls1.1")) {
