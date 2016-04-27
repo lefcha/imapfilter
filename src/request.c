@@ -376,6 +376,9 @@ request_expunge(session *ssn)
 {
 	int t, r;
 
+	if (opts.dryrun)
+		return STATUS_DRYRUN;
+
 	TRY(t = send_request(ssn, "EXPUNGE"));
 	TRY(r = response_generic(ssn, t));
 
@@ -603,6 +606,9 @@ request_store(session *ssn, const char *mesg, const char *mode, const char
 {
 	int t, r;
 
+	if (opts.dryrun)
+		return STATUS_DRYRUN;
+
 	TRY(t = send_request(ssn, "UID STORE %s %sFLAGS.SILENT (%s)", mesg, 
 	    (!strncasecmp(mode, "add", 3) ? "+" :
 	    !strncasecmp(mode, "remove", 6) ? "-" : ""), flags));
@@ -625,6 +631,9 @@ request_copy(session *ssn, const char *mesg, const char *mbox)
 {
 	int t, r;
 	const char *m;
+
+	if (opts.dryrun)
+		return STATUS_DRYRUN;
 
 	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
 
@@ -654,6 +663,9 @@ request_append(session *ssn, const char *mbox, const char *mesg, size_t
 {
 	int t, r;
 	const char *m;
+
+	if (opts.dryrun)
+		return STATUS_DRYRUN;
 
 	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
 
@@ -698,6 +710,9 @@ request_create(session *ssn, const char *mbox)
 	int t, r;
 	const char *m;
 
+	if (opts.dryrun)
+		return STATUS_DRYRUN;
+
 	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
 
 	TRY(t = send_request(ssn, "CREATE \"%s\"", m));
@@ -716,6 +731,9 @@ request_delete(session *ssn, const char *mbox)
 	int t, r;
 	const char *m;
 
+	if (opts.dryrun)
+		return STATUS_DRYRUN;
+
 	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
 
 	TRY(t = send_request(ssn, "DELETE \"%s\"", m));
@@ -733,6 +751,9 @@ request_rename(session *ssn, const char *oldmbox, const char *newmbox)
 {
 	int t, r;
 	char *o, *n;
+
+	if (opts.dryrun)
+		return STATUS_DRYRUN;
 
 	o = xstrdup(apply_namespace(oldmbox, ssn->ns.prefix, ssn->ns.delim));
 	n = xstrdup(apply_namespace(newmbox, ssn->ns.prefix, ssn->ns.delim));
@@ -753,6 +774,9 @@ request_subscribe(session *ssn, const char *mbox)
 	int t, r;
 	const char *m;
 
+	if (opts.dryrun)
+		return STATUS_DRYRUN;
+
 	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
 
 	TRY(t = send_request(ssn, "SUBSCRIBE \"%s\"", m));
@@ -770,6 +794,9 @@ request_unsubscribe(session *ssn, const char *mbox)
 {
 	int t, r;
 	const char *m;
+
+	if (opts.dryrun)
+		return STATUS_DRYRUN;
 
 	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
 

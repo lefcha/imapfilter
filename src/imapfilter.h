@@ -48,6 +48,8 @@
 #define STATUS_TRYCREATE		9
 #define STATUS_TIMEOUT			10
 
+#define STATUS_DRYRUN                   STATUS_OK
+
 /* Initial size for buffers. */
 #define INPUT_BUF			4096
 #define OUTPUT_BUF			1024
@@ -64,6 +66,7 @@
 typedef struct options {
 	int verbose;		/* Verbose mode. */
 	int interactive;	/* Act as an interpreter. */
+        int dryrun;             /* Don't send commands that do changes. */
 	char *log;		/* Log file for error messages. */
 	char *config;		/* Configuration file. */
 	char *oneline;		/* One line of program/configuration. */

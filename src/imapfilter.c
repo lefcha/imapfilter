@@ -51,6 +51,7 @@ main(int argc, char *argv[])
 
 	opts.verbose = 0;
 	opts.interactive = 0;
+	opts.dryrun = 0;
 	opts.log = NULL;
 	opts.config = NULL;
 	opts.oneline = NULL;
@@ -65,7 +66,7 @@ main(int argc, char *argv[])
 	env.home = NULL;
 	env.pathmax = -1;
 
-	while ((c = getopt(argc, argv, "Vc:d:e:il:t:v?")) != -1) {
+	while ((c = getopt(argc, argv, "Vc:d:e:il:nt:v?")) != -1) {
 		switch (c) {
 		case 'V':
 			version();
@@ -85,6 +86,9 @@ main(int argc, char *argv[])
 			break;
 		case 'l':
 			opts.log = optarg;
+			break;
+		case 'n':
+			opts.dryrun = 1;
 			break;
 		case 't':
 			opts.truststore = optarg;
@@ -191,7 +195,7 @@ void
 usage(void)
 {
 
-	fprintf(stderr, "usage: imapfilter [-iVv] [-c configfile] "
+	fprintf(stderr, "usage: imapfilter [-inVv] [-c configfile] "
 	    "[-d debugfile] [-e 'command'] [-l logfile]\n");
 
 	exit(0);
