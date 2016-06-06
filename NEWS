@@ -1,3 +1,7 @@
+IMAPFilter 2.6.7 - 7 Jun 2016
+  - A dry-run mode that disables all actions that modify data.
+  - Bug fix; handle IDLE untagged responses that are received in pieces.
+
 IMAPFilter 2.6.6 - 23 Jan 2016
   - Bug fix; print an error message if "ssl" has been set to "ssl3".
 
