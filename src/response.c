@@ -842,6 +842,7 @@ int
 response_idle(session *ssn, int tag, char **event)
 {
 	regexp *re;
+	ssize_t n;
 
 	if (tag == -1)
 		return -1;
@@ -851,23 +852,22 @@ response_idle(session *ssn, int tag, char **event)
 	for (;;) {
 		buffer_reset(&ibuf);
 
-		switch (receive_response(ssn, ibuf.data,
-		    get_option_number("keepalive") * 60, 0)) {
-		case -1:
-			return -1;
-			break; /* NOTREACHED */
-		case 0:
-			return STATUS_TIMEOUT;
-			break; /* NOTREACHED */
-		}
+		do {
+			buffer_check(&ibuf, ibuf.len + INPUT_BUF);
+			n = receive_response(ssn, ibuf.data + ibuf.len,
+			    get_option_number("keepalive") * 60, 0);
+			if (n < 0)
+				return -1;
+			if (n == 0)
+				return STATUS_TIMEOUT;
+			ibuf.len += n;
+
+			if (check_bye(ibuf.data))
+				return STATUS_BYE;
+		} while (regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0));
 
 		verbose("S (%d): %s", ssn->socket, ibuf.data);
 
-		if (check_bye(ibuf.data))
-			return STATUS_BYE;
-
-		if (regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0))
-			continue;
 		if (get_option_boolean("wakeonany"))
 			break;
 		if (!strncasecmp(ibuf.data + re->pmatch[1].rm_so,
