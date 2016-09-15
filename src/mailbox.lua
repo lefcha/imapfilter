@@ -147,7 +147,7 @@ function Mailbox._flag_messages(self, mode, flags, messages)
     if #flags ~= 0 then f = table.concat(flags, ' ') end
 
     local r = false
-    local m = _make_range(messages)
+    local m = _make_range(messages, options.range_limit)
     local n = #m
     local l = n
     if options.limit > 0 then l = options.limit end
@@ -174,7 +174,7 @@ function Mailbox._copy_messages(self, dest, messages)
     if self._account._account.session == dest._account._account.session then
         if self._cached_select(self) ~= true then return end
 
-        local m = _make_range(messages)
+        local m = _make_range(messages, options.range_limit)
         local n = #m
         local l = n
         if options.limit > 0 then l = options.limit end
