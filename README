@@ -32,6 +32,14 @@ Installation
 
     make all
     make install
+    
+  On illumos (and potentially on Solaris) you need these additional steps
+  before compilation:
+    - modify PATH with GNU tools before the native ones (/usr/local/gnu)
+    - modify Makefile with:
+      CC = gcc
+      MYLIBS = -lsocket
+      LIBDIRS = -L/usr/local/lib
 
 
 Documentation
