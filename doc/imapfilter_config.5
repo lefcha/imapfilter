@@ -1,4 +1,4 @@
-.Dd Dec 6, 2015
+.Dd Nov 26, 2016
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -241,7 +241,7 @@ myaccount = IMAP {
     server = 'imap.mail.server',
     username = 'me',
     password = 'secret',
-    ssl = 'ssl23'
+    ssl = 'auto'
 }
 .Ed
 .Pp
@@ -300,11 +300,18 @@ Forces an imaps connection and specifies the SSL/TLS protocol/version to be
 used.  It takes a
 .Vt string
 as a value, specifically one of:
-.Dq ssl3 ,
-.Dq ssl23 ,
-.Dq tls1 ,
+.Dq auto ,
+.Dq tls1.2 ,
 .Dq tls1.1 ,
-.Dq tls1.2 .
+.Dq tls1 ,
+.Dq ssl3 .
+.Pp
+Note that the latest versions of the OpenSSL library have deprecated
+version specific methods, and the actual protocol version used will be
+negotiated to be the highest version mutually supported by the client
+and the server.  This is also what the
+.Dq auto
+value does.
 .El
 .Pp
 .Ss LISTING

@@ -20,7 +20,11 @@ auth_cram_md5(const char *user, const char *pass, unsigned char *chal)
 	unsigned char *resp, *buf, *out;
 	unsigned char md[EVP_MAX_MD_SIZE], mdhex[EVP_MAX_MD_SIZE * 2 + 1];
 	unsigned int mdlen;
-	HMAC_CTX hmac;
+#if OPENSSL_VERSION_NUMBER >= 0x1010000fL
+	HMAC_CTX *ctx;
+#else
+	HMAC_CTX ctx;
+#endif
 
 	n = strlen((char *)(chal)) * 3 / 4 + 1;
 	resp = (unsigned char *)xmalloc(n * sizeof(char));
@@ -28,9 +32,20 @@ auth_cram_md5(const char *user, const char *pass, unsigned char *chal)
 
 	EVP_DecodeBlock(resp, chal, strlen((char *)(chal)));
 
-	HMAC_Init(&hmac, (const unsigned char *)pass, strlen(pass), EVP_md5());
-	HMAC_Update(&hmac, resp, strlen((char *)(resp)));
-	HMAC_Final(&hmac, md, &mdlen);
+#if OPENSSL_VERSION_NUMBER >= 0x1010000fL
+	ctx = HMAC_CTX_new();
+	HMAC_Init_ex(ctx, (const unsigned char *)pass, strlen(pass),
+	    EVP_md5(), NULL);
+	HMAC_Update(ctx, resp, strlen((char *)(resp)));
+	HMAC_Final(ctx, md, &mdlen);
+	HMAC_CTX_free(ctx);
+#else
+	HMAC_CTX_init(&ctx);
+	HMAC_Init(&ctx, (const unsigned char *)pass, strlen(pass), EVP_md5());
+	HMAC_Update(&ctx, resp, strlen((char *)(resp)));
+	HMAC_Final(&ctx, md, &mdlen);
+	HMAC_CTX_cleanup(&ctx);
+#endif
 
 	xfree(chal);
 	xfree(resp);

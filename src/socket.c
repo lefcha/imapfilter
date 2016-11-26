@@ -16,12 +16,23 @@
 #include "imapfilter.h"
 #include "session.h"
 
-SSL_CTX *ssl23ctx, *tls1ctx;
+
+#if OPENSSL_VERSION_NUMBER >= 0x1010000fL
+SSL_CTX *sslctx;
+#else
+SSL_CTX *ssl23ctx;
 #ifndef OPENSSL_NO_SSL3_METHOD
 SSL_CTX *ssl3ctx;
 #endif
-#if OPENSSL_VERSION_NUMBER >= 0x01000100fL
-SSL_CTX *tls11ctx, *tls12ctx;
+#ifndef OPENSSL_NO_TLS1_METHOD
+SSL_CTX *tls1ctx;
+#endif
+#ifndef OPENSSL_NO_TLS1_1_METHOD
+SSL_CTX *tls11ctx;
+#endif
+#ifndef OPENSSL_NO_TLS1_2_METHOD
+SSL_CTX *tls12ctx;
+#endif
 #endif
 
 
@@ -92,34 +103,29 @@ int
 open_secure_connection(session *ssn)
 {
 	int r, e;
-	SSL_CTX *ctx;
+	SSL_CTX *ctx = NULL;
 
-	if (!ssn->sslproto) {
-		ctx = ssl23ctx;
-	} else if (!strcasecmp(ssn->sslproto, "ssl3")) {
+#if OPENSSL_VERSION_NUMBER >= 0x1010000fL
+	ctx = sslctx;
+#else
+	ctx = ssl23ctx;
 #ifndef OPENSSL_NO_SSL3_METHOD
+	if (!strcasecmp(ssn->sslproto, "ssl3"))
 		ctx = ssl3ctx;
-#else
-		error("protocol SSLv3 not supported by current build\n");
-		goto fail;
 #endif
-	} else if (!strcasecmp(ssn->sslproto, "tls1")) {
+#ifndef OPENSSL_NO_TLS1_METHOD
+	if (!strcasecmp(ssn->sslproto, "tls1"))
 		ctx = tls1ctx;
-	} else if (!strcasecmp(ssn->sslproto, "tls1.1")) {
-#if OPENSSL_VERSION_NUMBER >= 0x01000100fL
+#endif
+#ifndef OPENSSL_NO_TLS1_1_METHOD
+	if (!strcasecmp(ssn->sslproto, "tls1.1"))
 		ctx = tls11ctx;
-#else
-		ctx = tls1ctx;
 #endif
-	} else if (!strcasecmp(ssn->sslproto, "tls1.2")) {
-#if OPENSSL_VERSION_NUMBER >= 0x01000100fL
+#ifndef OPENSSL_NO_TLS1_2_METHOD
+	if (!strcasecmp(ssn->sslproto, "tls1.2"))
 		ctx = tls12ctx;
-#else
-		ctx = tls1ctx;
 #endif
-	} else {
-		ctx = ssl23ctx;
-	}
+#endif
 
 	if (!(ssn->sslconn = SSL_new(ctx)))
 		goto fail;
