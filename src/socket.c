@@ -109,22 +109,25 @@ open_secure_connection(session *ssn)
 	ctx = sslctx;
 #else
 	ctx = ssl23ctx;
+
+	if (ssn->sslproto) {
 #ifndef OPENSSL_NO_SSL3_METHOD
-	if (!strcasecmp(ssn->sslproto, "ssl3"))
-		ctx = ssl3ctx;
+		if (!strcasecmp(ssn->sslproto, "ssl3"))
+			ctx = ssl3ctx;
 #endif
 #ifndef OPENSSL_NO_TLS1_METHOD
-	if (!strcasecmp(ssn->sslproto, "tls1"))
-		ctx = tls1ctx;
+		if (!strcasecmp(ssn->sslproto, "tls1"))
+			ctx = tls1ctx;
 #endif
 #ifndef OPENSSL_NO_TLS1_1_METHOD
-	if (!strcasecmp(ssn->sslproto, "tls1.1"))
-		ctx = tls11ctx;
+		if (!strcasecmp(ssn->sslproto, "tls1.1"))
+			ctx = tls11ctx;
 #endif
 #ifndef OPENSSL_NO_TLS1_2_METHOD
-	if (!strcasecmp(ssn->sslproto, "tls1.2"))
-		ctx = tls12ctx;
+		if (!strcasecmp(ssn->sslproto, "tls1.2"))
+			ctx = tls12ctx;
 #endif
+	}
 #endif
 
 	if (!(ssn->sslconn = SSL_new(ctx)))
