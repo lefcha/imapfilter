@@ -18,20 +18,20 @@
 
 
 #if OPENSSL_VERSION_NUMBER >= 0x1010000fL
-SSL_CTX *sslctx;
+SSL_CTX *sslctx = NULL;
 #else
-SSL_CTX *ssl23ctx;
+SSL_CTX *ssl23ctx = NULL;
 #ifndef OPENSSL_NO_SSL3_METHOD
-SSL_CTX *ssl3ctx;
+SSL_CTX *ssl3ctx = NULL;
 #endif
 #ifndef OPENSSL_NO_TLS1_METHOD
-SSL_CTX *tls1ctx;
+SSL_CTX *tls1ctx = NULL;
 #endif
 #ifndef OPENSSL_NO_TLS1_1_METHOD
-SSL_CTX *tls11ctx;
+SSL_CTX *tls11ctx = NULL;
 #endif
 #ifndef OPENSSL_NO_TLS1_2_METHOD
-SSL_CTX *tls12ctx;
+SSL_CTX *tls12ctx = NULL;
 #endif
 #endif
 
@@ -106,29 +106,37 @@ open_secure_connection(session *ssn)
 	SSL_CTX *ctx = NULL;
 
 #if OPENSSL_VERSION_NUMBER >= 0x1010000fL
-	ctx = sslctx;
+	if (sslctx)
+		ctx = sslctx;
 #else
-	ctx = ssl23ctx;
+	if (ssl23ctx)
+		ctx = ssl23ctx;
 
 	if (ssn->sslproto) {
 #ifndef OPENSSL_NO_SSL3_METHOD
-		if (!strcasecmp(ssn->sslproto, "ssl3"))
+		if (ssl3ctx && !strcasecmp(ssn->sslproto, "ssl3"))
 			ctx = ssl3ctx;
 #endif
 #ifndef OPENSSL_NO_TLS1_METHOD
-		if (!strcasecmp(ssn->sslproto, "tls1"))
+		if (tls1ctx && !strcasecmp(ssn->sslproto, "tls1"))
 			ctx = tls1ctx;
 #endif
 #ifndef OPENSSL_NO_TLS1_1_METHOD
-		if (!strcasecmp(ssn->sslproto, "tls1.1"))
+		if (tls11ctx && !strcasecmp(ssn->sslproto, "tls1.1"))
 			ctx = tls11ctx;
 #endif
 #ifndef OPENSSL_NO_TLS1_2_METHOD
-		if (!strcasecmp(ssn->sslproto, "tls1.2"))
+		if (tls12ctx && !strcasecmp(ssn->sslproto, "tls1.2"))
 			ctx = tls12ctx;
 #endif
 	}
 #endif
+
+	if (ctx == NULL) {
+		error("initiating SSL connection to %s; protocol version "
+		      "not supported by current build", ssn->server);
+		goto fail;
+	}
 
 	if (!(ssn->sslconn = SSL_new(ctx)))
 		goto fail;

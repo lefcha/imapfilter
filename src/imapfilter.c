@@ -153,20 +153,26 @@ main(int argc, char *argv[])
 	else if (exists_file(opts.truststore))
 		cafile = opts.truststore;
 #if OPENSSL_VERSION_NUMBER >= 0x1010000fL
-	SSL_CTX_load_verify_locations(sslctx, cafile, capath);
+	if (sslctx)
+		SSL_CTX_load_verify_locations(sslctx, cafile, capath);
 #else
-	SSL_CTX_load_verify_locations(ssl23ctx, cafile, capath);
+	if (ssl23ctx)
+		SSL_CTX_load_verify_locations(ssl23ctx, cafile, capath);
 #ifndef OPENSSL_NO_SSL3_METHOD
-	SSL_CTX_load_verify_locations(ssl3ctx, cafile, capath);
+	if (ssl3ctx)
+		SSL_CTX_load_verify_locations(ssl3ctx, cafile, capath);
 #endif
 #ifndef OPENSSL_NO_TLS1_METHOD
-	SSL_CTX_load_verify_locations(tls1ctx, cafile, capath);
+	if (tls1ctx)
+		SSL_CTX_load_verify_locations(tls1ctx, cafile, capath);
 #endif
 #ifndef OPENSSL_NO_TLS1_1_METHOD
-	SSL_CTX_load_verify_locations(tls11ctx, cafile, capath);
+	if (tls11ctx)
+		SSL_CTX_load_verify_locations(tls11ctx, cafile, capath);
 #endif
 #ifndef OPENSSL_NO_TLS1_2_METHOD
-	SSL_CTX_load_verify_locations(tls12ctx, cafile, capath);
+	if (tls12ctx)
+		SSL_CTX_load_verify_locations(tls12ctx, cafile, capath);
 #endif
 #endif
 
@@ -188,20 +194,26 @@ main(int argc, char *argv[])
 	stop_lua();
 
 #if OPENSSL_VERSION_NUMBER >= 0x1010000fL
-	SSL_CTX_free(sslctx);
+	if (sslctx)
+		SSL_CTX_free(sslctx);
 #else
-	SSL_CTX_free(ssl23ctx);
+	if (ssl23ctx)
+		SSL_CTX_free(ssl23ctx);
 #ifndef OPENSSL_NO_SSL3_METHOD
-	ssl3ctx = SSL_CTX_new(SSLv3_client_method());
+	if (ssl3ctx)
+		SSL_CTX_free(ssl3ctx);
 #endif
 #ifndef OPENSSL_NO_TLS1_METHOD
-	SSL_CTX_free(tls1ctx);
+	if (tls1ctx)
+		SSL_CTX_free(tls1ctx);
 #endif
 #ifndef OPENSSL_NO_TLS1_1_METHOD
-	SSL_CTX_free(tls11ctx);
+	if (tls11ctx)
+		SSL_CTX_free(tls11ctx);
 #endif
 #ifndef OPENSSL_NO_TLS1_2_METHOD
-	SSL_CTX_free(tls12ctx);
+	if (tls12ctx)
+		SSL_CTX_free(tls12ctx);
 #endif
 #endif
 	ERR_free_strings();
