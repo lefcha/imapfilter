@@ -1,3 +1,6 @@
+IMAPFilter 2.6.10 - 16 Dec 2016
+  - Bug fix; segmentation fault on some OpenSSL builds.
+
 IMAPFilter 2.6.9 - 6 Dec 2016
   - Bug fix; possible problem during STARTTLS negotiation.
 
