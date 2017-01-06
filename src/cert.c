@@ -44,7 +44,8 @@ get_cert(session *ssn)
 	if (!((verify == X509_V_OK) ||
 	    (verify == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT) ||
 	    (verify == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY))) {
-		error("certificate verification failed; %d\n", verify);
+		error("certificate verification failed; %s\n",
+		      X509_verify_cert_error_string(verify));
 		goto fail;
 	}
 
