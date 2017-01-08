@@ -76,6 +76,7 @@ end
 
 function Mailbox._cached_close(self)
     if not self._check_connection(self) then return end
+    if self._account._account.selected == nil then return end
     local r = ifcore.close(self._account._account.session)
     self._check_result(self, 'close', r)
     if r == false then return false end
@@ -501,6 +502,9 @@ end
 
 function Mailbox.check_status(self)
     if not self._check_connection(self) then return end
+    if self._account._account.selected == self._mailbox then
+        self._cached_close(self)
+    end
     local r, exist, recent, unseen, uidnext =
         ifcore.status(self._account._account.session,self._mailbox)
     self._check_result(self, 'status', r)
