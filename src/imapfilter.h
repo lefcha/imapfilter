@@ -61,6 +61,9 @@
 #define LINE_MAX			2048
 #endif
 
+/* Wait retry timeout, in seconds, on network problems. */
+#define WAIT_RETRY_TIMEOUT              60
+
 
 /* Program's options. */
 typedef struct options {

@@ -1,4 +1,4 @@
-.Dd Nov 26, 2016
+.Dd Jan 7, 2017
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -164,10 +164,27 @@ character as the delimiter and
 (ie.  nothing) as the prefix, regardless of the folder
 format of the mail server.  This must be disabled, if the user wants to
 manually specify mailbox names (eg. because they are not part of the user's
-personal namespace mailboxes).  This variable takes
+personal namespace mailboxes).  This variable takes a
 .Vt boolean
 as a value.  Default is
 .Dq true .
+.It Va persist
+When the
+.Va recover
+option is enabled, the recovery function tries to restore the lost session, but
+if it fails to do so it gives up with an error.  In some cases a temporary
+network problem might cause the recovery function to fail, but the connection
+could be reestablished when trying a bit later.  By enabling this option, the
+recovery function will be called repeatedly after a timeout, thus it will
+persist when trying to restore the session.  Note, that this will case the
+execution of the configuration file to be halted at the point of failure until
+the session is restored, which can have side effects to other established
+sessions, for example they might get dropped by the server after a while.  This
+variable
+takes a
+.Vt boolean
+as a value.  Default is
+.Dq false .
 .It Va recover
 With this option it is possible to control the recovery functionality, which
 restores a session (the connection to the server and the IMAP state at the

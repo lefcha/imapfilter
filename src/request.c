@@ -33,10 +33,16 @@ int send_continuation(session *ssn, const char *data, size_t len);
 	switch ((F)) {							       \
 	case -1:							       \
 		if ((!strcasecmp(get_option_string("recover"), "all") ||       \
-		    !strcasecmp(get_option_string("recover"), "errors")) &&    \
-		    request_login(&ssn, NULL, NULL, NULL, NULL, NULL,	       \
-		    	NULL) != -1)   					       \
-			return STATUS_NONE;				       \
+		    !strcasecmp(get_option_string("recover"), "errors")))      \
+			for (;;) {					       \
+				if (request_login(&ssn, NULL, NULL, NULL,      \
+				    NULL, NULL, NULL) != -1)		       \
+					return STATUS_NONE;		       \
+				if (get_option_boolean("persist"))	       \
+					sleep(WAIT_RETRY_TIMEOUT);	       \
+				else					       \
+					break;				       \
+			}						       \
 		return -1;						       \
 	case STATUS_BYE:						       \
 		close_connection(ssn);					       \
