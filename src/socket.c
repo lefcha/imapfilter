@@ -261,7 +261,7 @@ socket_read(session *ssn, char *buf, size_t len, long timeout, int timeoutfail)
 
 	FD_ZERO(&fds);
 	FD_SET(ssn->socket, &fds);
- 
+
 	if (ssn->sslconn) {
 		if (SSL_pending(ssn->sslconn) > 0 ||
 		    ((s = select(ssn->socket + 1, &fds, NULL, NULL, tvp)) > 0 &&

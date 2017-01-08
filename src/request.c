@@ -156,7 +156,7 @@ int
 request_login(session **ssnptr, const char *server, const char *port, const
     char *ssl, const char *user, const char *pass, const char *oauth2)
 {
-	int t, r, rg = -1, rl = -1; 
+	int t, r, rg = -1, rl = -1;
 	session *ssn = *ssnptr;
 	
 	if (*ssnptr && (*ssnptr)->socket != -1)
@@ -609,7 +609,7 @@ request_store(session *ssn, const char *mesg, const char *mode, const char
 	if (opts.dryrun)
 		return STATUS_DRYRUN;
 
-	TRY(t = send_request(ssn, "UID STORE %s %sFLAGS.SILENT (%s)", mesg, 
+	TRY(t = send_request(ssn, "UID STORE %s %sFLAGS.SILENT (%s)", mesg,
 	    (!strncasecmp(mode, "add", 3) ? "+" :
 	    !strncasecmp(mode, "remove", 6) ? "-" : ""), flags));
 	TRY(r = response_generic(ssn, t));
@@ -675,7 +675,7 @@ request_append(session *ssn, const char *mbox, const char *mesg, size_t
 	    (date ? date : ""), (date ? "\"" : ""), mesglen));
 	TRY(r = response_continuation(ssn, t));
 	if (r == STATUS_CONTINUE) {
-		TRY(send_continuation(ssn, mesg, mesglen)); 
+		TRY(send_continuation(ssn, mesg, mesglen));
 		TRY(r = response_generic(ssn, t));
 	}
 
@@ -692,7 +692,7 @@ request_append(session *ssn, const char *mbox, const char *mesg, size_t
 		    (date ? date : ""), (date ? "\"" : ""), mesglen));
 		TRY(r = response_continuation(ssn, t));
 		if (r == STATUS_CONTINUE) {
-			TRY(send_continuation(ssn, mesg, mesglen)); 
+			TRY(send_continuation(ssn, mesg, mesglen));
 			TRY(r = response_generic(ssn, t));
 		}
 	}

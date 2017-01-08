@@ -111,7 +111,7 @@ function Mailbox._send_query(self, criteria, messages)
         query = mesgs
     elseif type(criteria) == 'string' then
         query = mesgs .. ' ' .. criteria
-    else 
+    else
         query = _make_query(criteria, mesgs)
     end
 
@@ -527,7 +527,7 @@ end
 function Mailbox.add_flags(self, flags, messages)
     _check_required(flags, 'table')
     _check_required(messages, 'table')
-    
+
     local mesgs = _extract_messages(self, messages)
     local r = self._flag_messages(self, 'add', flags, mesgs)
     if options.info == true and r == true then
@@ -798,7 +798,7 @@ function Mailbox.append_message(self, message, flags, date)
         print('Appended message of ' .. #message .. ' octets to ' ..
               self._string .. '.')
     end
-    
+
     return true
 end
 
@@ -1063,7 +1063,7 @@ end
 
 function Mailbox.enter_idle(self)
     if self._cached_select(self) ~= true then return false end
-   
+
     if not self._check_connection(self) then return end
     local r, event = ifcore.idle(self._account._account.session)
     self._check_result(self, 'idle', r)

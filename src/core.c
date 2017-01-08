@@ -64,12 +64,12 @@ static const luaL_Reg ifcorelib[] = {
 	/*
 	 * RFC 822: message == header + body
 	 * RFC 3501: body == header + text
-	 * 
+	 *
 	 * RFC 3501 notation is used internally, and RFC 822 notation is used
 	 * for the interface available to the user.
 	 */
 	{ "fetchheader", ifcore_fetchheader },
-	{ "fetchbody", ifcore_fetchtext }, 
+	{ "fetchbody", ifcore_fetchtext },
 
 	{ "fetchfields", ifcore_fetchfields },
 	{ "fetchstructure", ifcore_fetchstructure },

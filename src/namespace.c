@@ -10,7 +10,7 @@ buffer nbuf;			/* Namespace buffer. */
 buffer cbuf;			/* Conversion buffer. */
 
 
-static const char base64[] = 
+static const char base64[] =
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+,";
 
 
@@ -65,7 +65,7 @@ reverse_namespace(const char *mbox, char *prefix, char delim)
 	int n, o;
 	char *c;
 
-	if (!strcasecmp(mbox, "INBOX")) 
+	if (!strcasecmp(mbox, "INBOX"))
 		return mbox;
 
 	if ((prefix == NULL && delim == '\0') ||
@@ -102,7 +102,7 @@ apply_conversion(const char *mbox)
 	unsigned char ucp[4], ucplast, ucptemp;
 	int padding, shift;
 
-	buffer_check(&nbuf, strlen(mbox)); 
+	buffer_check(&nbuf, strlen(mbox));
 	buffer_reset(&nbuf);
 	xstrncpy(nbuf.data, mbox, nbuf.size);
 	nbuf.len = strlen(nbuf.data);

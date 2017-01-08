@@ -619,7 +619,7 @@ response_fetchfast(session *ssn, int tag, char **flags, char **date,
 		return r;
 
 	re = &responses[RESPONSE_FETCH];
-	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) { 
+	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) {
 		s = xstrndup(ibuf.data + re->pmatch[1].rm_so,
 		    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
 
@@ -660,7 +660,7 @@ response_fetchflags(session *ssn, int tag, char **flags)
 		return r;
 
 	re = &responses[RESPONSE_FETCH];
-	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) { 
+	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) {
 		s = xstrndup(ibuf.data + re->pmatch[1].rm_so,
 		    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
 
@@ -692,7 +692,7 @@ response_fetchdate(session *ssn, int tag, char **date)
 		return r;
 
 	re = &responses[RESPONSE_FETCH];
-	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) { 
+	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) {
 		s = xstrndup(ibuf.data + re->pmatch[1].rm_so,
 		    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
 
@@ -724,7 +724,7 @@ response_fetchsize(session *ssn, int tag, char **size)
 		return r;
 
 	re = &responses[RESPONSE_FETCH];
-	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) { 
+	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) {
 		s = xstrndup(ibuf.data + re->pmatch[1].rm_so,
 		    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
 
@@ -756,7 +756,7 @@ response_fetchstructure(session *ssn, int tag, char **structure)
 		return r;
 
 	re = &responses[RESPONSE_FETCH];
-	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) { 
+	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0)) {
 		s = xstrndup(ibuf.data + re->pmatch[1].rm_so,
 		    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
 

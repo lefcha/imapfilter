@@ -158,7 +158,7 @@ function _parse_normalize(bs, key, val)
             end
         end
         return bs
-    else 
+    else
         for k, v in ipairs(val) do
             local new = tostring(key) .. '.' .. tostring(k)
             bs[new] = v
@@ -228,7 +228,7 @@ function _parse_basic(b)
         _parse_number(b)
     end
     if _parse_space(b) then _parse_nstring(b) end
-    if _parse_space(b) then 
+    if _parse_space(b) then
         s = _parse_dsp(b)
         if s then bp['name'] = s end
     end
@@ -300,7 +300,7 @@ function _parse_message(b)
     if not p then return end
     if #p == 0 then
         bp[1] = p
-    else 
+    else
         for k, v in pairs(p) do
             if type(k) == 'number' then
                 bp[k] = v
@@ -361,7 +361,7 @@ function _parse_address(b)
         end
         _parse_rpar(b)
     elseif _parse_nil(b) then
-    end  
+    end
 end
 
 function _parse_lang(b)
