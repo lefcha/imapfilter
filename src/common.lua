@@ -53,7 +53,7 @@ function _extract_messages(mailbox, messages)
 end
 
 
-function _make_range(messages)
+function _make_range(messages, limit)
     for _, m in ipairs(messages) do
         if type(m) ~= 'number' then return messages end
     end
@@ -61,13 +61,14 @@ function _make_range(messages)
     table.sort(messages)
 
     local t = {}
-    local a, z
+    local a, z, overlimit
     for _, m in ipairs(messages) do
         if a == nil or z == nil then
             a = m
             z = m
         else
-            if m == z + 1 then
+            overlimit = limit ~= nil and limit > 0 and m - a > limit
+            if m == z + 1 and not overlimit then
                 z = m
             else
                 if a == z then
