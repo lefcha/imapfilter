@@ -67,7 +67,7 @@ function _make_range(messages)
             a = m
             z = m
         else
-            if m == z + 1 then
+            if m == z + 1 and m - a <= options.range then
                 z = m
             else
                 if a == z then

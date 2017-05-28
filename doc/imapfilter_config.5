@@ -1,4 +1,4 @@
-.Dd Jan 7, 2017
+.Dd May 28, 2017
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -149,11 +149,14 @@ requests that need to be sent can become quite long, because they apply an
 action for many messages at once.  When this option is set, the client will try
 to break up these requests into smaller requests, that each operates on fewer
 messages at a time.  A good value for this would be
-.Dq 50,
+.Dq 50 .
 This variable takes a
 .Vt number
 as a value.  Default is
-.Dq 0 . 
+.Dq 0 .
+See also the
+.Va range
+option which is related.
 .It Va namespace
 When enabled, the program gets the namespace of the user's personal mailboxes,
 and applies automatically the prefix and hierarchy delimiter to any mailboxes
@@ -185,6 +188,16 @@ takes a
 .Vt boolean
 as a value.  Default is
 .Dq false .
+.It Va range
+Some servers have problems handling long sequence number ranges, and by setting
+this option, the number of messages included in each range can be limited.  A
+good value for this would be
+.Dq 50 .
+This variable takes a
+.Vt number
+as a value.  By default no such limit is imposed.  See also the
+.Va limit
+option which is related.
 .It Va recover
 With this option it is possible to control the recovery functionality, which
 restores a session (the connection to the server and the IMAP state at the
