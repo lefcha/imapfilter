@@ -57,8 +57,6 @@ main(int argc, char *argv[])
 	int c;
 	char *cafile = NULL, *capath = NULL;
 
-	setlocale(LC_CTYPE, "");
-
 	opts.verbose = 0;
 	opts.interactive = 0;
 	opts.dryrun = 0;
