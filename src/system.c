@@ -13,6 +13,7 @@
 
 #include "imapfilter.h"
 
+#pragma GCC diagnostic ignored "-Wunused-result"
 
 static int ifsys_echo(lua_State *lua);
 static int ifsys_noecho(lua_State *lua);
