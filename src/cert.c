@@ -64,7 +64,7 @@ get_cert(session *ssn)
 				goto fail;
 			break;
 		case -1:
-			error("certificate mismatch occured\n");
+			error("certificate mismatch occurred\n");
 			goto fail;
 		}
 	}
