@@ -383,7 +383,6 @@ end
 
 function Mailbox._fetch_message(self, messages)
     if not messages or #messages == 0 then return end
-    if self._cached_select(self) ~= true then return end
 
     local header = self._fetch_header(self, messages)
     local body = self._fetch_body(self, messages)
@@ -398,8 +397,6 @@ function Mailbox._fetch_message(self, messages)
             results[m] = header[m] .. body[m]
         end
     end
-
-    if options.close == true then self._cached_close(self) end
 
     return results
 end
