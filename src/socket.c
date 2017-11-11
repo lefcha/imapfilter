@@ -263,24 +263,37 @@ socket_read(session *ssn, char *buf, size_t len, long timeout, int timeoutfail, 
 	FD_SET(ssn->socket, &fds);
 
 	if (ssn->sslconn) {
-		if (SSL_pending(ssn->sslconn) > 0 ||
-		    ((s = select(ssn->socket + 1, &fds, NULL, NULL, tvp)) > 0 &&
-		    FD_ISSET(ssn->socket, &fds))) {
+		if (SSL_pending(ssn->sslconn) > 0) {
 			r = socket_secure_read(ssn, buf, len);
-
 			if (r <= 0)
 				goto fail;
+		} else {
+			if (interrupt != NULL)
+				catch_user_signals();
+			if ((s = select(ssn->socket + 1, &fds, NULL, NULL, tvp)) > 0) {
+				if (interrupt != NULL)
+					ignore_user_signals();
+				if (FD_ISSET(ssn->socket, &fds)) {
+					r = socket_secure_read(ssn, buf, len);
+					if (r <= 0)
+						goto fail;
+				}
+			}
 		}
 	} else {
-		if ((s = select(ssn->socket + 1, &fds, NULL, NULL, tvp)) > 0 &&
-		    FD_ISSET(ssn->socket, &fds)) {
-			r = read(ssn->socket, buf, len);
-
-			if (r == -1) {
-				error("reading data; %s\n", strerror(errno));
-				goto fail;
-			} else if (r == 0) {
-				goto fail;
+		if (interrupt != NULL)
+			catch_user_signals();
+		if ((s = select(ssn->socket + 1, &fds, NULL, NULL, tvp)) > 0) {
+			if (interrupt != NULL)
+				ignore_user_signals();
+			if (FD_ISSET(ssn->socket, &fds)) {
+				r = read(ssn->socket, buf, len);
+				if (r == -1) {
+					error("reading data; %s\n", strerror(errno));
+					goto fail;
+				} else if (r == 0) {
+					goto fail;
+				}
 			}
 		}
 	}

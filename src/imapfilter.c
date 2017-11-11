@@ -118,6 +118,7 @@ main(int argc, char *argv[])
 	open_debug();
 	create_homedir();
 	catch_signals();
+	ignore_user_signals();
 	open_log();
 	if (opts.config == NULL)
 		opts.config = get_filepath("config.lua");

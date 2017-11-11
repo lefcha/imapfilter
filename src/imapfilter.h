@@ -214,6 +214,8 @@ int response_idle(session *ssn, int tag, char **event);
 /*	signal.c	*/
 void catch_signals(void);
 void release_signals(void);
+void ignore_user_signals(void);
+void catch_user_signals(void);
 
 /*	socket.c	*/
 int open_connection(session *ssn);
