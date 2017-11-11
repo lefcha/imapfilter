@@ -1,4 +1,4 @@
-.Dd May 28, 2017
+.Dd Nov 11, 2017
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -550,6 +550,14 @@ is also returned, indicating the event received from the server, which is
 useful when the
 .Va wakeonany
 option has been enabled.
+.Pp
+Apart from an event received by the server, the SIGUSR1 or SIGUSR2 signals can
+also interrupt the IDLE mode at any time, and the execution of the
+configuration file will then continue from the next line after the
+.Fn enter_idle .
+In this case only the value
+.Dq true
+is returned.
 .El
 .Pp
 Examples:

@@ -237,7 +237,7 @@ close_secure_connection(session *ssn)
  * Read data from socket.
  */
 ssize_t
-socket_read(session *ssn, char *buf, size_t len, long timeout, int timeoutfail)
+socket_read(session *ssn, char *buf, size_t len, long timeout, int timeoutfail, int *interrupt)
 {
 	int s;
 	ssize_t r;
@@ -286,6 +286,10 @@ socket_read(session *ssn, char *buf, size_t len, long timeout, int timeoutfail)
 	}
 
 	if (s == -1) {
+		if (interrupt != NULL && errno == EINTR) {
+			*interrupt = 1;
+			return -1;
+		}
 		error("waiting to read from socket; %s\n", strerror(errno));
 		goto fail;
 	} else if (s == 0 && timeoutfail) {

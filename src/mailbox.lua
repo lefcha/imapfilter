@@ -1072,7 +1072,11 @@ function Mailbox.enter_idle(self)
 
     if options.close == true then self._cached_close(self) end
 
-    return true, string.upper(event)
+    if type(event) == 'string' then
+        return true, string.upper(event)
+    else
+        return true
+    end
 end
 
 

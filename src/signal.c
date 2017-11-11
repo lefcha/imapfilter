@@ -16,6 +16,8 @@ catch_signals(void)
 	signal(SIGINT, signal_handler);
 	signal(SIGQUIT, signal_handler);
 	signal(SIGTERM, signal_handler);
+	signal(SIGUSR1, signal_handler);
+	signal(SIGUSR2, signal_handler);
 }
 
 
@@ -29,6 +31,8 @@ release_signals(void)
 	signal(SIGINT, SIG_DFL);
 	signal(SIGQUIT, SIG_DFL);
 	signal(SIGTERM, SIG_DFL);
+	signal(SIGUSR1, SIG_DFL);
+	signal(SIGUSR2, SIG_DFL);
 }
 
 
@@ -38,6 +42,9 @@ release_signals(void)
 void
 signal_handler(int sig)
 {
+
+	if (sig == SIGUSR1 || sig == SIGUSR2)
+		return;
 
 	release_signals();
 

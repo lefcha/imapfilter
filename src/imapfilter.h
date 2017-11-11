@@ -47,6 +47,7 @@
 #define STATUS_READONLY			8
 #define STATUS_TRYCREATE		9
 #define STATUS_TIMEOUT			10
+#define STATUS_INTERRUPT                11
 
 #define STATUS_DRYRUN                   STATUS_OK
 
@@ -218,7 +219,7 @@ void release_signals(void);
 int open_connection(session *ssn);
 int close_connection(session *ssn);
 ssize_t socket_read(session *ssn, char *buf, size_t len, long timeout,
-    int timeoutfail);
+    int timeoutfail, int *interrupt);
 ssize_t socket_write(session *ssn, const char *buf, size_t len);
 int open_secure_connection(session *ssn);
 int close_secure_connection(session *ssn);
