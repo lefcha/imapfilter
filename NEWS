@@ -1,3 +1,10 @@
+IMAPFilter 2.6.11 - 19 Nov 2017
+  - Support for interrupting IDLE mode with SIGUSR1/SIGUSR2.
+  - New "persist" option to try to recover a connection indefinitely.
+  - New "range" option to limit messages included in a range.
+  - Bug fix; always close selected mailbox before check_status().
+  - Bug fix; closing of selected mailbox twice with fetch_message().
+
 IMAPFilter 2.6.10 - 16 Dec 2016
   - Bug fix; segmentation fault on some OpenSSL builds.
 
