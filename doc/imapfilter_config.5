@@ -1,4 +1,4 @@
-.Dd Nov 11, 2017
+.Dd May 10, 2018
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -671,6 +671,31 @@ will be executed on messages residing in different mailboxes or accounts.
 results = myaccount.mymailbox:is_unseen() +
 	  myaccount.myothermailbox:is_larger(100000) +
 	  myotheraccount.myothermailbox:contain_subject('test')
+.Ed
+.Pp
+And for those that want to know more about the return values of the following
+methods, it is a
+.Vt table
+which contains
+.Vt tables
+with two values: the mailbox
+.Pq Vt table
+the message belongs to, and the message UID
+.Pq Vt number
+which points to the matching message.  For examples on iterating these
+returned tables, or creating new tables of this format (they are actually
+metatables implementing sets), see the
+.Va samples/extend.lua
+file.
+.Bd -literal -offset 4n
+{
+    { <myaccount.mymailbox>, 1 },
+    { <myaccount.mymailbox>, 3 },
+    { <myaccount.myothermailbox>, 5 },
+    { <myothermailbox.myothermailbox>, 7},
+    { ... },
+    ...
+}
 .Ed
 .Pp
 The following method can be used to get all messages in a mailbox:
