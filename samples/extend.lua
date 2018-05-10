@@ -20,6 +20,19 @@ end
 become_daemon(600, forever)
 
 
+-- The previous example uses polling in order to search specific messages and
+-- process them.  Another more efficient alternative is using the IMAP IDLE
+-- extension.  This is implemented by the enter_idle() method, which waits for
+-- a notification by the server when new messages arrive in the monitored
+-- mailbox.
+
+while true do
+    myaccount.mymailbox:enter_idle()
+    results = myaccount.mymailbox:is_unread()
+    results:move_messages(myaccount.myothermailbox)
+end
+
+
 -- IMAPFilter can take advantage of all those filtering utilities that
 -- are available and use a wide range of heuristic tests, text analysis,
 -- internet-based realtime blacklists, advanced learning algorithms,
