@@ -1,4 +1,4 @@
-.Dd May 10, 2018
+.Dd Aug 26, 2018
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -9,7 +9,7 @@
 .Sh DESCRIPTION
 .Xr imapfilter 1
 uses the Lua programming language as a configuration and extension language,
-therefore the configuration file is a Lua script.  
+therefore the configuration file is a Lua script.
 .Pp
 Although knowledge of Lua is not required to use
 .Xr imapfilter 1 ,
@@ -115,7 +115,7 @@ as a value.  Default is
 When this option is enabled and the server supports the Challenge-Response
 Authentication Mechanism (specifically CRAM-MD5), this method will be used for
 user authentication instead of a plaintext password LOGIN.  This variable
-takes a 
+takes a
 .Vt boolean
 as a value.  Default is
 .Dq true .
@@ -226,7 +226,7 @@ Default is
 .It Va starttls
 When this option is enabled and the server supports the IMAP STARTTLS
 extension, a TLS connection will be negotiated with the mail server in the
-beginning of the session.  This variable takes a 
+beginning of the session.  This variable takes a
 .Vt boolean
 as value.  Default is
 .Dq true .
@@ -300,6 +300,12 @@ enter one interactively the first time it will be needed (unless
 has been set).  It takes a
 .Vt string
 as a value.
+.Pp
+Note that due to Lua using backslash
+.Sq \e
+as an escape character for its strings, one has to use double backslashes in
+order to insert a single backslash, and thus a backslash
+character inside a password might require four backslashes.
 .It Va oauth2
 The OAuth2 string to use to authenticate if the server supports the XOAUTH2
 authentication mechanism.  If the server does not support it and a
@@ -391,10 +397,10 @@ matches any character except the folder delimiter, ie.  non-recursively:
 .It Fn list_all folder mailbox
 Lists all the available mailboxes in the
 .Fa folder
-.Pq Vt string 
+.Pq Vt string
 with the name
 .Fa mailbox
-.Pq Vt string , 
+.Pq Vt string ,
 and returns a
 .Vt table
 that contains
@@ -405,7 +411,7 @@ and a
 that contains
 .Vt strings ,
 the available folders.  Wildcards may only be used in the
-.Fa mailbox 
+.Fa mailbox
 argument.
 .Pp
 .It Fn list_subscribed folder mailbox
@@ -425,7 +431,7 @@ and a
 that contains
 .Vt strings ,
 the subscribed folders.  Wildcards may only be used in the
-.Fa mailbox 
+.Fa mailbox
 argument.
 .El
 .Pp
@@ -502,7 +508,7 @@ The methods that are available for an account (eg.
 .Fn create_mailbox ,
 etc.) , are considered keywords and must not be used as mailbox names, and the
 same also applies for any string starting with an underscore, as they are
-considered reserved. 
+considered reserved.
 .Ss CHECKING
 The following methods can be used to check the status of a mailbox:
 .Pp
@@ -713,7 +719,7 @@ state:
 Messages that have been answered.
 .Pp
 .It Fn is_deleted
-Messages that are marked for later removal. 
+Messages that are marked for later removal.
 .Pp
 .It Fn is_draft
 Messages that have not completed composition.
@@ -740,7 +746,7 @@ Messages that have been read.
 Messages that have not been answered.
 .Pp
 .It Fn is_undeleted
-Messages that are not marked for later removal. 
+Messages that are not marked for later removal.
 .Pp
 .It Fn is_undraft
 Messages that have completed composition.
@@ -836,7 +842,7 @@ is in the
 .Dq day-month-year
 form.
 .Pp
-.It Fn arrived_since date 
+.It Fn arrived_since date
 Messages that have arrived within or later than the
 .Fa date
 .Pq Vt string ,
@@ -925,7 +931,7 @@ header field.
 Messages that contain the
 .Fa string
 .Pq Vt string
-in the 
+in the
 .Fa field
 .Pq Vt string
 header field.
@@ -959,8 +965,8 @@ will be downloaded.
 .Pp
 Note that due to Lua using backslash
 .Sq \e
-as an escape character for its strings, one has to double backslashes in order
-to insert a single backslash inside a regular expression pattern:
+as an escape character for its strings, one has to use double backslashes in
+order to insert a single backslash inside a regular expression pattern:
 .Pp
 .Bl -tag -width Ds -compact
 .It Fn match_bcc pattern
@@ -1406,9 +1412,9 @@ that denotes if the match was successful, and any captures which are of
 .Vt string
 type.  Note that due to Lua using backslash
 .Sq \e
-as an escape character for its strings, one has to double backslashes in order
-to insert a single backslash inside a regular expression pattern.  For more
-information on PCRE see 
+as an escape character for its strings, one has to use double backslashes in
+order to insert a single backslash inside a regular expression pattern.  For
+more information on PCRE see
 .Ad http://pcre.org/original/doc/html/ .
 .El
 .Pp
