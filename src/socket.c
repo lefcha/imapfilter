@@ -141,6 +141,16 @@ open_secure_connection(session *ssn)
 	if (!(ssn->sslconn = SSL_new(ctx)))
 		goto fail;
 
+#if OPENSSL_VERSION_NUMBER >= 0x1000000fL
+	r = SSL_set_tlsext_host_name(ssn->sslconn, ssn->server);
+	if (r == 0) {
+		error("failed setting the Server Name Indication (SNI) to "
+		    "%s; %s\n", ssn->server,
+		    ERR_error_string(ERR_get_error(), NULL));
+		goto fail;
+	}
+#endif
+
 	SSL_set_fd(ssn->sslconn, ssn->socket);
 
 	for (;;) {
