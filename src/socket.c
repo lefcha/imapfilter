@@ -140,6 +140,12 @@ open_secure_connection(session *ssn)
 
 	if (!(ssn->sslconn = SSL_new(ctx)))
 		goto fail;
+#if OPENSSL_VERSION_NUMBER >= 0x1000000fL
+	SSL_set_tlsext_host_name(ssn->sslconn, ssn->server);
+#else
+	debug("unable to set SNI to %s due to OpenSSL version < 1.0.0\n",
+	      ssn->server);
+#endif
 
 #if OPENSSL_VERSION_NUMBER >= 0x1000000fL
 	r = SSL_set_tlsext_host_name(ssn->sslconn, ssn->server);
