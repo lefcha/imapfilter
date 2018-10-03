@@ -1,3 +1,8 @@
+IMAPFilter 2.6.12 - 03 Oct 2017
+  - Support for Server Name Indication (SNI).
+  - The searching methods return values are described in the config man page.
+  - Example of using the enter_idle() function in the sample extend file.
+
 IMAPFilter 2.6.11 - 19 Nov 2017
   - Support for interrupting IDLE mode with SIGUSR1/SIGUSR2.
   - New "persist" option to try to recover a connection indefinitely.
