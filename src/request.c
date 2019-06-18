@@ -52,6 +52,7 @@ int send_continuation(session *ssn, const char *data, size_t len);
 				return STATUS_NONE;			       \
 		} else							       \
 			session_destroy(ssn);				       \
+			ssn = NULL;					       \
 		return -1;						       \
 	}
 
@@ -217,6 +218,7 @@ request_login(session **ssnptr, const char *server, const char *port, const
 			    ssn->server);
 			close_connection(ssn);
 			session_destroy(ssn);
+			ssn = NULL;
 			return STATUS_NO;
 		}
 		if (ssn->capabilities & CAPABILITY_XOAUTH2 && ssn->oauth2) {
@@ -229,6 +231,7 @@ request_login(session **ssnptr, const char *server, const char *port, const
 			    ssn->username, ssn->server);
 			close_connection(ssn);
 			session_destroy(ssn);
+			ssn = NULL;
 			return STATUS_NO;
 		}
 		if (rl != STATUS_OK && ssn->password &&
@@ -258,6 +261,7 @@ request_login(session **ssnptr, const char *server, const char *port, const
 			    ssn->username, ssn->server);
 			close_connection(ssn);
 			session_destroy(ssn);
+			ssn = NULL;
 			return STATUS_NO;
 		}
 	} else {
@@ -285,6 +289,7 @@ abort:
 	close_connection(ssn);
 fail:
 	session_destroy(ssn);
+	ssn = NULL;
 
 	return -1;
 }
@@ -299,9 +304,11 @@ request_logout(session *ssn)
 
 	if (response_generic(ssn, send_request(ssn, "LOGOUT")) == -1) {
 		session_destroy(ssn);
+		ssn = NULL;
 	} else {
 		close_connection(ssn);
 		session_destroy(ssn);
+		ssn = NULL;
 	}
 	return STATUS_OK;
 }

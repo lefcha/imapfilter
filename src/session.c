@@ -63,9 +63,13 @@ session_destroy(session *ssn)
 
 	sessions = list_remove(sessions, ssn);
 
-	if (ssn->ns.prefix)
+	if (ssn->ns.prefix) {
 		xfree(ssn->ns.prefix);
-	if (ssn->selected)
+		ssn->ns.prefix = NULL;
+	}
+	if (ssn->selected) {
 		xfree(ssn->selected);
+		ssn->selected = NULL;
+	}
 	xfree(ssn);
 }
