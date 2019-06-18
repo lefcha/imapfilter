@@ -146,6 +146,8 @@ init_options(void)
 	set_table_number("timeout", 60);
 	set_table_boolean("wakeonany", 0);
 
+	set_table_boolean("dryrun", opts.dryrun);
+
 	lua_setglobal(lua, "options");
 }
 
