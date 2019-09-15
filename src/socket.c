@@ -12,6 +12,7 @@
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#include <openssl/x509v3.h>
 
 #include "imapfilter.h"
 #include "session.h"
@@ -142,6 +143,18 @@ open_secure_connection(session *ssn)
 		goto fail;
 
 #if OPENSSL_VERSION_NUMBER >= 0x1000000fL
+	if (get_option_boolean("certificates")) {
+		SSL_set_hostflags(ssn->sslconn,
+		    X509_CHECK_FLAG_NO_WILDCARDS);
+		if (!SSL_set1_host(ssn->sslconn, ssn->server)) {
+			error("failed setting hostname validation to "
+			    "%s; %s\n ", ssn->server,
+			    ERR_error_string(ERR_get_error(), NULL));
+			goto fail;
+		}
+		SSL_set_verify(ssn->sslconn, SSL_VERIFY_PEER, NULL);
+	}
+
 	r = SSL_set_tlsext_host_name(ssn->sslconn, ssn->server);
 	if (r == 0) {
 		error("failed setting the Server Name Indication (SNI) to "
