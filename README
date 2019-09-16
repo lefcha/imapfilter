@@ -26,7 +26,7 @@ Changes
 Installation
 
   Compile time requirements are Lua (version 5.3 or 5.2 or 5.1), the PCRE
-  library, and the OpenSSL library.
+  library, and the OpenSSL library (version 1.0.2 and later).
 
   Compile and install the program:
 
