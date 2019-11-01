@@ -143,7 +143,7 @@ open_secure_connection(session *ssn)
 		goto fail;
 
 	if (get_option_boolean("certificates")) {
-#if OPENSSL_VERSION_NUMBER >= 0x10000010L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
 		SSL_set_hostflags(ssn->sslconn,
 		    X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
 		if (!SSL_set1_host(ssn->sslconn, ssn->server)) {
@@ -160,7 +160,9 @@ open_secure_connection(session *ssn)
 			    ERR_error_string(ERR_get_error(), NULL));
 			goto fail;
 		}
-#else
+
+		SSL_set_verify(ssn->sslconn, SSL_VERIFY_PEER, NULL);
+#elif OPENSSL_VERSION_NUMBER >= 0x10002000L
 		X509_VERIFY_PARAM *param = SSL_get0_param(ssn->sslconn);
 		X509_VERIFY_PARAM_set_hostflags(param,
 		    X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
@@ -171,8 +173,14 @@ open_secure_connection(session *ssn)
 			    ERR_error_string(ERR_get_error(), NULL));
 			goto fail;
 		}
-#endif
+
 		SSL_set_verify(ssn->sslconn, SSL_VERIFY_PEER, NULL);
+#else
+		/* SSL server name / certificate peer name validation not
+		 * supported as built-in functionality in OpenSSL versions
+		 * earlier than 1.0.2 (OpenSSL 1.0.1* and before).
+		 */
+#endif
 	}
 
 	SSL_set_fd(ssn->sslconn, ssn->socket);
