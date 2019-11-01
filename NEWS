@@ -1,7 +1,10 @@
+IMAPFilter 2.6.14 - 1 Nov 2019
+  - Bug fix; OpenSSL version mess up for SSL hostname validation.
+
 IMAPFilter 2.6.13 - 17 Sep 2019
   - Support for SSL hostname validation.
 
-IMAPFilter 2.6.12 - 03 Oct 2018
+IMAPFilter 2.6.12 - 3 Oct 2018
   - Support for Server Name Indication (SNI).
   - The searching methods return values are described in the config man page.
   - Example of using the enter_idle() function in the sample extend file.
