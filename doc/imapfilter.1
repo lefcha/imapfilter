@@ -1,4 +1,4 @@
-.Dd Apr 27, 2016
+.Dd Nov 13, 2019
 .Dt IMAPFILTER 1
 .Os
 .Sh NAME
@@ -59,11 +59,10 @@ The path to the system's SSL CA TrustStore directory or file. SSL connections
 will be validated using the CA certificates found in this directory or file,
 and when this is not possible the local
 .Pa $HOME/.imapfilter/certificates
-file will be used.  The default is either the
-.Pa /etc/ssl/certs
-directory or the
-.Pa /etc/ssl/cert.pem
-file, whichever is found.
+file will be used.  The default CA directory is
+.Pa /etc/ssl/certs/ ,
+and the default CA file is
+.Pa /etc/ssl/cert.pem .
 .It Fl V
 Displays version and copyright information.
 .It Fl v
