@@ -176,10 +176,7 @@ open_secure_connection(session *ssn)
 
 		SSL_set_verify(ssn->sslconn, SSL_VERIFY_PEER, NULL);
 #else
-		/* SSL server name / certificate peer name validation not
-		 * supported as built-in functionality in OpenSSL versions
-		 * earlier than 1.0.2 (OpenSSL 1.0.1* and before).
-		 */
+#error "hostname validation supported in OpenSSL version 1.0.2 and later"
 #endif
 	}
 
