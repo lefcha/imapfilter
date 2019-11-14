@@ -89,6 +89,9 @@ function Account._login_user(self)
             self._account.password = get_password('Enter password for ' ..
                                                   self._string .. ': ')
     end
+    if type(self._account.password) == 'string' then
+        self._account.password = string.gsub(self._account.password, '"', '\\"')
+    end
 
     if self._account.session then return true end
     local r, s = ifcore.login(self._account.server, self._account.port,
