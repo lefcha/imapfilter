@@ -68,10 +68,10 @@ main(int argc, char *argv[])
 	opts.debug = NULL;
 
 	opts.truststore = NULL;
-	if (exists_dir("/etc/ssl/certs"))
-		capath = "/etc/ssl/certs";
-	if (exists_file("/etc/ssl/cert.pem"))
-		cafile = "/etc/ssl/cert.pem";
+	if (exists_dir(CONFIG_SSL_CAPATH))
+		capath = CONFIG_SSL_CAPATH;
+	if (exists_file(CONFIG_SSL_CAFILE))
+		cafile = CONFIG_SSL_CAFILE;
 
 	env.home = NULL;
 	env.pathmax = -1;

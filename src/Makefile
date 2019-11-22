@@ -4,6 +4,9 @@ BINDIR = $(PREFIX)/bin
 SHAREDIR = $(PREFIX)/share/imapfilter
 MANDIR = $(PREFIX)/man
 
+SSLCAPATH = /etc/ssl/certs
+SSLCAFILE = /etc/ssl/cert.pem
+
 MYCFLAGS =
 MYLDFLAGS =
 MYLIBS =
@@ -16,7 +19,11 @@ LIBPCRE = -lpcre
 LIBSSL = -lssl
 LIBCRYPTO = -lcrypto
 
-CFLAGS = -Wall -Wextra -O -DCONFIG_SHAREDIR='"$(SHAREDIR)"' $(INCDIRS) $(MYCFLAGS)
+CFLAGS = -Wall -Wextra -O \
+	 -DCONFIG_SHAREDIR='"$(SHAREDIR)"' \
+	 -DCONFIG_SSL_CAPATH='"$(SSLCAPATH)"' \
+	 -DCONFIG_SSL_CAFILE='"$(SSLCAFILE)"' \
+	 $(INCDIRS) $(MYCFLAGS)
 LDFLAGS = $(LIBDIRS) $(MYLDFLAGS)
 LIBS = -lm -ldl $(LIBLUA) $(LIBPCRE) $(LIBSSL) $(LIBCRYPTO) $(MYLIBS)
 
