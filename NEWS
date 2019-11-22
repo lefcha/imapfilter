@@ -1,3 +1,6 @@
+IMAPFilter 2.6.16 - 23 Nov 2019
+  - Bug fix; escape the double-quote character in passwords.
+
 IMAPFilter 2.6.15 - 14 Nov 2019
   - Bug fix; try to setup both a CA file and path for SSL validations.
 
