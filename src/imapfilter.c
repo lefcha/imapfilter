@@ -246,7 +246,8 @@ usage(void)
 {
 
 	fprintf(stderr, "usage: imapfilter [-inVv] [-c configfile] "
-	    "[-d debugfile] [-e 'command'] [-l logfile]\n");
+	    "[-d debugfile] [-e 'command']\n"
+	    "\t\t  [-l logfile] [-t truststore]\n");
 
 	exit(0);
 }
