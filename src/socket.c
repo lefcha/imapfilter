@@ -212,9 +212,14 @@ open_secure_connection(session *ssn)
 				    ssn->server, ERR_error_string(e, NULL));
 			goto fail;
 		case SSL_ERROR_SSL:
+			e = ERR_get_error();
+			if (!strcmp("certificate verify failed",
+			    ERR_reason_error_string(e)))
+				fatal(ERROR_CERTIFICATE,
+				    "initiating SSL connection to %s; %s\n",
+				    ssn->server, ERR_error_string(e, NULL));
 			error("initiating SSL connection to %s; %s\n",
-			    ssn->server, ERR_error_string(ERR_get_error(),
-			    NULL));
+			    ssn->server, ERR_error_string(e, NULL));
 			goto fail;
 		default:
 			break;
