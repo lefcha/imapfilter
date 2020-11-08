@@ -110,7 +110,11 @@ ifsys_popen(lua_State *lua)
 	luaL_checktype(lua, 1, LUA_TSTRING);
 	luaL_checktype(lua, 2, LUA_TSTRING);
 
+#if LUA_VERSION_NUM < 504
 	fp = (FILE **) lua_newuserdata(lua, sizeof(FILE *));
+#else
+	fp = (FILE **) lua_newuserdatauv(lua, sizeof(FILE *), 1);
+#endif
 
 	*fp = NULL;
 
