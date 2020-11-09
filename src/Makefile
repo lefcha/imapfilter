@@ -15,7 +15,7 @@ INCDIRS =
 LIBDIRS =
 
 LIBLUA = -llua
-LIBPCRE = -lpcre
+LIBPCRE = -lpcre2-8
 LIBSSL = -lssl
 LIBCRYPTO = -lcrypto
 
