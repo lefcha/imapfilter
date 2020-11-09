@@ -33,7 +33,7 @@ Installation
 
   Compile and install the program:
 
-    make all
+    make -j all
     make install
 
 
