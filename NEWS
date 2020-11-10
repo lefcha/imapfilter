@@ -1,3 +1,6 @@
+IMAPFilter 2.7.2 - 10 Nov 2020
+  - Makefile is back to being Lua version agnostic.
+
 IMAPFilter 2.7.1 - 9 Nov 2020
   - Makefile now builds with Lua 5.4 and PCRE2.
 
