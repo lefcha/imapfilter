@@ -11,10 +11,10 @@ MYCFLAGS =
 MYLDFLAGS =
 MYLIBS =
 
-INCDIRS = -I/usr/include/lua5.4
+INCDIRS =
 LIBDIRS =
 
-LIBLUA = -llua5.4
+LIBLUA = -llua
 LIBPCRE = -lpcre2-8
 LIBSSL = -lssl
 LIBCRYPTO = -lcrypto
