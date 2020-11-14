@@ -32,6 +32,8 @@ int send_continuation(session *ssn, const char *data, size_t len);
 #define TRY(F)								       \
 	switch ((F)) {							       \
 	case -1:							       \
+		error("unexpected network error for %s@%s\n",		       \
+		    ssn->username, ssn->server);			       \
 		if ((!strcasecmp(get_option_string("recover"), "all") ||       \
 		    !strcasecmp(get_option_string("recover"), "errors")))      \
 			for (;;) {					       \
@@ -45,6 +47,8 @@ int send_continuation(session *ssn, const char *data, size_t len);
 			}						       \
 		return -1;						       \
 	case STATUS_BYE:						       \
+		error("unexpected IMAP BYE for %s@%s\n",		       \
+		    ssn->username, ssn->server);			       \
 		close_connection(ssn);					       \
 		if (!strcasecmp(get_option_string("recover"), "all")) {	       \
 			if (request_login(&ssn, NULL, NULL, NULL, NULL,	       \
@@ -165,7 +169,7 @@ request_login(session **ssnptr, const char *server, const char *port, const
 {
 	int t, r, rg = -1, rl = -1;
 	session *ssn = *ssnptr;
-	
+
 	if (*ssnptr && (*ssnptr)->socket != -1)
 		return STATUS_PREAUTH;
 
@@ -182,8 +186,8 @@ request_login(session **ssnptr, const char *server, const char *port, const
 			ssn->sslproto = ssl;
 	} else {
 		debug("recovering connection: %s://%s@%s:%s/%s\n",
-		    ssn->sslproto ?"imaps" : "imap", ssn->username, ssn->server,
-		    ssn->port, ssn->selected ? ssn->selected : "");
+		    ssn->sslproto ? "imaps" : "imap", ssn->username,
+		    ssn->server, ssn->port, ssn->selected ? ssn->selected : "");
 	}
 
 	if (open_connection(ssn) == -1)
