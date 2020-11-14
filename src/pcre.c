@@ -109,7 +109,6 @@ ifre_exec(lua_State *lua)
 	}
 
 	pcre2_match_data_free(match_data);
-	pcre2_code_free(re);
 
 	lua_remove(lua, 1);
 	lua_remove(lua, 1);
@@ -135,7 +134,7 @@ ifre_free(lua_State *lua)
 
 	re = *(pcre2_code **)(lua_touserdata(lua, 1));
 
-	xfree(re);
+	pcre2_code_free(re);
 
 	lua_remove(lua, 1);
 
