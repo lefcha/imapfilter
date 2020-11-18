@@ -7,7 +7,7 @@ setmetatable(_regex_cache, _regex_cache.mt)
 
 
 _regex_cache.mt.__index = function (self, key)
-    local r, compiled = ifre.compile(pattern)
+    local r, compiled = ifre.compile(key)
     if not r then return end
     self[key] = compiled
     return compiled
