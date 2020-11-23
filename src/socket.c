@@ -18,6 +18,9 @@
 #include "session.h"
 
 
+extern options opts;
+
+
 #if OPENSSL_VERSION_NUMBER >= 0x1010000fL
 SSL_CTX *sslctx = NULL;
 #else
@@ -161,7 +164,9 @@ open_secure_connection(session *ssn)
 			goto fail;
 		}
 
-		SSL_set_verify(ssn->sslconn, SSL_VERIFY_PEER, NULL);
+		//JAH
+		if (!opts.ignoresslhostname)
+			SSL_set_verify(ssn->sslconn, SSL_VERIFY_PEER, NULL);
 #elif OPENSSL_VERSION_NUMBER >= 0x10002000L
 		X509_VERIFY_PARAM *param = SSL_get0_param(ssn->sslconn);
 		X509_VERIFY_PARAM_set_hostflags(param,

@@ -70,6 +70,7 @@
 typedef struct options {
 	int verbose;		/* Verbose mode. */
 	int interactive;	/* Act as an interpreter. */
+	int ignoresslhostname;	/* Ignores the SSL hostname verification check */
         int dryrun;             /* Don't send commands that do changes. */
 	char *log;		/* Log file for error messages. */
 	char *config;		/* Configuration file. */
