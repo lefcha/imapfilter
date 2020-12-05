@@ -1,3 +1,7 @@
+IMAPFilter 2.7.5 - 5 Dec 2020
+  - New "hostnames" option can be used to disable hostname validation.
+  - Bug fix; "certificates" option incorrectly controlled hostname validation.
+
 IMAPFilter 2.7.4 - 18 Nov 2020
   - Bug fix; incorrect argument to regular expression compile function.
 
