@@ -1,4 +1,4 @@
-.Dd Aug 26, 2018
+.Dd Dec 5, 2020
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -125,6 +125,13 @@ mailbox is closed.  When this option is enabled, messages are expunged
 immediately after being marked deleted.  This variable takes a
 .Vt boolean
 as a value.  Default is
+.Dq true .
+.It Va hostnames
+When this option is enabled, the server hostname is validated, in
+order to verify the client is talking to the correct server. This variable
+takes a
+.Vt boolean
+as a value. Default is
 .Dq true .
 .It Va info
 When this options is enabled, a summary of the program's actions is printed,

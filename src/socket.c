@@ -142,7 +142,7 @@ open_secure_connection(session *ssn)
 	if (!(ssn->sslconn = SSL_new(ctx)))
 		goto fail;
 
-	if (get_option_boolean("certificates")) {
+	if (get_option_boolean("hostnames")) {
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
 		SSL_set_hostflags(ssn->sslconn,
 		    X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
