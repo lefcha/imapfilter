@@ -33,6 +33,25 @@ while true do
 end
 
 
+-- The previous example can be further improved to consider whether new
+-- messages arrived while filtering took place, and also somewhat work on
+-- servers that have no IDLE support.
+
+function custom_idle(mbox)
+    if #mbox:is_unseen() == 0 then
+        if not mbox:enter_idle() then
+            sleep(300)
+        end
+    end
+end
+
+while true do
+    custom_idle(myaccount.mymailbox)
+    results = myaccount.mymailbox:is_unread()
+    results:move_messages(myaccount.myothermailbox)
+end
+
+
 -- IMAPFilter can take advantage of all those filtering utilities that
 -- are available and use a wide range of heuristic tests, text analysis,
 -- internet-based realtime blacklists, advanced learning algorithms,
