@@ -11,7 +11,7 @@
 #include "imapfilter.h"
 #include "pathnames.h"
 
-
+extern options opts;
 extern environment env;
 
 
@@ -156,4 +156,31 @@ get_filepath(char *fname)
 	snprintf(fp, n + 1, "%s/%s", env.home, fname);
 
 	return fp;
+}
+
+void
+write_pidfile(void)
+{
+    FILE *pidfile;
+
+    if (opts.pidfile != NULL) {
+        pidfile = fopen(opts.pidfile, "w");
+        if (pidfile == NULL) {
+            error("unable to write PID to \'%s\' (%d: %s)", errno, strerror(errno));
+        }
+        else {
+            fprintf(pidfile, "%d", getpid());
+            fclose(pidfile);
+        }
+    }
+}
+
+void
+delete_pidfile(void)
+{
+    if (opts.pidfile != NULL) {
+        if (unlink(opts.pidfile) == -1) {
+            error("unable to delete PID file \'%s\' (%d: %s)", errno, strerror(errno));
+        }
+    }
 }

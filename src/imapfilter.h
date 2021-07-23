@@ -74,6 +74,7 @@ typedef struct options {
 	char *log;		/* Log file for error messages. */
 	char *config;		/* Configuration file. */
 	char *oneline;		/* One line of program/configuration. */
+	char *pidfile;      /* write a pidfile (useful for systemd template files */
 	char *debug;		/* Debug file. */
         char *truststore;       /* CA TrustStore. */
 } options;
@@ -102,6 +103,8 @@ int exists_dir(char *fname);
 int create_file(char *fname, mode_t mode);
 int get_pathmax(void);
 char *get_filepath(char *fname);
+void write_pidfile(void);
+void delete_pidfile(void);
 
 /*	log.c		*/
 void verbose(const char *info,...);
