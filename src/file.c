@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/mman.h>
 
 #include "imapfilter.h"
 #include "pathnames.h"
@@ -14,9 +15,11 @@
 extern options opts;
 extern environment env;
 
+#define CONFIG_TEMPLATE   CONFIG_SHAREDIR "/config.lua"
 
 /*
  * Create imapfilter's home directory.
+ * if no config.lua exists, copy the config.lua file CONFIG_SHAREDIR to there, too.
  */
 void
 create_homedir(void)
@@ -45,10 +48,17 @@ create_homedir(void)
 		snprintf(env.home, n + 1, "%s", i);
 
 	if (!exists_dir(env.home)) {
+        debug("creating directory %s", env.home);
 		if (mkdir(env.home, S_IRUSR | S_IWUSR | S_IXUSR))
-			error("could not create directory %s; %s\n", env.home,
-			    strerror(errno));
+			error("could not create directory %s (%d: %s)\n", env.home, errno, strerror(errno));
 	}
+
+	h = get_filepath("config.lua");
+	if (!exists_file(h) && exists_file(CONFIG_TEMPLATE))
+    {
+        debug("%s not found, initializing from %s\n", h, CONFIG_TEMPLATE);
+        copy_file(CONFIG_TEMPLATE, h);
+    }
 }
 
 
@@ -113,6 +123,49 @@ create_file(char *fname, mode_t mode)
 	}
 
 	return 0;
+}
+
+int
+copy_file( char *from_path, char *to_path )
+{
+    int result;
+    int from_fd, to_fd;
+    struct stat from_stat;
+    unsigned char * mapped_file;
+
+    result = -1;
+
+    if (stat(from_path, &from_stat) == -1) {
+        error("could not get information about file %s (%d: %s)\n", from_path, errno, strerror(errno));
+    } else if (!S_ISREG(from_stat.st_mode)) {
+        error(" %s is not a normal file (%d: %s)\n", from_path, errno, strerror(errno));
+    } else {
+        from_fd = open(from_path, O_RDONLY, S_IRUSR | S_IWUSR);
+        if (from_fd == -1) {
+            error("could not open file %s (%d: %s)\n", from_path, errno, strerror(errno));
+        } else {
+            to_fd =
+                open(to_path, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
+            if (to_fd == -1) {
+                error("could not create file %s (%d: %s)\n", to_path, errno, strerror(errno));
+            } else {
+                mapped_file = mmap(NULL, from_stat.st_size, PROT_READ, MAP_SHARED, from_fd,0);
+                if (mapped_file == NULL) {
+                    error("unable to read from %s (%d: %s)\n", from_path, errno, strerror(errno));
+                } else {
+                    if (write(to_fd, mapped_file, from_stat.st_size) < from_stat.st_size) {
+                        error("failed to write to %s (%d: %s)\n", to_path, errno, strerror(errno));
+                    } else {
+                        result = 0;
+                    }
+                    munmap(mapped_file, from_stat.st_size);
+                }
+                close(to_fd);
+            }
+            close(from_fd);
+        }
+    }
+    return result;
 }
 
 

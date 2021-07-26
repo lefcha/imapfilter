@@ -101,6 +101,7 @@ void create_homedir(void);
 int exists_file(char *fname);
 int exists_dir(char *fname);
 int create_file(char *fname, mode_t mode);
+int copy_file( char *from_path, char *to_path );
 int get_pathmax(void);
 char *get_filepath(char *fname);
 void write_pidfile(void);
