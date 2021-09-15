@@ -313,6 +313,13 @@ Note that due to Lua using backslash
 as an escape character for its strings, one has to use double backslashes in
 order to insert a single backslash, and thus a backslash
 character inside a password might require four backslashes.
+.Pp
+To get the passwordstring from an external script or secretmanagement use
+.Bd -literal -offset 4n
+status, passwd = pipe_from('pass mypasswordstore')
+passwd = string.gsub(passwd, "\n", "")
+account1 = IMAP {password = passwd, ...}
+.Ed
 .It Va oauth2
 The OAuth2 string to use to authenticate if the server supports the XOAUTH2
 authentication mechanism.  If the server does not support it and a
