@@ -292,8 +292,10 @@ request_login(session **ssnptr, const char *server, const char *port, const
 abort:
 	close_connection(ssn);
 fail:
-	session_destroy(ssn);
-	ssn = NULL;
+	if (!*ssnptr) {
+		session_destroy(ssn);
+		ssn = NULL;
+	}
 
 	return -1;
 }
