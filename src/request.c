@@ -54,9 +54,10 @@ int send_continuation(session *ssn, const char *data, size_t len);
 			if (request_login(&ssn, NULL, NULL, NULL, NULL,	       \
 			    NULL, NULL) != -1)				       \
 				return STATUS_NONE;			       \
-		} else							       \
+		} else {						       \
 			session_destroy(ssn);				       \
 			ssn = NULL;					       \
+		}							       \
 		return -1;						       \
 	}
 
