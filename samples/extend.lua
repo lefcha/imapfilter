@@ -119,37 +119,13 @@ end
 
 
 -- Passwords could be extracted during execution time from an encrypted
--- file.
---
--- The file is encrypted using the openssl(1) command line tool.  For
--- example the "passwords.txt" file:
---
---   secret1
---   secret2
---
--- ... is encrypted and saved to a file named "passwords.enc" with the
--- command:
---
---   $ openssl bf -in passwords.txt -out passwords.enc
---
--- The auxiliary function pipe_from() is supplied for conveniency.  The
--- user is prompted to enter the decryption password, the file is
--- decrypted and the account passwords are set accordingly:
+-- password vault. Here's an example using pass.
 
-status, output = pipe_from('openssl bf -d -in ~/passwords.enc')
-
-_, _, password1, password2 = string.find(output, '([%w%p]+)\n([%w%p]+)')
-
+status, password = pipe_from('pass Email/imap1.mail.server')
 account1 = IMAP {
     server = 'imap1.mail.server',
     username = 'user1',
-    password = password1
-}
-
-account2 = IMAP {
-    server = 'imap2.mail.server',
-    username = 'user2',
-    password = password2
+    password = password
 }
 
 
