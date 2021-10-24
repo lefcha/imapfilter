@@ -1,4 +1,4 @@
-.Dd May 29, 2021
+.Dd Oct 24, 2021
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -308,6 +308,11 @@ has been set).  It takes a
 .Vt string
 as a value.
 .Pp
+Passwords can be also extracted during execution time from an encrypted
+password vault.  The
+.Pa samples/extend.lua
+file contains such an example.
+.Pp
 Note that due to Lua using backslash
 .Sq \e
 as an escape character for its strings, one has to use double backslashes in
@@ -330,6 +335,10 @@ expired, and an OAuth2 string has been generated from the access token.  The
 aforementioned OAuth2 string is a Base64 encoded string that should be set
 here.  For more information see
 .Ad https://developers.google.com/gmail/xoauth2_protocol .
+.Pp
+The
+.Pa samples/extend.lua
+file contains an example of authentication using OAuth2.
 .It Va port
 The port to connect to.  It takes a
 .Vt number
@@ -1440,7 +1449,11 @@ status = pipe_to('mycommandline', 'mydata')
 status, data = pipe_from('mycommandline')
 success, capture = regex_search('^(?i)pcre: (\e\ew)$', 'mystring')
 sleep(300)
+.Pp
 .Ed
+For more examples see the
+.Pa samples/extend.lua
+file.
 .Sh EXAMPLES
 See
 .Pa samples/config.lua
