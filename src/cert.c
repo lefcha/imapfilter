@@ -37,7 +37,7 @@ get_cert(session *ssn)
 
 	mdlen = 0;
 
-	if (!(cert = SSL_get_peer_certificate(ssn->sslconn)))
+	if (!(cert = SSL_get1_peer_certificate(ssn->sslconn)))
 		return -1;
 
 	verify = SSL_get_verify_result(ssn->sslconn);
