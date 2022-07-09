@@ -133,7 +133,6 @@ init_options(void)
 	lua_newtable(lua);
 
 	set_table_boolean("certificates", 1);
-	set_table_boolean("crammd5", 1);
 	set_table_boolean("create", 0);
 	set_table_boolean("expunge", 1);
 	set_table_boolean("hostnames", 1);

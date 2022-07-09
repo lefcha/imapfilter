@@ -29,11 +29,10 @@
 /* Capabilities of mail server. */
 #define CAPABILITY_NONE			0x00
 #define CAPABILITY_NAMESPACE		0x01
-#define CAPABILITY_CRAMMD5		0x02
-#define CAPABILITY_STARTTLS		0x04
-#define CAPABILITY_CHILDREN		0x08
-#define CAPABILITY_IDLE			0x10
-#define CAPABILITY_XOAUTH2              0x20
+#define CAPABILITY_STARTTLS		0x02
+#define CAPABILITY_CHILDREN		0x04
+#define CAPABILITY_IDLE			0x08
+#define CAPABILITY_XOAUTH2              0x10
 
 /* Status responses and response codes. */
 #define STATUS_NONE			0
@@ -84,10 +83,6 @@ typedef struct environment {
 	long pathmax;		/* Maximum pathname. */
 } environment;
 
-
-/*	auth.c		*/
-unsigned char *auth_cram_md5(const char *user, const char *pass,
-    unsigned char *chal);
 
 /*	cert.c		*/
 int get_cert(session *ssn);

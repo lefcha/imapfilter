@@ -1,4 +1,4 @@
-.Dd Oct 24, 2021
+.Dd Jul 8, 2022
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -111,14 +111,6 @@ are marked deleted. This variable takes a
 .Vt boolean
 as a value.  Default is
 .Dq false .
-.It Va crammd5
-When this option is enabled and the server supports the Challenge-Response
-Authentication Mechanism (specifically CRAM-MD5), this method will be used for
-user authentication instead of a plaintext password LOGIN.  This variable
-takes a
-.Vt boolean
-as a value.  Default is
-.Dq true .
 .It Va expunge
 Normally, messages are marked for deletion and are actually deleted when the
 mailbox is closed.  When this option is enabled, messages are expunged

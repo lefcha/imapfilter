@@ -34,7 +34,7 @@ LUA = common.lua set.lua regex.lua account.lua mailbox.lua message.lua \
       options.lua auxiliary.lua
 
 BIN = imapfilter
-OBJ = auth.o buffer.o cert.o core.o file.o imapfilter.o list.o log.o lua.o \
+OBJ = buffer.o cert.o core.o file.o imapfilter.o list.o log.o lua.o \
       memory.o misc.o namespace.o pcre.o regexp.o request.o response.o \
       session.o signal.o socket.o system.o
 

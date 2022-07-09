@@ -330,8 +330,6 @@ response_capability(session *ssn, int tag)
 
 		if (xstrcasestr(s, "NAMESPACE"))
 			ssn->capabilities |= CAPABILITY_NAMESPACE;
-		if (xstrcasestr(s, "AUTH=CRAM-MD5"))
-			ssn->capabilities |= CAPABILITY_CRAMMD5;
 		if (xstrcasestr(s, "STARTTLS"))
 			ssn->capabilities |= CAPABILITY_STARTTLS;
 		if (xstrcasestr(s, "CHILDREN"))

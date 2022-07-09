@@ -239,23 +239,6 @@ request_login(session **ssnptr, const char *server, const char *port, const
 			ssn = NULL;
 			return STATUS_NO;
 		}
-		if (rl != STATUS_OK && ssn->password &&
-		    ssn->capabilities & CAPABILITY_CRAMMD5 &&
-		    get_option_boolean("crammd5")) {
-			unsigned char *in, *out;
-			CHECK(t = send_request(ssn, "AUTHENTICATE CRAM-MD5"));
-			CHECK(r = response_authenticate(ssn, t, &in));
-			if (r == STATUS_CONTINUE) {
-				if ((out = auth_cram_md5(ssn->username,
-				    ssn->password, in)) == NULL)
-					goto abort;
-				CHECK(send_continuation(ssn, (char *)(out),
-				    strlen((char *)(out))));
-				xfree(out);
-				CHECK(rl = response_generic(ssn, t));
-			} else
-				goto abort;
-		}
 		if (rl != STATUS_OK && ssn->password) {
 			CHECK(t = send_request(ssn, "LOGIN \"%s\" \"%s\"",
 			    ssn->username, ssn->password));
