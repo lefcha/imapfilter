@@ -37,7 +37,11 @@ get_cert(session *ssn)
 
 	mdlen = 0;
 
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
 	if (!(cert = SSL_get1_peer_certificate(ssn->sslconn)))
+#else
+	if (!(cert = SSL_get_peer_certificate(ssn->sslconn)))
+#endif
 		return -1;
 
 	verify = SSL_get_verify_result(ssn->sslconn);
