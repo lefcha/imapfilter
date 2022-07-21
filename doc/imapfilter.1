@@ -14,11 +14,11 @@
 .Op Fl t Ar truststore
 .Sh DESCRIPTION
 .Nm
-is a mail filtering utility.  It connects to remote mail servers using the
+is a mail filtering utility. It connects to remote mail servers using the
 Internet Message Access Protocol (IMAP), sends searching queries to the server
-and processes mailboxes based on the results.  It can be used to delete, copy,
-move, flag, etc.  messages residing in mailboxes at the same or different mail
-servers.  The 4rev1 and 4 versions of the IMAP protocol are supported.
+and processes mailboxes based on the results. It can be used to delete, copy,
+move, flag, etc. messages residing in mailboxes at the same or different mail
+servers. The 4rev1 and 4 versions of the IMAP protocol are supported.
 .Pp
 The command line options of
 .Xr imapfilter 1
@@ -45,19 +45,19 @@ Enters interactive mode after executing the configuration file.
 File that contains logs of error messages produced.
 .It Fl n
 This option enables the so called dry-run mode, and any actions that would
-result in changes to the server do not actually take place.  So the requests
+result in changes to the server do not actually take place. So the requests
 that would modify any data are not sent to the server, even though
 informational messages about these actions are still printed.
 
 Any other methods, that only receive data from the server, are performed as
-normal, such as for example the searching methods.  Note, that the number of
+normal, such as for example the searching methods. Note, that the number of
 messages an action is reported to be applied upon, might differ between dry-run
 mode and the normal execution, and this is expected as in the latter case the
-data on the server are continuesly altered by subsequent actions.
+data on the server are continuously altered by subsequent actions.
 .It Fl t Ar truststore
 The path to the system's SSL CA TrustStore directory or file. SSL connections
 will be validated using the CA certificates found in this directory or file,
-and when this is not possible the local
+and when this is not possible, the local
 .Pa $HOME/.imapfilter/certificates
 file will be used.  The default CA directory is
 .Pa /etc/ssl/certs/ ,
@@ -79,7 +79,7 @@ Program's configuration directory, which overrides the default
 .Sh FILES
 .Bl -tag -width Ds
 .It Pa $HOME/.imapfilter/config.lua
-Default configuration file.  Because this file may contain sensitive data such
+Default configuration file. Because this file may contain sensitive data such
 as user passwords, the recommended permissions are read/write for the user, and
 not accessible by others.
 .It Pa $HOME/.imapfilter/certificates
