@@ -170,6 +170,7 @@ request_login(session **ssnptr, const char *server, const char *port, const
 {
 	int t, r, rg = -1, rl = -1;
 	session *ssn = *ssnptr;
+	int recovering = 0;
 
 	if (*ssnptr && (*ssnptr)->socket != -1)
 		return STATUS_PREAUTH;
@@ -186,6 +187,7 @@ request_login(session **ssnptr, const char *server, const char *port, const
 		if (ssl)
 			ssn->sslproto = ssl;
 	} else {
+		recovering = 1;
 		debug("recovering connection: %s://%s@%s:%s/%s\n",
 		    ssn->sslproto ? "imaps" : "imap", ssn->username,
 		    ssn->server, ssn->port, ssn->selected ? ssn->selected : "");
@@ -222,8 +224,10 @@ request_login(session **ssnptr, const char *server, const char *port, const
 			error("OAuth2 not supported at %s@%s\n", ssn->username,
 			    ssn->server);
 			close_connection(ssn);
-			session_destroy(ssn);
-			ssn = NULL;
+			if (!recovering) {
+				session_destroy(ssn);
+				*ssnptr = ssn = NULL;
+			}
 			return STATUS_NO;
 		}
 		if (ssn->capabilities & CAPABILITY_XOAUTH2 && ssn->oauth2) {
@@ -235,8 +239,10 @@ request_login(session **ssnptr, const char *server, const char *port, const
 			error("oauth2 string rejected at %s@%s\n",
 			    ssn->username, ssn->server);
 			close_connection(ssn);
-			session_destroy(ssn);
-			ssn = NULL;
+			if (!recovering) {
+				session_destroy(ssn);
+				*ssnptr = ssn = NULL;
+			}
 			return STATUS_NO;
 		}
 		if (rl != STATUS_OK && ssn->password) {
@@ -248,8 +254,10 @@ request_login(session **ssnptr, const char *server, const char *port, const
 			error("username %s or password rejected at %s\n",
 			    ssn->username, ssn->server);
 			close_connection(ssn);
-			session_destroy(ssn);
-			ssn = NULL;
+			if (!recovering) {
+				session_destroy(ssn);
+				*ssnptr = ssn = NULL;
+			}
 			return STATUS_NO;
 		}
 	} else {
@@ -276,9 +284,9 @@ request_login(session **ssnptr, const char *server, const char *port, const
 abort:
 	close_connection(ssn);
 fail:
-	if (!*ssnptr) {
+	if (ssn && !recovering) {
 		session_destroy(ssn);
-		ssn = NULL;
+		*ssnptr = ssn = NULL;
 	}
 
 	return -1;
