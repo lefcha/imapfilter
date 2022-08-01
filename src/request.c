@@ -177,11 +177,11 @@ request_login(session **ssnptr, const char *server, const char *port, const
 	if (!*ssnptr) {
 		ssn = *ssnptr = session_new();
 
-		ssn->server = server;
-		ssn->port = port;
-		ssn->username = user;
-		ssn->password = pass;
-		ssn->oauth2 = oauth2;
+		ssn->server = xstrdup(server);
+		ssn->port = xstrdup(port);
+		ssn->username = user ? xstrdup(user) : NULL;
+		ssn->password = pass ? xstrdup(pass) : NULL;
+		ssn->oauth2 = oauth2 ? xstrdup(oauth2) : NULL;
 
 		if (ssl)
 			ssn->sslproto = ssl;
