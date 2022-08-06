@@ -1,3 +1,10 @@
+IMAPFilter 2.7.6 - 6 Aug 2022
+  - Support building with OpenSSL 3.0.0 and later.
+  - Several minor improvements to documentation and example code.
+  - Removed deprecated CRAM-MD5 mechanism.
+  - Bug fix; session was destroyed incorrectly on login failures.
+  - Bug fix; potential session management problems.
+
 IMAPFilter 2.7.5 - 5 Dec 2020
   - New "hostnames" option can be used to disable hostname validation.
   - Bug fix; "certificates" option incorrectly controlled hostname validation.
