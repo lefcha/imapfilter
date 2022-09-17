@@ -26,7 +26,7 @@ void interactive_mode(void);
  * Lua interface functions, load and execute imapfilter's configuration file.
  */
 void
-start_lua()
+start_lua(void)
 {
 
 	lua = luaL_newstate();
