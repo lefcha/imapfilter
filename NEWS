@@ -1,93 +1,99 @@
-IMAPFilter 2.7.6 - 6 Aug 2022
+IMAPFilter 2.8.0 - Jan 6, 2023
+  - New, more advanced, robust, and flexible recovery mechanism, replaces the
+    old automatic recovery functionality. Note that, the config must be updated
+    to use the new mechanism, otherwise no recovery will take place on errors.
+  - Bug fix; potential failure when deleting mailbox while mailbox is selected.
+
+IMAPFilter 2.7.6 - Aug 6, 2022
   - Support building with OpenSSL 3.0.0 and later.
   - Several minor improvements to documentation and example code.
   - Removed deprecated CRAM-MD5 mechanism.
   - Bug fix; session was destroyed incorrectly on login failures.
   - Bug fix; potential session management problems.
 
-IMAPFilter 2.7.5 - 5 Dec 2020
+IMAPFilter 2.7.5 - Dec 5, 2020
   - New "hostnames" option can be used to disable hostname validation.
   - Bug fix; "certificates" option incorrectly controlled hostname validation.
 
-IMAPFilter 2.7.4 - 18 Nov 2020
+IMAPFilter 2.7.4 - Nov 18, 2020
   - Bug fix; incorrect argument to regular expression compile function.
 
-IMAPFilter 2.7.3 - 14 Nov 2020
+IMAPFilter 2.7.3 - Nov 14, 2020
   - Bug fix; incorrect free of compiled pattern.
   - Unexpected network errors and IMAP BYE are now logged.
 
-IMAPFilter 2.7.2 - 10 Nov 2020
+IMAPFilter 2.7.2 - Nov 10, 2020
   - Makefile is back to being Lua version agnostic.
 
-IMAPFilter 2.7.1 - 9 Nov 2020
+IMAPFilter 2.7.1 - Nov 9, 2020
   - Makefile now builds with Lua 5.4 and PCRE2.
 
-IMAPFilter 2.7 - 8 Nov 2020
+IMAPFilter 2.7 - Nov 8, 2020
   - Lua 5.4 compatibility (the codebase can still be compiled with versions
     5.3, 5.2 and 5.1).
   - PCRE2 compatibility (version 10.00 and later)
   - New error code is returned if certificate verify fails.
   - Bug fix; add missing truststore option from brief usage message.
 
-IMAPFilter 2.6.16 - 23 Nov 2019
+IMAPFilter 2.6.16 - Nov 23, 2019
   - Bug fix; escape the double-quote character in passwords.
 
-IMAPFilter 2.6.15 - 14 Nov 2019
+IMAPFilter 2.6.15 - Nov 14, 2019
   - Bug fix; try to setup both a CA file and path for SSL validations.
 
-IMAPFilter 2.6.14 - 1 Nov 2019
+IMAPFilter 2.6.14 - Nov 1, 2019
   - Bug fix; OpenSSL version mess up for SSL hostname validation.
 
-IMAPFilter 2.6.13 - 17 Sep 2019
+IMAPFilter 2.6.13 - Sep 17, 2019
   - Support for SSL hostname validation.
 
-IMAPFilter 2.6.12 - 3 Oct 2018
+IMAPFilter 2.6.12 - Oct 3, 2018
   - Support for Server Name Indication (SNI).
   - The searching methods return values are described in the config man page.
   - Example of using the enter_idle() function in the sample extend file.
 
-IMAPFilter 2.6.11 - 19 Nov 2017
+IMAPFilter 2.6.11 - Nov 19, 2017
   - Support for interrupting IDLE mode with SIGUSR1/SIGUSR2.
   - New "persist" option to try to recover a connection indefinitely.
   - New "range" option to limit messages included in a range.
   - Bug fix; always close selected mailbox before check_status().
   - Bug fix; closing of selected mailbox twice with fetch_message().
 
-IMAPFilter 2.6.10 - 16 Dec 2016
+IMAPFilter 2.6.10 - Dec 16, 2016
   - Bug fix; segmentation fault on some OpenSSL builds.
 
-IMAPFilter 2.6.9 - 6 Dec 2016
+IMAPFilter 2.6.9 - Dec 6, 2016
   - Bug fix; possible problem during STARTTLS negotiation.
 
-IMAPFilter 2.6.8 - 26 Nov 2016
+IMAPFilter 2.6.8 - Nov 26, 2016
   - Support building with OpenSSL 1.1.0.
 
-IMAPFilter 2.6.7 - 7 Jun 2016
+IMAPFilter 2.6.7 - Jun 7, 2016
   - A dry-run mode that disables all actions that modify data.
   - Bug fix; handle IDLE untagged responses that are received in pieces.
 
-IMAPFilter 2.6.6 - 23 Jan 2016
+IMAPFilter 2.6.6 - Jan 23, 2016
   - Bug fix; print an error message if "ssl" has been set to "ssl3".
 
-IMAPFilter 2.6.5 - 18 Jan 2016
+IMAPFilter 2.6.5 - Jan 18, 2016
   - Possible to build again with OpenSSL when support for SSL 3.0 is disabled.
 
-IMAPFilter 2.6.4 - 8 Dec 2015
+IMAPFilter 2.6.4 - Dec 8, 2015
   - Support for OAuth 2.0 and the XOAUTH2 authentication mechanism.
 
-IMAPFilter 2.6.3 - 30 Sep 2015
+IMAPFilter 2.6.3 - Sep 30, 2015
   - Support for loading a default CA certificates file.
   - A new has_unkeyword() method to search messages without a keyword flag set.
   - Bug fix; double quotation around keyword sent by the has_flag() method.
 
-IMAPFilter 2.6.2 - 30 Jun 2015
+IMAPFilter 2.6.2 - Jun 30, 2015
   - Bug fix; drop connection on local certificate mismatch.
 
-IMAPFilter 2.6.1 - 29 Jun 2015
+IMAPFilter 2.6.1 - Jun 29, 2015
   - Support for loading the system's CA certificates from a file.
   - Bug fix; flusing of standard output/error in a some cases.
 
-IMAPFilter 2.6 - 16 Jun 2015
+IMAPFilter 2.6 - Jun 16, 2015
   - Optimizations that vastly improve performance of the meta-searching
     functionality, by making subsequent search requests limit their scope based
     on the results already returned by previous requests (previously this was
@@ -102,7 +108,7 @@ IMAPFilter 2.6 - 16 Jun 2015
   - Bug fix; flushing of default output on password prompt.
   - Bug fix; program fault when very long requests were to be sent.
 
-IMAPFilter 2.5.7 - 16 Nov 2014
+IMAPFilter 2.5.7 - Nov 16, 2014
   - Support for automatic validation of SSL connections, using the operating
     system's installed trusted CA certificates (usually from authorities that
     are shipped with web browsers).
@@ -117,13 +123,13 @@ IMAPFilter 2.5.7 - 16 Nov 2014
     sent_*() methods.
   - Bug fix; the value returned by the copy method was incorrect in some cases.
 
-IMAPFilter 2.5.6 - 27 Oct 2013
+IMAPFilter 2.5.6 - Oct 27, 2013
   - Possible to build again with OpenSSL older than version 1.0.1 (was a
     requirement for the previous release due to new protocols TLS 1.1/1.2).
   - Support for reading the configuration from the standard input stream.
   - New makefile dist target, which can be used to create distribution archives.
 
-IMAPFilter 2.5.5 - 8 Jun 2013
+IMAPFilter 2.5.5 - Jun 8, 2013
   - Work-around for some servers that send an unexpected APPEND response.
   - The serial number of the certificates is taken into account, because some
     servers send different certificates with the same subject and issuer.
@@ -131,27 +137,27 @@ IMAPFilter 2.5.5 - 8 Jun 2013
     order to make it easier to distinguish each of them.
   - Support for TLS versions 1.1 and 1.2 for secure connections.
 
-IMAPFilter 2.5.4 - 9 Apr 2013
+IMAPFilter 2.5.4 - Apr 9, 2013
   - Some server responses are now parsed less stricly.
   - More detailed information is now printed when there's an error.
   - Bug fix; various corrections in the recovery mechanism.
 
-IMAPFilter 2.5.3 - 22 Jul 2012
+IMAPFilter 2.5.3 - Jul 22, 2012
   - New implementation for international mailbox names.
   - Bug fix; wrong variable name in one of the examples on extending.
   - Bug fix; an OpenSSL compilation warning.
 
-IMAPFilter 2.5.2 - 29 Feb 2012
+IMAPFilter 2.5.2 - Feb 29, 2012
   - Persistent errors or connection failures are now ignored when running in
     daemon mode, and a reconnection is attempted during the next loop iteration.
   - Bug fix; problems with failure handling during login/logout.
 
-IMAPFilter 2.5.1 - 27 Feb 2012
+IMAPFilter 2.5.1 - Feb 27, 2012
   - Support for recovery of a session after a BYE response is received.
   - Option to control in which cases a terminated session will be restored.
   - Bug fix; a BYE response could sometimes get incorrectly ignored.
 
-IMAPFilter 2.5 - 23 Feb 2012
+IMAPFilter 2.5 - Feb 23, 2012
   - Support for recovery of a session when a network failure is encountered,
     and other robustness improvements.
   - Informational messages are printed also for the fetch and append methods.
@@ -169,14 +175,14 @@ IMAPFilter 2.5 - 23 Feb 2012
   * Support for the old deprecated 1.x configuration format has been removed,
     and the current 2.x format can only be executed from now on.
 
-IMAPFilter 2.4.2 - 19 Jan 2012
+IMAPFilter 2.4.2 - Jan 19, 2012
   - Bug fix; some ASCII characters in mailbox names were incorrectly converted
     to UTF-7.
 
-IMAPFilter 2.4.1 - 8 Dec 2011
+IMAPFilter 2.4.1 - Dec 8, 2011
   - Bug fix; become_daemon() failure.
 
-IMAPFilter 2.4 - 6 Dec 2011
+IMAPFilter 2.4 - Dec 6, 2011
   - Support for non-ASCII mailbox names.
   - New environment variable to set the configuration directory.
   - Bug fix; parsing of some server responses was broken since the previous
@@ -186,7 +192,7 @@ IMAPFilter 2.4 - 6 Dec 2011
   - Bug fix; debug file check caused printing of a misleading error message.
   - Bug fix; typo error in a configuration man page example.
 
-IMAPFilter 2.3 - 6 Aug 2011
+IMAPFilter 2.3 - Aug 6, 2011
   - Support for appending/uploading messages to mailboxes.
   - Debug file option now takes filename argument.
   - New simplified configuration and building procedure.
@@ -195,7 +201,7 @@ IMAPFilter 2.3 - 6 Aug 2011
   - Bug fix; timeout problem with CRAM-MD5 authentication.
   - Bug fix; some servers send non-ASCII characters in their responses.
 
-IMAPFilter 2.2.3 - 6 Mar 2011
+IMAPFilter 2.2.3 - Mar 6, 2011
   - Project moved to GitHub.
   - Changed file and directory structure.
   - The next UID is returned as an additional return value of check_status().
@@ -205,14 +211,14 @@ IMAPFilter 2.2.3 - 6 Mar 2011
   - Bug fix; in some servers the initial IDLE reply wasn't handled correctly.
   - Bug fix; typo errors in the documentation.
 
-IMAPFilter 2.2.2 - 23 Jan 2010
+IMAPFilter 2.2.2 - Jan 23, 2010
   - Bug fix; a couple of errors in the extending examples file.
 
-IMAPFilter 2.2.1 - 20 Jan 2010
+IMAPFilter 2.2.1 - Jan 20, 2010
   - A global option for the IDLE refreshing interval was added.
   - Bug fix; more detailed reporting when SSL socket errors occur.
 
-IMAPFilter 2.2 - 30 Dec 2009
+IMAPFilter 2.2 - Dec 30, 2009
   - Support for combining searching methods in multiple mailboxes at the same
     or different accounts and processing of the results in bulk.
   - Support for meta-searching that allows searching on the previous searching
@@ -230,14 +236,14 @@ IMAPFilter 2.2 - 30 Dec 2009
     changes are backwards compatible, an update of the configuration file is
     still recommended.
 
-IMAPFilter 2.1.2 - 3 Dec 2009
+IMAPFilter 2.1.2 - Dec 3, 2009
   - Bug fix; cache for message parts didn't work correctly.
   - Bug fix; documentation error.
 
-IMAPFilter 2.1.1 - 24 Nov 2009
+IMAPFilter 2.1.1 - Nov 24, 2009
   - Bug fix; global option timeout and enter_idle() didn't play well together.
 
-IMAPFilter 2.1 - 23 Nov 2009
+IMAPFilter 2.1 - Nov 23, 2009
   - Support for the IMAP IDLE extension (RFC 2177) through the enter_idle()
     method.
   - Support for fetching of a message's body structure through the
@@ -249,36 +255,36 @@ IMAPFilter 2.1 - 23 Nov 2009
   - Bug fix; no trailing end-of-line characters in the results of
     fetch_fields().
 
-IMAPFilter 2.0.11 - 20 Sep 2009
+IMAPFilter 2.0.11 - Sep 20, 2009
   - Bug fix; fetching of messages with empty body.
   - Workaround for problematic IMAP server sending non-compliant mailbox status
     information.
 
-IMAPFilter 2.0.10 - 16 Feb 2008
+IMAPFilter 2.0.10 - Feb 16, 2008
   - Bug fix; failed a great number (tens of thousands) of commands were
     exchanged with an IMAP server.
   - Bug fix; failed to fetch the body of some messages in some extremely rare
     occasions.
   - Bug fix; the description for the contain_header() method was clarified.
 
-IMAPFilter 2.0.9 - 26 Dec 2007
+IMAPFilter 2.0.9 - Dec 26, 2007
   - Bug fix; the match_*() methods failed to match messages.
   - Bug fix; the match_*() methods failed with an error when no messages
     matched.
   - Bug fix; note added in the documentation about the need to use double
     backslashes inside of regular expression patterns.
 
-IMAPFilter 2.0.8 - 23 Dec 2007
+IMAPFilter 2.0.8 - Dec 23, 2007
   - Bug fix; on some platforms it is necessary to link against the math library.
 
-IMAPFilter 2.0.7 - 22 Dec 2007
+IMAPFilter 2.0.7 - Dec 22, 2007
   - Bug fix; the match_*() methods failed with an error message.
 
-IMAPFilter 2.0.6 - 7 Oct 2007
+IMAPFilter 2.0.6 - Oct 7, 2007
   - Bug fix; the search query that was sent with the select_all() method had an
     incorrect format and this caused an error in some mail servers.
 
-IMAPFilter 2.0.5 - 4 Oct 2007
+IMAPFilter 2.0.5 - Oct 4, 2007
   - Bug fix; an error in the sample extensions file.
   - Bug fix; typo errors in the manual page.
   - The documentation was updated with details and examples on how to access
@@ -286,7 +292,7 @@ IMAPFilter 2.0.5 - 4 Oct 2007
   - Examples were added on how to define composite filters that include
     multiple searching rules.
 
-IMAPFilter 2.0.4 - 27 Sep 2007
+IMAPFilter 2.0.4 - Sep 27, 2007
   - Bug fix; the send_query() method didn't return the special form of table
     that the rest of the searching methods did.
   - An additional searching method has been added to search for keyword flags
@@ -294,19 +300,19 @@ IMAPFilter 2.0.4 - 27 Sep 2007
   - A new variable that was added to the Makefile makes it possible to set an
     alternative environment for the installation path.
 
-IMAPFilter 2.0.3 - 27 Jul 2007
+IMAPFilter 2.0.3 - Jul 27, 2007
   - Bug fix; part of the program's functionality didn't seem to work at all.
     (did nothing), due to problem when providing the results from searching
     methods to processing methods.
 
-IMAPFilter 2.0.2 - 30 Jun 2007
+IMAPFilter 2.0.2 - Jun 30, 2007
   - Bug fix; message cache problem due to non-use of message UIDs.
 
-IMAPFilter 2.0.1 - 29 Jun 2007
+IMAPFilter 2.0.1 - Jun 29, 2007
   - Bug fix; character set problem with 1.x configuration files.
   - Bug fix; typo errors in the documentation.
 
-IMAPFilter 2.0 - 27 Jun 2007
+IMAPFilter 2.0 - Jun 27, 2007
   - New, more powerful, feature rich and yet simpler configuration file.
   - Easier object oriented view of accounts and mailboxes.
   - Simpler approach to filters, with infix logical or/and/not operators.
@@ -322,13 +328,13 @@ IMAPFilter 2.0 - 27 Jun 2007
     Nevertheless, configuration files that employ the old, and now deprecated,
     format can still be read and executed as before.
 
-IMAPFilter 1.3 - 13 Feb 2007
+IMAPFilter 1.3 - Feb 13, 2007
   - Perl Compatible Regular Expression (PCRE) support.
   - Compile against Lua 5.1 by default.
   - Bug fix; program fault in some cases and when namespace prefix was empty.
   - Bug fix; program fault on some platforms when running in verbose mode.
 
-IMAPFilter 1.2.2 - 1 Aug 2006
+IMAPFilter 1.2.2 - Aug 1, 2006
   - Bug fix; a mix up of connections could happen in certain circumstances,
     when a hostname and/or username was a prefix of another hostname and/or
     username respectively, or when the same hostname and username was used to
@@ -340,22 +346,22 @@ IMAPFilter 1.2.2 - 1 Aug 2006
   - It is now possible to define new user keywords for messages inside a
     mailbox, apart from the standard system flags.
 
-IMAPFilter 1.2.1 - 9 Mar 2006
+IMAPFilter 1.2.1 - Mar 9, 2006
   - Buf fix; program fault when using the fetch*() family of functions.
 
-IMAPFilter 1.2 - 2 Mar 2006
+IMAPFilter 1.2 - Mar 2, 2006
   - IPv6 support.
   - Lua 5.1 compatibility.
   - Bug fix; handle messages containing binary data.
   - Bug fix; problems with CPU utilisation when the inactivity timeout timer
     was set.
 
-IMAPFilter 1.1.1 - 11 Nov 2005
+IMAPFilter 1.1.1 - Nov 11, 2005
   - Bug fix; minor memory leak.
   - Bug fix; on some systems, failure resulted while disconnecting from all the
     servers, during the shutdown phase just before exiting.
 
-IMAPFilter 1.1 - 24 Aug 2005
+IMAPFilter 1.1 - Aug 24, 2005
   - Addition of the list() and lsub() commands, that make it possible to get a
     list of the available mailboxes or only of those that are subscribed.
     Implementation of the IMAP LIST/LSUB commands, with additional support for
@@ -371,7 +377,7 @@ IMAPFilter 1.1 - 24 Aug 2005
   - Bug fix; in some systems and when in debug mode, an empty namespace caused
     program fault.
 
-IMAPFilter 1.0.1 - 22 Aug 2004
+IMAPFilter 1.0.1 - Aug 22, 2004
   - Bug fix; in some cases processing of messages with an empty body caused
     failure.
   - Bug fix; an invalid namespace prefix was inserted in mailbox names of some
@@ -386,5 +392,5 @@ IMAPFilter 1.0.1 - 22 Aug 2004
     considered.
   - Debug files are now written in $HOME/.imapfilter/ instead of /tmp/.
 
-IMAPFilter 1.0 - 23 May 2004
+IMAPFilter 1.0 - May 23, 2004
   - Initial release of IMAPFilter with extension language Lua.
