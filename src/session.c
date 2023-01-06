@@ -35,19 +35,12 @@ void
 session_init(session *ssn)
 {
 
-	ssn->server = NULL;
-	ssn->port = NULL;
-	ssn->sslproto = NULL;
-	ssn->username = NULL;
-	ssn->password = NULL;
-	ssn->oauth2 = NULL;
 	ssn->socket = -1;
 	ssn->sslconn = NULL;
 	ssn->protocol = PROTOCOL_NONE;
 	ssn->capabilities = CAPABILITY_NONE;
 	ssn->ns.prefix = NULL;
 	ssn->ns.delim = '\0';
-	ssn->selected = NULL;
 }
 
 
@@ -66,10 +59,6 @@ session_destroy(session *ssn)
 	if (ssn->ns.prefix) {
 		xfree(ssn->ns.prefix);
 		ssn->ns.prefix = NULL;
-	}
-	if (ssn->selected) {
-		xfree(ssn->selected);
-		ssn->selected = NULL;
 	}
 	xfree(ssn);
 }

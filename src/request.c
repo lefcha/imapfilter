@@ -20,46 +20,12 @@ static int tag = 0x1000;	/* Every IMAP command is prefixed with a
 int send_request(session *ssn, const char *fmt,...);
 int send_continuation(session *ssn, const char *data, size_t len);
 
+int handle_error(session *ssn);
 
-#define CHECK(F)							       \
-	switch ((F)) {							       \
-	case -1:							       \
-		goto fail;						       \
-	case STATUS_BYE:						       \
-		goto abort;						       \
-	}
 
-#define TRY(F)								       \
-	switch ((F)) {							       \
-	case -1:							       \
-		error("unexpected network error for %s@%s\n",		       \
-		    ssn->username, ssn->server);			       \
-		if ((!strcasecmp(get_option_string("recover"), "all") ||       \
-		    !strcasecmp(get_option_string("recover"), "errors")))      \
-			for (;;) {					       \
-				if (request_login(&ssn, NULL, NULL, NULL,      \
-				    NULL, NULL, NULL) != -1)		       \
-					return STATUS_NONE;		       \
-				if (get_option_boolean("persist"))	       \
-					sleep(WAIT_RETRY_TIMEOUT);	       \
-				else					       \
-					break;				       \
-			}						       \
-		return -1;						       \
-	case STATUS_BYE:						       \
-		error("unexpected IMAP BYE for %s@%s\n",		       \
-		    ssn->username, ssn->server);			       \
-		close_connection(ssn);					       \
-		if (!strcasecmp(get_option_string("recover"), "all")) {	       \
-			if (request_login(&ssn, NULL, NULL, NULL, NULL,	       \
-			    NULL, NULL) != -1)				       \
-				return STATUS_NONE;			       \
-		} else {						       \
-			session_destroy(ssn);				       \
-			ssn = NULL;					       \
-		}							       \
-		return -1;						       \
-	}
+#define TRY(F)								\
+	if ((F) < 0)							\
+		return handle_error(ssn);
 
 
 /*
@@ -73,7 +39,7 @@ send_request(session *ssn, const char *fmt,...)
 	int t = tag;
 
 	if (ssn->socket == -1)
-		return -1;
+		return STATUS_ERROR;
 
 	buffer_reset(&obuf);
 	obuf.len = snprintf(obuf.data, obuf.size + 1, "%04X ", tag);
@@ -94,19 +60,14 @@ send_request(session *ssn, const char *fmt,...)
 	snprintf(obuf.data + obuf.len, obuf.size - obuf.len + 1, "\r\n");
 	obuf.len = strlen(obuf.data);
 
-	if (!strncasecmp(fmt, "LOGIN", strlen("LOGIN"))) {
-		debug("sending command (%d):\n\n%.*s*\r\n\n", ssn->socket,
-		    obuf.len - strlen(ssn->password) - strlen("\"\"\r\n"),
-		    obuf.data);
-		verbose("C (%d): %.*s*\r\n", ssn->socket, obuf.len -
-		    strlen(ssn->password) - strlen("\"\"\r\n"),  obuf.data);
-	} else {
-		debug("sending command (%d):\n\n%s\n", ssn->socket, obuf.data);
+	debug("sending command (%d):\n\n%s\n", ssn->socket, obuf.data);
+	if (!strncasecmp(fmt, "LOGIN", strlen("LOGIN")))
+		verbose("C (%d): LOGIN * *\r\n", ssn->socket);
+	else
 		verbose("C (%d): %s", ssn->socket, obuf.data);
-	}
 
 	if (socket_write(ssn, obuf.data, obuf.len) == -1)
-		return -1;
+		return STATUS_ERROR;
 
 	if (tag == 0xFFFF)	/* Tag always between 0x1000 and 0xFFFF. */
 		tag = 0x0FFF;
@@ -123,11 +84,11 @@ send_continuation(session *ssn, const char *data, size_t len)
 {
 
 	if (ssn->socket == -1)
-		return -1;
+		return STATUS_ERROR;
 
 	if (socket_write(ssn, data, len) == -1 ||
 	    socket_write(ssn, "\r\n", strlen("\r\n")) == -1)
-		return -1;
+		return STATUS_ERROR;
 
 	if (opts.debug) {
 		unsigned int i;
@@ -142,6 +103,17 @@ send_continuation(session *ssn, const char *data, size_t len)
 	}
 
 	return 0;
+}
+
+
+/*
+ * Cleanup on failures.
+ */
+int
+handle_error(session *ssn)
+{
+	session_destroy(ssn);
+	return STATUS_ERROR;
 }
 
 
@@ -165,123 +137,90 @@ request_noop(session *ssn)
  * the namespace of the mailboxes.
  */
 int
-request_login(session **ssnptr, const char *server, const char *port, const
-    char *ssl, const char *user, const char *pass, const char *oauth2)
+request_login(session **ssnptr, const char *server, const char *port, const char *sslproto,
+    const char *username, const char *password, const char *oauth2)
 {
 	int t, r, rg = -1, rl = -1;
 	session *ssn = *ssnptr;
 
-	if (*ssnptr && (*ssnptr)->socket != -1)
+	if (ssn && ssn->socket != -1)
 		return STATUS_PREAUTH;
 
-	if (!*ssnptr) {
-		ssn = *ssnptr = session_new();
+	if (!ssn)
+		ssn = session_new();
 
-		ssn->server = server;
-		ssn->port = port;
-		ssn->username = user;
-		ssn->password = pass;
-		ssn->oauth2 = oauth2;
+	TRY(open_connection(ssn, server, port, sslproto));
 
-		if (ssl)
-			ssn->sslproto = ssl;
-	} else {
-		debug("recovering connection: %s://%s@%s:%s/%s\n",
-		    ssn->sslproto ? "imaps" : "imap", ssn->username,
-		    ssn->server, ssn->port, ssn->selected ? ssn->selected : "");
-	}
-
-	if (open_connection(ssn) == -1)
-		goto fail;
-
-	CHECK(rg = response_greeting(ssn));
+	TRY(rg = response_greeting(ssn));
 
 	if (opts.debug) {
-		CHECK(t = send_request(ssn, "NOOP"));
-		CHECK(response_generic(ssn, t));
+		TRY(t = send_request(ssn, "NOOP"));
+		TRY(response_generic(ssn, t));
 	}
 
-	CHECK(t = send_request(ssn, "CAPABILITY"));
-	CHECK(response_capability(ssn, t));
+	TRY(t = send_request(ssn, "CAPABILITY"));
+	TRY(response_capability(ssn, t));
 
-	if (!ssn->sslproto && ssn->capabilities & CAPABILITY_STARTTLS &&
+	if (!sslproto && ssn->capabilities & CAPABILITY_STARTTLS &&
 	    get_option_boolean("starttls")) {
-		CHECK(t = send_request(ssn, "STARTTLS"));
-		CHECK(r = response_generic(ssn, t));
+		TRY(t = send_request(ssn, "STARTTLS"));
+		TRY(r = response_generic(ssn, t));
 		if (r == STATUS_OK) {
-			if (open_secure_connection(ssn) == -1)
-				goto fail;
-			CHECK(t = send_request(ssn, "CAPABILITY"));
-			CHECK(response_capability(ssn, t));
+			TRY(open_secure_connection(ssn, server, sslproto));
+			TRY(t = send_request(ssn, "CAPABILITY"));
+			TRY(response_capability(ssn, t));
 		}
 	}
 
 	if (rg != STATUS_PREAUTH) {
-		if (ssn->oauth2 && !ssn->password &&
+		if (oauth2 && !password &&
 		   !(ssn->capabilities & CAPABILITY_XOAUTH2)) {
-			error("OAuth2 not supported at %s@%s\n", ssn->username,
-			    ssn->server);
+			error("OAuth2 not supported at %s@%s\n", username,
+			    server);
 			close_connection(ssn);
 			session_destroy(ssn);
-			ssn = NULL;
 			return STATUS_NO;
 		}
-		if (ssn->capabilities & CAPABILITY_XOAUTH2 && ssn->oauth2) {
-			CHECK(t = send_request(ssn, "AUTHENTICATE XOAUTH2 %s",
-			    ssn->oauth2));
-			CHECK(rl = response_generic(ssn, t));
+		if (ssn->capabilities & CAPABILITY_XOAUTH2 && oauth2) {
+			TRY(t = send_request(ssn, "AUTHENTICATE XOAUTH2 %s",
+			    oauth2));
+			TRY(rl = response_generic(ssn, t));
 		}
 		if (rl == STATUS_NO) {
 			error("oauth2 string rejected at %s@%s\n",
-			    ssn->username, ssn->server);
+			    username, server);
 			close_connection(ssn);
 			session_destroy(ssn);
-			ssn = NULL;
 			return STATUS_NO;
 		}
-		if (rl != STATUS_OK && ssn->password) {
-			CHECK(t = send_request(ssn, "LOGIN \"%s\" \"%s\"",
-			    ssn->username, ssn->password));
-			CHECK(rl = response_generic(ssn, t));
+		if (rl != STATUS_OK && password) {
+			TRY(t = send_request(ssn, "LOGIN \"%s\" \"%s\"",
+			    username, password));
+			TRY(rl = response_generic(ssn, t));
 		}
 		if (rl == STATUS_NO) {
 			error("username %s or password rejected at %s\n",
-			    ssn->username, ssn->server);
+			    username, server);
 			close_connection(ssn);
 			session_destroy(ssn);
-			ssn = NULL;
 			return STATUS_NO;
 		}
 	} else {
 		rl = STATUS_PREAUTH;
 	}
 
-	CHECK(t = send_request(ssn, "CAPABILITY"));
-	CHECK(response_capability(ssn, t));
+	TRY(t = send_request(ssn, "CAPABILITY"));
+	TRY(response_capability(ssn, t));
 
 	if (ssn->capabilities & CAPABILITY_NAMESPACE &&
 	    get_option_boolean("namespace")) {
-		CHECK(t = send_request(ssn, "NAMESPACE"));
-		CHECK(response_namespace(ssn, t));
+		TRY(t = send_request(ssn, "NAMESPACE"));
+		TRY(response_namespace(ssn, t));
 	}
 
-	if (ssn->selected) {
-		CHECK(t = send_request(ssn, "SELECT \"%s\"",
-		    apply_namespace(ssn->selected, ssn->ns.prefix,
-		    ssn->ns.delim)));
-		CHECK(response_select(ssn, t));
-	}
+	*ssnptr = ssn;
 
 	return rl;
-abort:
-	close_connection(ssn);
-fail:
-	if (!*ssnptr) {
-		session_destroy(ssn);
-		ssn = NULL;
-	}
-
-	return -1;
 }
 
 
@@ -294,11 +233,9 @@ request_logout(session *ssn)
 
 	if (response_generic(ssn, send_request(ssn, "LOGOUT")) == -1) {
 		session_destroy(ssn);
-		ssn = NULL;
 	} else {
 		close_connection(ssn);
 		session_destroy(ssn);
-		ssn = NULL;
 	}
 	return STATUS_OK;
 }
@@ -319,8 +256,7 @@ request_status(session *ssn, const char *mbox, unsigned int *exists, unsigned
 	if (ssn->protocol == PROTOCOL_IMAP4REV1) {
 		TRY(t = send_request(ssn,
 		    "STATUS \"%s\" (MESSAGES RECENT UNSEEN UIDNEXT)", m));
-		TRY(r = response_status(ssn, t, exists, recent, unseen,
-		    uidnext));
+		TRY(r = response_status(ssn, t, exists, recent, unseen, uidnext));
 	} else {
 		TRY(t = send_request(ssn, "EXAMINE \"%s\"", m));
 		TRY(r = response_examine(ssn, t, exists, recent));
@@ -344,9 +280,6 @@ request_select(session *ssn, const char *mbox)
 	TRY(t = send_request(ssn, "SELECT \"%s\"", m));
 	TRY(r = response_select(ssn, t));
 
-	if (r == STATUS_OK)
-		ssn->selected = xstrdup(mbox);
-	
 	return r;
 }
 
@@ -361,11 +294,6 @@ request_close(session *ssn)
 
 	TRY(t = send_request(ssn, "CLOSE"));
 	TRY(r = response_generic(ssn, t));
-
-	if (r == STATUS_OK && ssn->selected) {
-		xfree(ssn->selected);
-		ssn->selected = NULL;
-	}
 
 	return r;
 }
@@ -619,8 +547,9 @@ request_store(session *ssn, const char *mesg, const char *mode, const char
 
 	if (xstrcasestr(flags, "\\Deleted") && get_option_boolean("expunge")) {
 		TRY(t = send_request(ssn, "EXPUNGE"));
-		TRY(response_generic(ssn, t));
+		TRY(r = response_generic(ssn, t));
 	}
+
 
 	return r;
 }
@@ -642,12 +571,14 @@ request_copy(session *ssn, const char *mesg, const char *mbox)
 
 	TRY(t = send_request(ssn, "UID COPY %s \"%s\"", mesg, m));
 	TRY(r = response_generic(ssn, t));
+
 	if (r == STATUS_TRYCREATE) {
 		TRY(t = send_request(ssn, "CREATE \"%s\"", m));
-		TRY(response_generic(ssn, t));
+		TRY(r = response_generic(ssn, t));
+
 		if (get_option_boolean("subscribe")) {
 			TRY(t = send_request(ssn, "SUBSCRIBE \"%s\"", m));
-			TRY(response_generic(ssn, t));
+			TRY(r = response_generic(ssn, t));
 		}
 		TRY(t = send_request(ssn, "UID COPY %s \"%s\"", mesg, m));
 		TRY(r = response_generic(ssn, t));
@@ -677,25 +608,28 @@ request_append(session *ssn, const char *mbox, const char *mesg, size_t
 	    (flags ? ")" : ""), (date ? " \"" : ""),
 	    (date ? date : ""), (date ? "\"" : ""), mesglen));
 	TRY(r = response_continuation(ssn, t));
+
 	if (r == STATUS_CONTINUE) {
-		TRY(send_continuation(ssn, mesg, mesglen));
+		TRY(r = send_continuation(ssn, mesg, mesglen));
 		TRY(r = response_generic(ssn, t));
 	}
 
 	if (r == STATUS_TRYCREATE) {
 		TRY(t = send_request(ssn, "CREATE \"%s\"", m));
-		TRY(response_generic(ssn, t));
+		TRY(r = response_generic(ssn, t));
+
 		if (get_option_boolean("subscribe")) {
 			TRY(t = send_request(ssn, "SUBSCRIBE \"%s\"", m));
-			TRY(response_generic(ssn, t));
+			TRY(r = response_generic(ssn, t));
 		}
+
 		TRY(t = send_request(ssn, "APPEND \"%s\"%s%s%s%s%s%s {%d}", m,
 		    (flags ? " (" : ""), (flags ? flags : ""),
 		    (flags ? ")" : ""), (date ? " \"" : ""),
 		    (date ? date : ""), (date ? "\"" : ""), mesglen));
 		TRY(r = response_continuation(ssn, t));
 		if (r == STATUS_CONTINUE) {
-			TRY(send_continuation(ssn, mesg, mesglen));
+			TRY(r = send_continuation(ssn, mesg, mesglen));
 			TRY(r = response_generic(ssn, t));
 		}
 	}
@@ -822,10 +756,10 @@ request_idle(session *ssn, char **event)
 		ri = 0;
 
 		TRY(t = send_request(ssn, "IDLE"));
-		TRY(r = response_continuation(ssn, t));
+		r = response_continuation(ssn, t);
 		if (r == STATUS_CONTINUE) {
 			TRY(ri = response_idle(ssn, t, event));
-			TRY(send_continuation(ssn, "DONE", strlen("DONE")));
+			TRY(r = send_continuation(ssn, "DONE", strlen("DONE")));
 			TRY(r = response_generic(ssn, t));
 		}
 	} while (ri == STATUS_TIMEOUT);

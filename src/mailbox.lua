@@ -29,23 +29,15 @@ end
 
 function Mailbox._check_connection(self)
     if not self._account._account.session then
-        if not _daemon then
-            error('not connected to ' .. self._account._string, 0)
-        else
-            return false
-        end
+        self._account._login_user(self._account)
     end
-    return true
 end
 
 function Mailbox._check_result(self, request, result)
     if result == nil then
         self._account._account.session = nil
         self._account._account.selected = nil
-        if not _daemon then
-            error(request .. ' request to ' .. self._account._string ..
-                  ' failed', 0)
-        end
+        error(request .. ' request to ' .. self._account._string .. ' failed', 0)
     end
 end
 
@@ -64,7 +56,7 @@ function Mailbox._cached_select(self)
     if self._account._account.selected == nil or
         self._account._account.selected ~= self._mailbox then
 
-        if not self._check_connection(self) then return end
+        self._check_connection(self)
         local r = ifcore.select(self._account._account.session, self._mailbox)
         self._check_result(self, 'select', r)
         if r == false then return false end
@@ -75,11 +67,15 @@ function Mailbox._cached_select(self)
 end
 
 function Mailbox._cached_close(self)
-    if not self._check_connection(self) then return end
-    if self._account._account.selected == nil then return end
+    self._check_connection(self)
+    if self._account._account.selected == nil then
+        return
+    end
     local r = ifcore.close(self._account._account.session)
     self._check_result(self, 'close', r)
-    if r == false then return false end
+    if r == false then
+        return false
+    end
 
     self._account._account.selected = nil
 
@@ -122,7 +118,7 @@ function Mailbox._send_query(self, criteria, messages)
         charset = ''
     end
 
-    if not self._check_connection(self) then return end
+    self._check_connection(self)
     local r, results = ifcore.search(self._account._account.session, query,
                                      charset)
     self._check_result(self, 'search', r)
@@ -155,7 +151,7 @@ function Mailbox._flag_messages(self, mode, flags, messages)
     for i = 1, n, l do
         j = i + l - 1
         if n < j then j = n end
-        if not self._check_connection(self) then return end
+        self._check_connection(self)
         r = ifcore.store(self._account._account.session, table.concat(m, ',',
                          i, j), mode, f)
         self._check_result(self, 'store', r)
@@ -182,7 +178,7 @@ function Mailbox._copy_messages(self, dest, messages)
         for i = 1, n, l do
             j = i + l - 1
             if n < j then j = n end
-            if not self._check_connection(self) then return end
+            self._check_connection(self)
             r = ifcore.copy(self._account._account.session,
                             table.concat(m, ',', i, j), dest._mailbox)
             self._check_result(self, 'copy', r)
@@ -201,7 +197,7 @@ function Mailbox._copy_messages(self, dest, messages)
                 end
             end
 
-            if not self._check_connection(dest) then return end
+            self._check_connection(dest)
             r = ifcore.append(dest._account._account.session, dest._mailbox,
                               mesgs[i], table.concat(fast[i]['flags'], ' '),
                               fast[i]['date'])
@@ -220,7 +216,7 @@ function Mailbox._fetch_fast(self, messages)
 
     local results = {}
     for _, m in ipairs(messages) do
-        if not self._check_connection(self) then return end
+        self._check_connection(self)
         local r, flags, date, size =
             ifcore.fetchfast(self._account._account.session, tostring(m))
         self._check_result(self, 'fetchfast', r)
@@ -249,7 +245,7 @@ function Mailbox._fetch_flags(self, messages)
 
     local results = {}
     for _, m in ipairs(messages) do
-        if not self._check_connection(self) then return end
+        self._check_connection(self)
         local r, flags = ifcore.fetchflags(self._account._account.session,
                                            tostring(m))
         self._check_result(self, 'fetchfast', r)
@@ -279,7 +275,7 @@ function Mailbox._fetch_date(self, messages)
             self[m]._date then
             results[m] = self[m]._date
         else
-            if not self._check_connection(self) then return end
+            self._check_connection(self)
             local r, date = ifcore.fetchdate(self._account._account.session,
                                              tostring(m))
             self._check_result(self, 'fetchdate', r)
@@ -307,7 +303,7 @@ function Mailbox._fetch_size(self, messages)
             self[m]._size then
             results[m] = self[m]._size
         else
-            if not self._check_connection(self) then return end
+            self._check_connection(self)
             local r, size = ifcore.fetchsize(self._account._account.session,
                                              tostring(m))
             self._check_result(self, 'fetchsize', r)
@@ -335,7 +331,7 @@ function Mailbox._fetch_header(self, messages)
             self[m]._header then
             results[m] = self[m]._header
         else
-            if not self._check_connection(self) then return end
+            self._check_connection(self)
             local r, header = ifcore.fetchheader(self._account._account.session,
                                                  tostring(m))
             self._check_result(self, 'fetchheader', r)
@@ -363,7 +359,7 @@ function Mailbox._fetch_body(self, messages)
             self[m]._body then
             results[m] = self[m]._body
         else
-            if not self._check_connection(self) then return end
+            self._check_connection(self)
             local r, body = ifcore.fetchbody(self._account._account.session,
                                              tostring(m))
             self._check_result(self, 'fetchbody', r)
@@ -414,7 +410,7 @@ function Mailbox._fetch_fields(self, fields, messages)
                 self[m]._fields[f] then
                 results[m] = results[m] .. self[m]._fields[f]
             else
-                if not self._check_connection(self) then return end
+                self._check_connection(self)
                 local r, field =
                     ifcore.fetchfields(self._account._account.session,
                                        tostring(m), f)
@@ -447,7 +443,7 @@ function Mailbox._fetch_structure(self, messages)
             self[m]._structure then
             results[m] = self[m]._structure
         else
-            if not self._check_connection(self) then return end
+            self._check_connection(self)
             local r, structure =
                 ifcore.fetchstructure(self._account._account.session,
                                       tostring(m))
@@ -478,7 +474,7 @@ function Mailbox._fetch_parts(self, parts, message)
             self[message]._parts[part] then
             results[part] = self[message]._parts[part]
         else
-            if not self._check_connection(self) then return end
+            self._check_connection(self)
             local r, bodypart = ifcore.fetchpart(self._account._account.session,
                                                  tostring(message), part)
             self._check_result(self, 'fetchpart', r)
@@ -498,12 +494,12 @@ end
 
 
 function Mailbox.check_status(self)
-    if not self._check_connection(self) then return end
+    self._check_connection(self)
     if self._account._account.selected == self._mailbox then
         self._cached_close(self)
     end
     local r, exist, recent, unseen, uidnext =
-        ifcore.status(self._account._account.session,self._mailbox)
+        ifcore.status(self._account._account.session, self._mailbox)
     self._check_result(self, 'status', r)
     if r == false then return -1, -1, -1, -1 end
 
@@ -789,7 +785,7 @@ function Mailbox.append_message(self, message, flags, date)
     _check_optional(date, 'string')
 
     if type(flags) == 'table' then flags = table.concat(flags, ' ') end
-    if not self._check_connection(self) then return end
+    self._check_connection(self)
     r = ifcore.append(self._account._account.session, self._mailbox, message,
                       flags, date)
     self._check_result(self, 'append', r)
@@ -1065,7 +1061,7 @@ end
 function Mailbox.enter_idle(self)
     if self._cached_select(self) ~= true then return false end
 
-    if not self._check_connection(self) then return end
+    self._check_connection(self)
     local r, event = ifcore.idle(self._account._account.session)
     self._check_result(self, 'idle', r)
     if r == false then return false end

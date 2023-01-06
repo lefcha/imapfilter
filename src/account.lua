@@ -56,30 +56,21 @@ Account._mt.__call = function (self, arg)
 
     table.insert(_imap, object)
 
-    object._login_user(object)
-
     return object
 end
 
 
 function Account._check_connection(self)
     if not self._account.session then
-        if not _daemon then
-            error('not connected to ' .. self._string, 0)
-        else
-            return false
-        end
+        self._login_user(self)
     end
-    return true
 end
 
 function Account._check_result(self, request, result)
     if result == nil then
         self._account.session = nil
         self._account.selected = nil
-        if not _daemon then
-            error(request .. ' request to ' .. self._string ..  ' failed', 0)
-        end
+        error(request .. ' request to ' .. self._string ..  ' failed', 0)
     end
 end
 
@@ -110,7 +101,7 @@ function Account._login_user(self)
 end
 
 function Account._logout_user(self)
-    if not self._check_connection(self) then return end
+    self._check_connection(self)
     local r = ifcore.logout(self._account.session)
     self._check_result(self, 'logout', r)
     if r == false then return false end
@@ -146,7 +137,7 @@ function Account.list_all(self, folder, mbox)
     end
     if mbox == nil then mbox = '%' end
 
-    if not self._check_connection(self) then return end
+    self._check_connection(self)
     local r, mailboxes, folders = ifcore.list(self._account.session, '',
                                               folder .. mbox)
     self._check_result(self, 'list', r)
@@ -181,7 +172,7 @@ function Account.list_subscribed(self, folder, mbox)
     end
     if mbox == nil then mbox = '*' end
 
-    if not self._check_connection(self) then return end
+    self._check_connection(self)
     local r, mailboxes, folders = ifcore.lsub(self._account.session, '',
                                               folder .. mbox)
     self._check_result(self, 'lsub', r)
@@ -204,7 +195,7 @@ end
 function Account.create_mailbox(self, name)
     _check_required(name, 'string')
 
-    if not self._check_connection(self) then return end
+    self._check_connection(self)
     local r = ifcore.create(self._account.session, name)
     self._check_result(self, 'create', r)
     if r == false then return false end
@@ -219,7 +210,8 @@ end
 function Account.delete_mailbox(self, name)
     _check_required(name, 'string')
 
-    if not self._check_connection(self) then return end
+    self._check_connection(self)
+    self[name]._cached_close(self[name])
     local r = ifcore.delete(self._account.session, name)
     self._check_result(self, 'delete', r)
     if r == false then return false end
@@ -235,7 +227,7 @@ function Account.rename_mailbox(self, oldname, newname)
     _check_required(oldname, 'string')
     _check_required(newname, 'string')
 
-    if not self._check_connection(self) then return end
+    self._check_connection(self)
     local r = ifcore.rename(self._account.session, oldname, newname)
     self._check_result(self, 'rename', r)
     if r == false then return false end
@@ -251,7 +243,7 @@ end
 function Account.subscribe_mailbox(self, name)
     _check_required(name, 'string')
 
-    if not self._check_connection(self) then return end
+    self._check_connection(self)
     local r = ifcore.subscribe(self._account.session, name)
     self._check_result(self, 'subscribe', r)
     if r == false then return false end
@@ -266,7 +258,7 @@ end
 function Account.unsubscribe_mailbox(self, name)
     _check_required(name, 'string')
 
-    if not self._check_connection(self) then return end
+    self._check_connection(self)
     local r = ifcore.unsubscribe(self._account.session, name)
     self._check_result(self, 'unsubscribe', r)
     if r == false then return false end

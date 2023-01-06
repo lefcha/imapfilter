@@ -37,11 +37,57 @@ SSL_CTX *tls12ctx = NULL;
 #endif
 
 
+int handle_socket_error(session *ssn);
+int handle_secure_open_error(session *ssn);
+int handle_secure_error(session *ssn);
+
+
+/*
+ * Cleanup on read/write socket failures.
+ */
+int
+handle_socket_error(session *ssn)
+{
+
+	close_connection(ssn);
+
+	return -1;
+}
+
+
+/*
+ * Cleanup on open secure connection failures.
+ */
+int
+handle_secure_open_error(session *ssn)
+{
+
+	ssn->sslconn = NULL;
+
+	return -1;
+}
+
+
+/*
+ * Cleanup on read/write secure connection failures.
+ */
+int
+handle_secure_error(session *ssn)
+{
+
+	SSL_set_shutdown(ssn->sslconn, SSL_SENT_SHUTDOWN |
+	    SSL_RECEIVED_SHUTDOWN);
+
+	return -1;
+}
+
+
 /*
  * Connect to mail server.
  */
 int
-open_connection(session *ssn)
+open_connection(session *ssn, const char *server, const char *port,
+    const char *sslproto)
 {
 	struct addrinfo hints, *res, *ressave;
 	int n, sockfd;
@@ -51,7 +97,7 @@ open_connection(session *ssn)
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 
-	n = getaddrinfo(ssn->server, ssn->port, &hints, &res);
+	n = getaddrinfo(server, port, &hints, &res);
 
 	if (n < 0) {
 		error("gettaddrinfo; %s\n", gai_strerror(n));
@@ -80,14 +126,14 @@ open_connection(session *ssn)
 
 	if (sockfd == -1) {
 		error("error while initiating connection to %s at port %s\n",
-		    ssn->server, ssn->port);
+		    server, port);
 		return -1;
 	}
 
 	ssn->socket = sockfd;
 
-	if (ssn->sslproto) {
-		if (open_secure_connection(ssn) == -1) {
+	if (sslproto) {
+		if (open_secure_connection(ssn, server, sslproto) == -1) {
 			close_connection(ssn);
 			return -1;
 		}
@@ -101,33 +147,34 @@ open_connection(session *ssn)
  * Initialize SSL/TLS connection.
  */
 int
-open_secure_connection(session *ssn)
+open_secure_connection(session *ssn, const char *server, const char *sslproto)
 {
 	int r, e;
 	SSL_CTX *ctx = NULL;
 
 #if OPENSSL_VERSION_NUMBER >= 0x1010000fL
+	(void)sslproto;
 	if (sslctx)
 		ctx = sslctx;
 #else
 	if (ssl23ctx)
 		ctx = ssl23ctx;
 
-	if (ssn->sslproto) {
+	if (sslproto) {
 #ifndef OPENSSL_NO_SSL3_METHOD
-		if (ssl3ctx && !strcasecmp(ssn->sslproto, "ssl3"))
+		if (ssl3ctx && !strcasecmp(sslproto, "ssl3"))
 			ctx = ssl3ctx;
 #endif
 #ifndef OPENSSL_NO_TLS1_METHOD
-		if (tls1ctx && !strcasecmp(ssn->sslproto, "tls1"))
+		if (tls1ctx && !strcasecmp(sslproto, "tls1"))
 			ctx = tls1ctx;
 #endif
 #ifndef OPENSSL_NO_TLS1_1_METHOD
-		if (tls11ctx && !strcasecmp(ssn->sslproto, "tls1.1"))
+		if (tls11ctx && !strcasecmp(sslproto, "tls1.1"))
 			ctx = tls11ctx;
 #endif
 #ifndef OPENSSL_NO_TLS1_2_METHOD
-		if (tls12ctx && !strcasecmp(ssn->sslproto, "tls1.2"))
+		if (tls12ctx && !strcasecmp(sslproto, "tls1.2"))
 			ctx = tls12ctx;
 #endif
 	}
@@ -135,30 +182,30 @@ open_secure_connection(session *ssn)
 
 	if (ctx == NULL) {
 		error("initiating SSL connection to %s; protocol version "
-		      "not supported by current build", ssn->server);
-		goto fail;
+		      "not supported by current build", server);
+		return handle_secure_open_error(ssn);
 	}
 
 	if (!(ssn->sslconn = SSL_new(ctx)))
-		goto fail;
+		return handle_secure_open_error(ssn);
 
 	if (get_option_boolean("hostnames")) {
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
 		SSL_set_hostflags(ssn->sslconn,
 		    X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
-		if (!SSL_set1_host(ssn->sslconn, ssn->server)) {
+		if (!SSL_set1_host(ssn->sslconn, server)) {
 			error("failed setting hostname validation to "
-			    "%s; %s\n ", ssn->server,
+			    "%s; %s\n ", server,
 			    ERR_error_string(ERR_get_error(), NULL));
-			goto fail;
+			return handle_secure_open_error(ssn);
 		}
 
-		r = SSL_set_tlsext_host_name(ssn->sslconn, ssn->server);
+		r = SSL_set_tlsext_host_name(ssn->sslconn, server);
 		if (r == 0) {
 			error("failed setting the Server Name Indication (SNI)"
-			    " to %s; %s\n", ssn->server,
+			    " to %s; %s\n", server,
 			    ERR_error_string(ERR_get_error(), NULL));
-			goto fail;
+			return handle_secure_open_error(ssn);
 		}
 
 		SSL_set_verify(ssn->sslconn, SSL_VERIFY_PEER, NULL);
@@ -166,12 +213,12 @@ open_secure_connection(session *ssn)
 		X509_VERIFY_PARAM *param = SSL_get0_param(ssn->sslconn);
 		X509_VERIFY_PARAM_set_hostflags(param,
 		    X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
-		if (!X509_VERIFY_PARAM_set1_host(param, ssn->server,
-		    strlen(ssn->server))) {
+		if (!X509_VERIFY_PARAM_set1_host(param, server,
+		    strlen(server))) {
 			error("failed setting hostname validation to "
-			    "%s; %s\n ", ssn->server,
+			    "%s; %s\n ", server,
 			    ERR_error_string(ERR_get_error(), NULL));
-			goto fail;
+			return handle_secure_open_error(ssn);
 		}
 
 		SSL_set_verify(ssn->sslconn, SSL_VERIFY_PEER, NULL);
@@ -190,8 +237,8 @@ open_secure_connection(session *ssn)
 		case SSL_ERROR_ZERO_RETURN:
 			error("initiating SSL connection to %s; the "
 			    "connection has been closed cleanly\n",
-			    ssn->server);
-			goto fail;
+			    server);
+			return handle_secure_open_error(ssn);
 		case SSL_ERROR_NONE:
 		case SSL_ERROR_WANT_CONNECT:
 		case SSL_ERROR_WANT_ACCEPT:
@@ -203,37 +250,32 @@ open_secure_connection(session *ssn)
 			e = ERR_get_error();
 			if (e == 0 && r == 0)
 				error("initiating SSL connection to %s; EOF in "
-				    "violation of the protocol\n", ssn->server);
+				    "violation of the protocol\n", server);
 			else if (e == 0 && r == -1)
 				error("initiating SSL connection to %s; %s\n",
-				    ssn->server, strerror(errno));
+				    server, strerror(errno));
 			else
 				error("initiating SSL connection to %s; %s\n",
-				    ssn->server, ERR_error_string(e, NULL));
-			goto fail;
+				    server, ERR_error_string(e, NULL));
+			return handle_secure_open_error(ssn);
 		case SSL_ERROR_SSL:
 			e = ERR_get_error();
 			if (!strcmp("certificate verify failed",
 			    ERR_reason_error_string(e)))
 				fatal(ERROR_CERTIFICATE,
 				    "initiating SSL connection to %s; %s\n",
-				    ssn->server, ERR_error_string(e, NULL));
+				    server, ERR_error_string(e, NULL));
 			error("initiating SSL connection to %s; %s\n",
-			    ssn->server, ERR_error_string(e, NULL));
-			goto fail;
+			    server, ERR_error_string(e, NULL));
+			return handle_secure_open_error(ssn);
 		default:
 			break;
 		}
 	}
 	if (get_option_boolean("certificates") && get_cert(ssn) == -1)
-		goto fail;
+		return handle_secure_open_error(ssn);
 
 	return 0;
-
-fail:
-	ssn->sslconn = NULL;
-
-	return -1;
 }
 
 
@@ -310,7 +352,7 @@ socket_read(session *ssn, char *buf, size_t len, long timeout, int timeoutfail, 
 		if (SSL_pending(ssn->sslconn) > 0) {
 			r = socket_secure_read(ssn, buf, len);
 			if (r <= 0)
-				goto fail;
+				return handle_socket_error(ssn);
 		} else {
 			if (interrupt != NULL)
 				catch_user_signals();
@@ -320,7 +362,7 @@ socket_read(session *ssn, char *buf, size_t len, long timeout, int timeoutfail, 
 				if (FD_ISSET(ssn->socket, &fds)) {
 					r = socket_secure_read(ssn, buf, len);
 					if (r <= 0)
-						goto fail;
+						return handle_socket_error(ssn);
 				}
 			}
 		}
@@ -334,9 +376,9 @@ socket_read(session *ssn, char *buf, size_t len, long timeout, int timeoutfail, 
 				r = read(ssn->socket, buf, len);
 				if (r == -1) {
 					error("reading data; %s\n", strerror(errno));
-					goto fail;
+					return handle_socket_error(ssn);
 				} else if (r == 0) {
-					goto fail;
+					return handle_socket_error(ssn);
 				}
 			}
 		}
@@ -348,18 +390,13 @@ socket_read(session *ssn, char *buf, size_t len, long timeout, int timeoutfail, 
 			return -1;
 		}
 		error("waiting to read from socket; %s\n", strerror(errno));
-		goto fail;
+		return handle_socket_error(ssn);
 	} else if (s == 0 && timeoutfail) {
 		error("timeout period expired while waiting to read data\n");
-		goto fail;
+		return handle_socket_error(ssn);
 	}
 
 	return r;
-fail:
-	close_connection(ssn);
-
-	return -1;
-
 }
 
 
@@ -379,7 +416,7 @@ socket_secure_read(session *ssn, char *buf, size_t len)
 		case SSL_ERROR_ZERO_RETURN:
 			error("reading data through SSL; the connection has "
 			    "been closed cleanly\n");
-			goto fail;
+			return handle_secure_error(ssn);
 		case SSL_ERROR_NONE:
 		case SSL_ERROR_WANT_READ:
 		case SSL_ERROR_WANT_WRITE:
@@ -398,23 +435,17 @@ socket_secure_read(session *ssn, char *buf, size_t len)
 			else
 				error("reading data through SSL; %s\n",
 				    ERR_error_string(e, NULL));
-			goto fail;
+			return handle_secure_error(ssn);
 		case SSL_ERROR_SSL:
 			error("reading data through SSL; %s\n",
 			    ERR_error_string(ERR_get_error(), NULL));
-			goto fail;
+			return handle_secure_error(ssn);
 		default:
 			break;
 		}
 	}
 
 	return r;
-fail:
-	SSL_set_shutdown(ssn->sslconn, SSL_SENT_SHUTDOWN |
-	    SSL_RECEIVED_SHUTDOWN);
-
-	return -1;
-
 }
 
 
@@ -441,16 +472,16 @@ socket_write(session *ssn, const char *buf, size_t len)
 				r = socket_secure_write(ssn, buf, len);
 
 				if (r <= 0)
-					goto fail;
+					return handle_socket_error(ssn);
 			} else {
 				r = write(ssn->socket, buf, len);
 
 				if (r == -1) {
 					error("writing data; %s\n",
 					    strerror(errno));
-					goto fail;
+					return handle_socket_error(ssn);
 				} else if (r == 0) {
-					goto fail;
+					return handle_socket_error(ssn);
 				}
 			}
 
@@ -464,17 +495,13 @@ socket_write(session *ssn, const char *buf, size_t len)
 
 	if (s == -1) {
 		error("waiting to write to socket; %s\n", strerror(errno));
-		goto fail;
+		return handle_socket_error(ssn);
 	} else if (s == 0) {
 		error("timeout period expired while waiting to write data\n");
-		goto fail;
+		return handle_socket_error(ssn);
 	}
 
 	return t;
-fail:
-	close_connection(ssn);
-
-	return -1;
 }
 
 
@@ -494,7 +521,7 @@ socket_secure_write(session *ssn, const char *buf, size_t len)
 		case SSL_ERROR_ZERO_RETURN:
 			error("writing data through SSL; the connection has "
 			    "been closed cleanly\n");
-			goto fail;
+			return handle_secure_error(ssn);
 		case SSL_ERROR_NONE:
 		case SSL_ERROR_WANT_READ:
 		case SSL_ERROR_WANT_WRITE:
@@ -513,20 +540,15 @@ socket_secure_write(session *ssn, const char *buf, size_t len)
 			else
 				error("writing data through SSL; %s\n",
 				    ERR_error_string(e, NULL));
-			goto fail;
+			return handle_secure_error(ssn);
 		case SSL_ERROR_SSL:
 			error("writing data through SSL; %s\n",
 			    ERR_error_string(ERR_get_error(), NULL));
-			goto fail;
+			return handle_secure_error(ssn);
 		default:
 			break;
 		}
 	}
 
 	return r;
-fail:
-	SSL_set_shutdown(ssn->sslconn, SSL_SENT_SHUTDOWN |
-	    SSL_RECEIVED_SHUTDOWN);
-
-	return -1;
 }

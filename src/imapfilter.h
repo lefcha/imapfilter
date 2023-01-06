@@ -32,23 +32,24 @@
 #define CAPABILITY_STARTTLS		0x02
 #define CAPABILITY_CHILDREN		0x04
 #define CAPABILITY_IDLE			0x08
-#define CAPABILITY_XOAUTH2              0x10
+#define CAPABILITY_XOAUTH2		0x10
 
 /* Status responses and response codes. */
+#define STATUS_BYE			-2
+#define STATUS_ERROR			-1
 #define STATUS_NONE			0
 #define STATUS_OK			1
 #define STATUS_NO			2
 #define STATUS_BAD			3
 #define STATUS_UNTAGGED			4
 #define STATUS_CONTINUE			5
-#define STATUS_BYE			6
-#define STATUS_PREAUTH			7
-#define STATUS_READONLY			8
-#define STATUS_TRYCREATE		9
-#define STATUS_TIMEOUT			10
-#define STATUS_INTERRUPT                11
+#define STATUS_PREAUTH			6
+#define STATUS_READONLY			7
+#define STATUS_TRYCREATE		8
+#define STATUS_TIMEOUT			9
+#define STATUS_INTERRUPT		10
 
-#define STATUS_DRYRUN                   STATUS_OK
+#define STATUS_DRYRUN			STATUS_OK
 
 /* Initial size for buffers. */
 #define INPUT_BUF			4096
@@ -61,20 +62,16 @@
 #define LINE_MAX			2048
 #endif
 
-/* Wait retry timeout, in seconds, on network problems. */
-#define WAIT_RETRY_TIMEOUT              60
-
-
 /* Program's options. */
 typedef struct options {
 	int verbose;		/* Verbose mode. */
 	int interactive;	/* Act as an interpreter. */
-        int dryrun;             /* Don't send commands that do changes. */
+	int dryrun;		/* Don't send commands that do changes. */
 	char *log;		/* Log file for error messages. */
 	char *config;		/* Configuration file. */
 	char *oneline;		/* One line of program/configuration. */
 	char *debug;		/* Debug file. */
-        char *truststore;       /* CA TrustStore. */
+	char *truststore;       /* CA TrustStore. */
 } options;
 
 /* Environment variables. */
@@ -143,8 +140,8 @@ LUALIB_API int luaopen_ifre(lua_State *lua);
 
 /*	request.c	*/
 int request_noop(session *ssn);
-int request_login(session **ssn, const char *server, const char *port, const
-    char *protocol, const char *user, const char *pass, const char *oauth2);
+int request_login(session **ssnptr, const char *server, const char *port, const char *sslproto,
+    const char *username, const char *password, const char *oauth2);
 int request_logout(session *ssn);
 int request_status(session *ssn, const char *mbox, unsigned int *exist,
     unsigned int *recent, unsigned int *unseen, unsigned int *uidnext);
@@ -213,12 +210,14 @@ void ignore_user_signals(void);
 void catch_user_signals(void);
 
 /*	socket.c	*/
-int open_connection(session *ssn);
+int open_connection(session *ssn, const char *server, const char *port,
+    const char *sslproto);
 int close_connection(session *ssn);
 ssize_t socket_read(session *ssn, char *buf, size_t len, long timeout,
     int timeoutfail, int *interrupt);
 ssize_t socket_write(session *ssn, const char *buf, size_t len);
-int open_secure_connection(session *ssn);
+int open_secure_connection(session *ssn, const char *server,
+    const char *sslproto);
 int close_secure_connection(session *ssn);
 ssize_t socket_secure_read(session *ssn, char *buf, size_t len);
 ssize_t socket_secure_write(session *ssn, const char *buf, size_t len);

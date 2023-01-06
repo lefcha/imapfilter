@@ -60,16 +60,30 @@ function become_daemon(interval, commands, nochdir, noclose)
     if nochdir == nil then nochdir = false end
     if noclose == nil then noclose = false end
     ifsys.daemon(nochdir, noclose)
-    _daemon = true
     repeat
-        for _, account in pairs(_imap) do
-            if not account._account.session then
-                account:_login_user(account)
-            end
-        end
         commands()
         collectgarbage()
     until ifsys.sleep(interval) ~= 0
 end
+
+
+function recover(commands, retries)
+    _check_required(commands, 'function')
+    _check_optional(retries, 'number')
+
+    count = 0
+    while true do
+        local r = table.pack(pcall(commands))
+        if retries == nil or count < retries then
+            if r[1] then return table.unpack(r) end
+        else
+            if not r[1] then return table.unpack(r) end
+        end
+        collectgarbage()
+        count = count + 1
+        ifsys.sleep(math.min(math.pow(2, count), 60))
+    end
+end
+
 
 sleep = ifsys.sleep

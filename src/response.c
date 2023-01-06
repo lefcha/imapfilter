@@ -75,6 +75,8 @@ int check_bye(char *buf);
 int check_continuation(char *buf);
 int check_trycreate(char *buf);
 
+int handle_bye(session *ssn);
+
 
 /*
  * Read data the server sent.
@@ -86,7 +88,7 @@ receive_response(session *ssn, char *buf, long timeout, int timeoutfail, int *in
 
 	if ((n = socket_read(ssn, buf, INPUT_BUF, timeout ? timeout :
 	    (long)(get_option_number("timeout")), timeoutfail, interrupt)) == -1)
-		return -1;
+		return STATUS_ERROR;
 
 
 	if (opts.debug) {
@@ -202,6 +204,16 @@ check_trycreate(char *buf)
 		return 0;
 }
 
+/*
+ * Cleanup on BYE response.
+ */
+int
+handle_bye(session *ssn)
+{
+	close_connection(ssn);
+	return STATUS_BYE;
+}
+
 
 /*
  * Get server data and make sure there is a tagged response inside them.
@@ -212,8 +224,8 @@ response_generic(session *ssn, int tag)
 	int r;
 	ssize_t n;
 
-	if (tag == -1)
-		return -1;
+	if (tag < 0)
+		return STATUS_ERROR;
 
 	buffer_reset(&ibuf);
 
@@ -221,11 +233,11 @@ response_generic(session *ssn, int tag)
 		buffer_check(&ibuf, ibuf.len + INPUT_BUF);
 		if ((n = receive_response(ssn, ibuf.data + ibuf.len, 0, 1, NULL)) ==
 		    -1)
-			return -1;
+			return STATUS_ERROR;
 		ibuf.len += n;
 
 		if (check_bye(ibuf.data))
-			return STATUS_BYE;
+			return handle_bye(ssn);
 	} while ((r = check_tag(ibuf.data, ssn, tag)) == STATUS_NONE);
 
 	if (r == STATUS_NO &&
@@ -251,11 +263,11 @@ response_continuation(session *ssn, int tag)
 		buffer_check(&ibuf, ibuf.len + INPUT_BUF);
 		if ((n = receive_response(ssn, ibuf.data + ibuf.len, 0, 1, NULL)) ==
 		    -1)
-			return -1;
+			return STATUS_ERROR;
 		ibuf.len += n;
 
 		if (check_bye(ibuf.data))
-			return STATUS_BYE;
+			return handle_bye(ssn);
 	} while ((r = check_tag(ibuf.data, ssn, tag)) == STATUS_NONE &&
 	    !check_continuation(ibuf.data));
 
@@ -280,12 +292,12 @@ response_greeting(session *ssn)
 	buffer_reset(&ibuf);
 
 	if (receive_response(ssn, ibuf.data, 0, 1, NULL) == -1)
-		return -1;
+		return STATUS_ERROR;
 
 	verbose("S (%d): %s", ssn->socket, ibuf.data);
 
 	if (check_bye(ibuf.data))
-		return STATUS_BYE;
+		return handle_bye(ssn);
 
 	if (check_preauth(ibuf.data))
 		return STATUS_PREAUTH;
@@ -305,7 +317,7 @@ response_capability(session *ssn, int tag)
 	regexp *re;
 
 	r = response_generic(ssn, tag);
-	if (r == -1 || r == STATUS_BYE)
+	if (r < 0)
 		return r;
 
 	ssn->protocol = PROTOCOL_NONE;
@@ -323,7 +335,7 @@ response_capability(session *ssn, int tag)
 		else {
 			error("server supports neither the IMAP4rev1 nor the "
 			    "IMAP4 protocol\n");
-			return -1;
+			return STATUS_ERROR;
 		}
 
 		ssn->capabilities = CAPABILITY_NONE;
@@ -376,8 +388,7 @@ response_namespace(session *ssn, int tag)
 	int r, n;
 	regexp *re;
 
-	r = response_generic(ssn, tag);
-	if (r == -1 || r == STATUS_BYE)
+	if ((r = response_generic(ssn, tag)) < 0)
 		return r;
 
 	if (ssn->ns.prefix != NULL)
@@ -412,8 +423,7 @@ response_status(session *ssn, int tag, unsigned int *exist,
 	char *s;
 	regexp *re;
 
-	r = response_generic(ssn, tag);
-	if (r == -1 || r == STATUS_BYE)
+	if ((r = response_generic(ssn, tag)) < 0)
 		return r;
 
 	re = &responses[RESPONSE_STATUS];
@@ -455,8 +465,7 @@ response_examine(session *ssn, int tag, unsigned int *exist,
 	int r;
 	regexp *re;
 
-	r = response_generic(ssn, tag);
-	if (r == -1 || r == STATUS_BYE)
+	if ((r = response_generic(ssn, tag)) < 0)
 		return r;
 
 	re = &responses[RESPONSE_EXISTS];
@@ -479,8 +488,7 @@ response_select(session *ssn, int tag)
 {
 	int r;
 
-	r = response_generic(ssn, tag);
-	if (r == -1 || r == STATUS_BYE)
+	if ((r = response_generic(ssn, tag)) < 0)
 		return r;
 
 	if (xstrcasestr(ibuf.data, "[READ-ONLY]"))
@@ -502,8 +510,7 @@ response_list(session *ssn, int tag, char **mboxs, char **folders)
 	const char *v;
 	regexp *re;
 
-	r = response_generic(ssn, tag);
-	if (r == -1 || r == STATUS_BYE)
+	if ((r = response_generic(ssn, tag)) < 0)
 		return r;
 
 	m = *mboxs = (char *)xmalloc((ibuf.len + 1) * sizeof(char));
@@ -570,8 +577,7 @@ response_search(session *ssn, int tag, char **mesgs)
 	regexp *re;
 	char *b, *m;
 
-	r = response_generic(ssn, tag);
-	if (r == -1 || r == STATUS_BYE)
+	if ((r = response_generic(ssn, tag)) < 0)
 		return r;
 
 	re = &responses[RESPONSE_SEARCH];
@@ -612,8 +618,7 @@ response_fetchfast(session *ssn, int tag, char **flags, char **date,
 	char *s;
 	regexp *re;
 
-	r = response_generic(ssn, tag);
-	if (r == -1 || r == STATUS_BYE)
+	if ((r = response_generic(ssn, tag)) < 0)
 		return r;
 
 	re = &responses[RESPONSE_FETCH];
@@ -653,8 +658,7 @@ response_fetchflags(session *ssn, int tag, char **flags)
 	char *s;
 	regexp *re;
 
-	r = response_generic(ssn, tag);
-	if (r == -1 || r == STATUS_BYE)
+	if ((r = response_generic(ssn, tag)) < 0)
 		return r;
 
 	re = &responses[RESPONSE_FETCH];
@@ -685,8 +689,7 @@ response_fetchdate(session *ssn, int tag, char **date)
 	char *s;
 	regexp *re;
 
-	r = response_generic(ssn, tag);
-	if (r == -1 || r == STATUS_BYE)
+	if ((r = response_generic(ssn, tag)) < 0)
 		return r;
 
 	re = &responses[RESPONSE_FETCH];
@@ -717,8 +720,7 @@ response_fetchsize(session *ssn, int tag, char **size)
 	char *s;
 	regexp *re;
 
-	r = response_generic(ssn, tag);
-	if (r == -1 || r == STATUS_BYE)
+	if ((r = response_generic(ssn, tag)) < 0)
 		return r;
 
 	re = &responses[RESPONSE_FETCH];
@@ -749,8 +751,7 @@ response_fetchstructure(session *ssn, int tag, char **structure)
 	char *s;
 	regexp *re;
 
-	r = response_generic(ssn, tag);
-	if (r == -1 || r == STATUS_BYE)
+	if ((r = response_generic(ssn, tag)) < 0)
 		return r;
 
 	re = &responses[RESPONSE_FETCH];
@@ -784,7 +785,7 @@ response_fetchbody(session *ssn, int tag, char **body, size_t *len)
 	regexp *re;
 
 	if (tag == -1)
-		return -1;
+		return STATUS_ERROR;
 
 	buffer_reset(&ibuf);
 
@@ -797,7 +798,7 @@ response_fetchbody(session *ssn, int tag, char **body, size_t *len)
 		buffer_check(&ibuf, ibuf.len + INPUT_BUF);
 		if ((n = receive_response(ssn, ibuf.data + ibuf.len, 0, 1, NULL)) ==
 		    -1)
-			return -1;
+			return STATUS_ERROR;
 		ibuf.len += n;
 
 		if (match != 0) {
@@ -814,7 +815,7 @@ response_fetchbody(session *ssn, int tag, char **body, size_t *len)
 
 		if (offset != 0 && ibuf.len >= offset) {
 			if (check_bye(ibuf.data + offset))
-				return STATUS_BYE;
+				return handle_bye(ssn);
 		}
 	} while (ibuf.len < offset || (r = check_tag(ibuf.data + offset, ssn,
 	    tag)) == STATUS_NONE);
@@ -844,7 +845,7 @@ response_idle(session *ssn, int tag, char **event)
 	int eintr = 0;
 
 	if (tag == -1)
-		return -1;
+		return STATUS_ERROR;
 
 	re = &responses[RESPONSE_UNTAGGED];
 
@@ -859,14 +860,15 @@ response_idle(session *ssn, int tag, char **event)
 				if (eintr)
 					return STATUS_INTERRUPT;
 				else
-					return -1;
+					return STATUS_ERROR;
 			}
 			if (n == 0)
 				return STATUS_TIMEOUT;
 			ibuf.len += n;
 
 			if (check_bye(ibuf.data))
-				return STATUS_BYE;
+				return handle_bye(ssn);
+
 		} while (regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0));
 
 		verbose("S (%d): %s", ssn->socket, ibuf.data);

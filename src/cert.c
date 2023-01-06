@@ -22,6 +22,21 @@ void print_cert(X509 *cert, unsigned char *md, unsigned int *mdlen);
 char *get_serial(X509 *cert);
 int store_cert(X509 *cert);
 
+int handle_cert_error(X509 *cert);
+
+
+/*
+ * Cleanup on read/write socket failures.
+ */
+int
+handle_cert_error(X509 *cert)
+{
+
+	X509_free(cert);
+
+	return -1;
+}
+
 
 /*
  * Get SSL/TLS certificate check it, maybe ask user about it and act
@@ -50,7 +65,7 @@ get_cert(session *ssn)
 	    (verify == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY))) {
 		error("certificate verification failed; %s\n",
 		      X509_verify_cert_error_string(verify));
-		goto fail;
+		return handle_cert_error(cert);
 	}
 
 	if (verify != X509_V_OK) {
@@ -65,22 +80,17 @@ get_cert(session *ssn)
 				    "non-interactive mode");
 			print_cert(cert, md, &mdlen);
 			if (store_cert(cert) == -1)
-				goto fail;
+				return handle_cert_error(cert);
 			break;
 		case -1:
 			error("certificate mismatch occurred\n");
-			goto fail;
+			return handle_cert_error(cert);
 		}
 	}
 
 	X509_free(cert);
 
 	return 0;
-
-fail:
-	X509_free(cert);
-
-	return -1;
 }
 
 

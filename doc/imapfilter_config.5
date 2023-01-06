@@ -1,4 +1,4 @@
-.Dd Jul 8, 2022
+.Dd Jan 6, 2023
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -170,23 +170,6 @@ personal namespace mailboxes).  This variable takes a
 .Vt boolean
 as a value.  Default is
 .Dq true .
-.It Va persist
-When the
-.Va recover
-option is enabled, the recovery function tries to restore the lost session, but
-if it fails to do so, it gives up with an error.  In some cases, a temporary
-network problem might cause the recovery function to fail, but the connection
-could be reestablished when trying a bit later.  By enabling this option, the
-recovery function will be called repeatedly after a timeout, thus it will
-persist when trying to restore the session.  Note, that this will cause the
-execution of the configuration file to be halted at the point of failure until
-the session is restored, which can have side effects to other established
-sessions, for example, they might get dropped by the server after a while.  This
-variable
-takes a
-.Vt boolean
-as a value.  Default is
-.Dq false .
 .It Va range
 Some servers have problems handling long sequence number ranges, and by setting
 this option, the number of messages included in each range can be limited.  A
@@ -197,31 +180,6 @@ This variable takes a
 as a value.  By default, no such limit is imposed.  See also the
 .Va limit
 option which is related.
-.It Va recover
-With this option, it is possible to control the recovery functionality, which
-restores a session (the connection to the server and the IMAP state at the
-time), after some unexpected event takes place.  Currently, there are two types
-of events that can end abnormally a session, and finally cause the program to
-terminate: network errors, and the IMAP BYE response which a server can send
-anytime.  When this option is set to
-.Dq all
-the recovery function is triggered by both types of events, when set to
-.Dq errors
-only in the case of network errors, and when set to
-.Dq none
-the mechanism is completely disabled.  Default is
-.Dq all .
-.It Va reenter
-When this option is enabled and the connection is recovered after some
-unexpected event while in IDLE mode (see also the
-.Va recover
-option), the client will re-enter IDLE mode.  But when this option is disabled,
-and after the connection is recovered, the client will not re-enter IDLE mode,
-and instead will continue to execute the next line in the configuration file,
-i.e. the one after
-.Fn enter_idle .
-Default is
-.Dq true .
 .It Va starttls
 When this option is enabled and the server supports the IMAP STARTTLS
 extension, a TLS connection will be negotiated with the mail server in the
@@ -1348,16 +1306,7 @@ that password as a
 .Vt string .
 .Pp
 .It Fn become_daemon interval commands
-Detaches the program from the controlling terminal and runs it in the
-background as system daemon. The program will then repeatedly poll at the
-specified
-.Fa interval
-.Pq Vt number
-in seconds. Each time the program wakes up, the
-.Fa commands
-.Pq Vt function
-are executed.
-.Pp
+.It Fn become_daemon interval commands nochdir
 .It Fn become_daemon interval commands nochdir noclose
 Detaches the program from the controlling terminal and runs it in the
 background as system daemon. The program will then repeatedly poll at the
@@ -1376,6 +1325,7 @@ is
 .Dq true ,
 the current working directory is not changed to the root directory
 .Pq Pa / .
+.Pp
 If
 .Fa noclose
 .Pq Vt boolean
@@ -1430,6 +1380,31 @@ Delay for the specified
 .Fa interval
 .Pq Vt number
 in seconds.
+.Pp
+.It Fn recover commands
+.It Fn recover commands retries
+Protects the
+.Fa commands
+.Pq Vt function
+executed from raising an error. Whenever an error is raised, it sleeps for a
+few seconds (using exponential backoff up to some upper limit), and then re-executes the
+.Fa commands
+.Pq Vt function
+from start.
+.Pp
+If the maximum count of
+.Fa retries
+.Pq Vt number
+is specified, it will retry up to the specified number of times, otherwise it will never give up.
+.Pp
+Returns the status code of the execution as the first result,
+.Dq true
+if it succeeded or
+.Dq false
+if it failed. If it succeeded, it returns all values the
+.Fa commands
+.Pq Vt function
+returned as additional results.  If it failed, it returns the error as an additional result.
 .El
 .Pp
 Examples:
@@ -1441,6 +1416,7 @@ status = pipe_to('mycommandline', 'mydata')
 status, data = pipe_from('mycommandline')
 success, capture = regex_search('^(?i)pcre: (\e\ew)$', 'mystring')
 sleep(300)
+recover(myfunction, 5)
 .Pp
 .Ed
 For more examples, see the
