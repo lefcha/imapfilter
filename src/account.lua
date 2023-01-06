@@ -43,6 +43,7 @@ Account._mt.__call = function (self, arg)
     object._account.ssl = arg.ssl
     object._account.session = nil
     object._account.selected = nil
+    object._account.readonly = nil
     object._string = object._account.username .. '@' .. object._account.server
 
     for key, value in pairs(Account) do
@@ -70,6 +71,7 @@ function Account._check_result(self, request, result)
     if result == nil then
         self._account.session = nil
         self._account.selected = nil
+        self._account.readonly = nil
         error(request .. ' request to ' .. self._string ..  ' failed', 0)
     end
 end
@@ -96,6 +98,7 @@ function Account._login_user(self)
 
     self._account.session = s
     self._account.selected = nil
+    self._account.readonly = nil
 
     return true
 end
@@ -108,6 +111,7 @@ function Account._logout_user(self)
 
     self._account.session = nil
     self._account.selected = nil
+    self._account.readonly = nil
 
     return true
 end

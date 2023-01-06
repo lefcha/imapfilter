@@ -37,6 +37,7 @@ function Mailbox._check_result(self, request, result)
     if result == nil then
         self._account._account.session = nil
         self._account._account.selected = nil
+        self._account._account.readonly = nil
         error(request .. ' request to ' .. self._account._string .. ' failed', 0)
     end
 end
@@ -57,11 +58,12 @@ function Mailbox._cached_select(self)
         self._account._account.selected ~= self._mailbox then
 
         self._check_connection(self)
-        local r = ifcore.select(self._account._account.session, self._mailbox)
+        local r, readonly = ifcore.select(self._account._account.session, self._mailbox)
         self._check_result(self, 'select', r)
         if r == false then return false end
 
         self._account._account.selected = self._mailbox
+        self._account._account.readonly = readonly
     end
     return true
 end
@@ -78,6 +80,7 @@ function Mailbox._cached_close(self)
     end
 
     self._account._account.selected = nil
+    self._account._account.readonly = nil
 
     return true
 end
@@ -139,6 +142,7 @@ end
 function Mailbox._flag_messages(self, mode, flags, messages)
     if not messages or #messages == 0 then return end
     if self._cached_select(self) ~= true then return end
+    if self._account._account.readonly == true then return end
 
     local f = ''
     if #flags ~= 0 then f = table.concat(flags, ' ') end

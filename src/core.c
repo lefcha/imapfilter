@@ -232,9 +232,10 @@ ifcore_select(lua_State *lua)
 	if (r < 0)
 		return 0;
 
-	lua_pushboolean(lua, (r == STATUS_OK));
+	lua_pushboolean(lua, (r == STATUS_OK || r == STATUS_READONLY));
+	lua_pushboolean(lua, (r == STATUS_READONLY));
 
-	return 1;
+	return 2;
 }
 
 
