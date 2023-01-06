@@ -76,7 +76,7 @@ main(int argc, char *argv[])
 	env.home = NULL;
 	env.pathmax = -1;
 
-	while ((c = getopt(argc, argv, "Vc:d:e:il:nt:v?")) != -1) {
+	while ((c = getopt(argc, argv, "Vc:d:e:il:np:t:v?")) != -1) {
 		switch (c) {
 		case 'V':
 			version();
@@ -100,6 +100,9 @@ main(int argc, char *argv[])
 		case 'n':
 			opts.dryrun = 1;
 			break;
+		case 'p':
+			opts.pidfile = optarg;
+			break;
 		case 't':
 			opts.truststore = optarg;
 			break;
@@ -120,6 +123,8 @@ main(int argc, char *argv[])
 	catch_signals();
 	ignore_user_signals();
 	open_log();
+	write_pidfile();
+
 	if (opts.config == NULL)
 		opts.config = get_filepath("config.lua");
 
@@ -231,8 +236,10 @@ main(int argc, char *argv[])
 
 	xfree(env.home);
 
-	close_log();
+	remove_pidfile();
+
 	close_debug();
+	close_log();
 
 	exit(0);
 }
@@ -247,7 +254,7 @@ usage(void)
 
 	fprintf(stderr, "usage: imapfilter [-inVv] [-c configfile] "
 	    "[-d debugfile] [-e 'command']\n"
-	    "\t\t  [-l logfile] [-t truststore]\n");
+	    "\t\t  [-l logfile] [-p pidfile] [-t truststore]\n");
 
 	exit(0);
 }

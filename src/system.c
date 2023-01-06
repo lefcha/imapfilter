@@ -295,6 +295,8 @@ ifsys_daemon(lua_State *lua)
 			    strerror(errno));
 	}
 
+	write_pidfile();
+
 	return 0;
 }
 

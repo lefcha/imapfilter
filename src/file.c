@@ -12,6 +12,7 @@
 #include "pathnames.h"
 
 
+extern options opts;
 extern environment env;
 
 
@@ -156,4 +157,40 @@ get_filepath(char *fname)
 	snprintf(fp, n + 1, "%s/%s", env.home, fname);
 
 	return fp;
+}
+
+
+/*
+ * Write PID to user specified file.
+ */
+void
+write_pidfile(void)
+{
+	FILE *fp;
+
+	if (opts.pidfile == NULL)
+		return;
+
+	if ((fp = fopen(opts.pidfile, "w")) == NULL) {
+	    error("could not write PID to file %s; %s\n", opts.pidfile, strerror(errno));
+	    return;
+	}
+
+	fprintf(fp, "%d\n", getpid());
+	fclose(fp);
+}
+
+
+/*
+ * Delete user specified file, which holds the PID written earlier.
+ */
+void
+remove_pidfile(void)
+{
+
+	if (opts.pidfile == NULL)
+		return;
+
+	if (unlink(opts.pidfile) == -1)
+		error("could not delete PID file %s; %s\n", opts.pidfile, strerror(errno));
 }

@@ -1,4 +1,4 @@
-.Dd Nov 13, 2019
+.Dd Jan 6, 2023
 .Dt IMAPFILTER 1
 .Os
 .Sh NAME
@@ -11,6 +11,7 @@
 .Op Fl d Ar debugfile
 .Op Fl e Ar 'command'
 .Op Fl l Ar logfile
+.Op Fl p Ar pidfile
 .Op Fl t Ar truststore
 .Sh DESCRIPTION
 .Nm
@@ -63,6 +64,8 @@ file will be used.  The default CA directory is
 .Pa /etc/ssl/certs/ ,
 and the default CA file is
 .Pa /etc/ssl/cert.pem .
+.It Fl p Ar pidfile
+Write the process ID (PID) to this file on startup, and delete it on exit.
 .It Fl V
 Displays version and copyright information.
 .It Fl v

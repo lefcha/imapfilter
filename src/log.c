@@ -127,8 +127,10 @@ fatal(unsigned int errnum, const char *fmt,...)
 		close_connection(s);
 	}
 
-	close_log();
+	remove_pidfile();
+
 	close_debug();
+	close_log();
 
 	exit(errnum);
 }
