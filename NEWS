@@ -1,3 +1,7 @@
+IMAPFilter 2.8.1 - Jan 8, 2023
+  - Add support for non-write actions on read-only mailboxes.
+  - Add new parameter to write process ID (PID) to file.
+
 IMAPFilter 2.8.0 - Jan 6, 2023
   - New, more advanced, robust, and flexible recovery mechanism, replaces the
     old automatic recovery functionality. Note that, the config must be updated
