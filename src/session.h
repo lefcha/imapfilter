@@ -16,6 +16,7 @@ typedef struct session {
 		char *prefix;	/* Namespace prefix. */
 		char delim;	/* Namespace delimiter. */
 	} ns;
+	char utf8_accept_enabled; /* Boolean of UTF8=ACCEPT enabled session */
 } session;
 
 

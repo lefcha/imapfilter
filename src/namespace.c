@@ -23,7 +23,7 @@ const char *reverse_conversion(const char *mbox);
  * by the mail server, from internal to mail server format.
  */
 const char *
-apply_namespace(const char *mbox, char *prefix, char delim)
+apply_namespace(const char *mbox, char *prefix, char delim, char utf8_accept_enabled)
 {
 	int n;
 	char *c;
@@ -32,7 +32,9 @@ apply_namespace(const char *mbox, char *prefix, char delim)
 	if (!strcasecmp(mbox, "INBOX"))
 		return mbox;
 
-	m = apply_conversion(mbox);
+	m = mbox;
+	if (!utf8_accept_enabled)
+		m = apply_conversion(mbox);
 
 	if ((prefix == NULL && delim == '\0') ||
 	    (prefix == NULL && delim == '/'))
@@ -60,7 +62,7 @@ apply_namespace(const char *mbox, char *prefix, char delim)
  * the mail server, from mail server format to internal format.
  */
 const char *
-reverse_namespace(const char *mbox, char *prefix, char delim)
+reverse_namespace(const char *mbox, char *prefix, char delim, char utf8_accept_enabled)
 {
 	int n, o;
 	char *c;
@@ -69,8 +71,11 @@ reverse_namespace(const char *mbox, char *prefix, char delim)
 		return mbox;
 
 	if ((prefix == NULL && delim == '\0') ||
-	    (prefix == NULL && delim == '/'))
-		return reverse_conversion(mbox);
+	    (prefix == NULL && delim == '/')) {
+		if (!utf8_accept_enabled)
+			return reverse_conversion(mbox);
+		return mbox;
+	}
 
 	buffer_reset(&nbuf);
 

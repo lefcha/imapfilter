@@ -41,6 +41,7 @@ session_init(session *ssn)
 	ssn->capabilities = CAPABILITY_NONE;
 	ssn->ns.prefix = NULL;
 	ssn->ns.delim = '\0';
+	ssn->utf8_accept_enabled = 0;
 }
 
 
