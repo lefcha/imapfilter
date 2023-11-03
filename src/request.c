@@ -396,7 +396,8 @@ request_fetchfast(session *ssn, const char *mesg, char **flags, char **date,
 {
 	int t, r;
 
-	TRY(t = send_request(ssn, "UID FETCH %s FAST", mesg));
+	/*TRY(t = send_request(ssn, "UID FETCH %s FAST", mesg));*/
+	TRY(t = send_request(ssn, "UID FETCH %s (FLAGS INTERNALDATE RFC822.SIZE)", mesg));
 	TRY(r = response_fetchfast(ssn, t, flags, date, size));
 
 	return r;
