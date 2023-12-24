@@ -73,7 +73,7 @@ function recover(commands, retries)
 
     count = 0
     while true do
-        local r = table.pack(pcall(commands))
+        local r = {pcall(commands)}
         if retries == nil or count < retries then
             if r[1] then return table.unpack(r) end
         else
