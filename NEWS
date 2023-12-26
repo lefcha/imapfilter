@@ -1,3 +1,8 @@
+IMAPFilter 2.8.2 - Dec 26, 2023
+  - Add IMAP support for UTF-8 (RFC 6855) when "charset" is set to "UTF-8"
+  - Don't use FETCH FAST macro use for better compatibility
+  - Bug fix; recovery mechanism error on Lua 5.1
+
 IMAPFilter 2.8.1 - Jan 8, 2023
   - Add support for non-write actions on read-only mailboxes.
   - Add new parameter to write process ID (PID) to file.
