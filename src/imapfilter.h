@@ -33,6 +33,8 @@
 #define CAPABILITY_CHILDREN		0x04
 #define CAPABILITY_IDLE			0x08
 #define CAPABILITY_XOAUTH2		0x10
+#define CAPABILITY_ENABLE		0x20
+#define CAPABILITY_UTF8			0x40
 
 /* Status responses and response codes. */
 #define STATUS_BYE			-2
@@ -135,8 +137,8 @@ const char *xstrcasestr(const char *haystack, const char *needle);
 char *xstrncpy(char *dest, const char *src, size_t size);
 
 /*	namespace.c	*/
-const char *apply_namespace(const char *mbox, char *prefix, char delim);
-const char *reverse_namespace(const char *mbox, char *prefix, char delim);
+const char *apply_namespace(const char *mbox, session *ssn);
+const char *reverse_namespace(const char *mbox, session *ssn);
 
 /*	pcre.c		*/
 LUALIB_API int luaopen_ifre(lua_State *lua);

@@ -3,6 +3,7 @@
 #include <errno.h>
 
 #include "imapfilter.h"
+#include "session.h"
 #include "buffer.h"
 
 
@@ -23,7 +24,7 @@ const char *reverse_conversion(const char *mbox);
  * by the mail server, from internal to mail server format.
  */
 const char *
-apply_namespace(const char *mbox, char *prefix, char delim)
+apply_namespace(const char *mbox, session *ssn)
 {
 	int n;
 	char *c;
@@ -32,22 +33,24 @@ apply_namespace(const char *mbox, char *prefix, char delim)
 	if (!strcasecmp(mbox, "INBOX"))
 		return mbox;
 
-	m = apply_conversion(mbox);
+	m = mbox;
+	if (!ssn->utf8)
+		m = apply_conversion(mbox);
 
-	if ((prefix == NULL && delim == '\0') ||
-	    (prefix == NULL && delim == '/'))
+	if ((ssn->ns.prefix == NULL && ssn->ns.delim == '\0') ||
+	    (ssn->ns.prefix == NULL && ssn->ns.delim == '/'))
 		return m;
 
 	buffer_reset(&nbuf);
 
-	n = snprintf(nbuf.data, nbuf.size + 1, "%s%s", (prefix ? prefix : ""),
-	    m);
+	n = snprintf(nbuf.data, nbuf.size + 1, "%s%s",
+	    (ssn->ns.prefix ? ssn->ns.prefix : ""), m);
 	if (n > (int)nbuf.size) {
 		buffer_check(&nbuf, n);
 		snprintf(nbuf.data, nbuf.size + 0, "%s%s",
-		    (prefix ? prefix : ""), m);
+		    (ssn->ns.prefix ? ssn->ns.prefix : ""), m);
 	}
-	for (c = nbuf.data; (c = strchr(c, '/')) != NULL; *(c++) = delim);
+	for (c = nbuf.data; (c = strchr(c, '/')) != NULL; *(c++) = ssn->ns.delim);
 
 	debug("namespace: '%s' -> '%s'\n", m, nbuf.data);
 
@@ -60,7 +63,7 @@ apply_namespace(const char *mbox, char *prefix, char delim)
  * the mail server, from mail server format to internal format.
  */
 const char *
-reverse_namespace(const char *mbox, char *prefix, char delim)
+reverse_namespace(const char *mbox, session *ssn)
 {
 	int n, o;
 	char *c;
@@ -68,14 +71,17 @@ reverse_namespace(const char *mbox, char *prefix, char delim)
 	if (!strcasecmp(mbox, "INBOX"))
 		return mbox;
 
-	if ((prefix == NULL && delim == '\0') ||
-	    (prefix == NULL && delim == '/'))
-		return reverse_conversion(mbox);
+	if ((ssn->ns.prefix == NULL && ssn->ns.delim == '\0') ||
+	    (ssn->ns.prefix == NULL && ssn->ns.delim == '/')) {
+		if (!ssn->utf8)
+			return reverse_conversion(mbox);
+		return mbox;
+	}
 
 	buffer_reset(&nbuf);
 
-	o = strlen(prefix ? prefix : "");
-	if (strncasecmp(mbox, (prefix ? prefix : ""), o))
+	o = strlen(ssn->ns.prefix ? ssn->ns.prefix : "");
+	if (strncasecmp(mbox, (ssn->ns.prefix ? ssn->ns.prefix : ""), o))
 		o = 0;
 
 	n = snprintf(nbuf.data, nbuf.size + 1, "%s", mbox + o);
@@ -83,7 +89,7 @@ reverse_namespace(const char *mbox, char *prefix, char delim)
 		buffer_check(&nbuf, n);
 		snprintf(nbuf.data, nbuf.size + 1, "%s", mbox + o);
 	}
-	for (c = nbuf.data; (c = strchr(c, delim)) != NULL; *(c++) = '/');
+	for (c = nbuf.data; (c = strchr(c, ssn->ns.delim)) != NULL; *(c++) = '/');
 
 	debug("namespace: '%s' <- '%s'\n", mbox, nbuf.data);
 

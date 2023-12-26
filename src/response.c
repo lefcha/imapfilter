@@ -350,6 +350,10 @@ response_capability(session *ssn, int tag)
 			ssn->capabilities |= CAPABILITY_IDLE;
 		if (xstrcasestr(s, "AUTH=XOAUTH2"))
 			ssn->capabilities |= CAPABILITY_XOAUTH2;
+		if (xstrcasestr(s, "ENABLE"))
+			ssn->capabilities |= CAPABILITY_ENABLE;
+		if (xstrcasestr(s, "UTF8=ACCEPT"))
+			ssn->capabilities |= CAPABILITY_UTF8;
 
 		xfree(s);
 	}
@@ -535,7 +539,7 @@ response_list(session *ssn, int tag, char **mboxs, char **folders)
 			s = xstrndup(b + re->pmatch[8].rm_so, strtoul(b +
 			    re->pmatch[7].rm_so, NULL, 10));
 
-		v = reverse_namespace(s, ssn->ns.prefix, ssn->ns.delim);
+		v = reverse_namespace(s, ssn);
 		n = strlen(v);
 
 		if (!xstrcasestr(a, "\\NoSelect")) {

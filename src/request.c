@@ -212,6 +212,16 @@ request_login(session **ssnptr, const char *server, const char *port, const char
 	TRY(t = send_request(ssn, "CAPABILITY"));
 	TRY(response_capability(ssn, t));
 
+	if (!strcasecmp(get_option_string("charset"), "UTF-8")) {
+		if (ssn->capabilities & CAPABILITY_ENABLE &&
+			ssn->capabilities & CAPABILITY_UTF8) {
+			TRY(t = send_request(ssn, "ENABLE UTF8=ACCEPT"));
+			TRY(r = response_generic(ssn, t));
+			if (r == STATUS_OK)
+				ssn->utf8 = 1;
+		}
+	}
+
 	if (ssn->capabilities & CAPABILITY_NAMESPACE &&
 	    get_option_boolean("namespace")) {
 		TRY(t = send_request(ssn, "NAMESPACE"));
@@ -251,7 +261,7 @@ request_status(session *ssn, const char *mbox, unsigned int *exists, unsigned
 	int t, r;
 	const char *m;
 
-	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
+	m = apply_namespace(mbox, ssn);
 
 	if (ssn->protocol == PROTOCOL_IMAP4REV1) {
 		TRY(t = send_request(ssn,
@@ -275,7 +285,7 @@ request_select(session *ssn, const char *mbox)
 	int t, r;
 	const char *m;
 
-	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
+	m = apply_namespace(mbox, ssn);
 
 	TRY(t = send_request(ssn, "SELECT \"%s\"", m));
 	TRY(r = response_select(ssn, t));
@@ -327,7 +337,7 @@ request_list(session *ssn, const char *refer, const char *name, char **mboxs,
 	int t, r;
 	const char *n;
 
-	n = apply_namespace(name, ssn->ns.prefix, ssn->ns.delim);
+	n = apply_namespace(name, ssn);
 	
 	TRY(t = send_request(ssn, "LIST \"%s\" \"%s\"", refer, n));
 	TRY(r = response_list(ssn, t, mboxs, folders));
@@ -346,7 +356,7 @@ request_lsub(session *ssn, const char *refer, const char *name, char **mboxs,
 	int t, r;
 	const char *n;
 
-	n = apply_namespace(name, ssn->ns.prefix, ssn->ns.delim);
+	n = apply_namespace(name, ssn);
 
 	TRY(t = send_request(ssn, "LSUB \"%s\" \"%s\"", refer, n));
 	TRY(r = response_list(ssn, t, mboxs, folders));
@@ -364,7 +374,7 @@ request_search(session *ssn, const char *criteria, const char *charset, char
 {
 	int t, r;
 
-	if (charset != NULL && *charset != '\0') {
+	if (charset != NULL && *charset != '\0' && !ssn->utf8) {
 		TRY(t = send_request(ssn, "UID SEARCH CHARSET \"%s\" %s",
 		    charset, criteria));
 	} else {
@@ -567,7 +577,7 @@ request_copy(session *ssn, const char *mesg, const char *mbox)
 	if (opts.dryrun)
 		return STATUS_DRYRUN;
 
-	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
+	m = apply_namespace(mbox, ssn);
 
 	TRY(t = send_request(ssn, "UID COPY %s \"%s\"", mesg, m));
 	TRY(r = response_generic(ssn, t));
@@ -601,7 +611,7 @@ request_append(session *ssn, const char *mbox, const char *mesg, size_t
 	if (opts.dryrun)
 		return STATUS_DRYRUN;
 
-	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
+	m = apply_namespace(mbox, ssn);
 
 	TRY(t = send_request(ssn, "APPEND \"%s\"%s%s%s%s%s%s {%d}", m,
 	    (flags ? " (" : ""), (flags ? flags : ""),
@@ -650,7 +660,7 @@ request_create(session *ssn, const char *mbox)
 	if (opts.dryrun)
 		return STATUS_DRYRUN;
 
-	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
+	m = apply_namespace(mbox, ssn);
 
 	TRY(t = send_request(ssn, "CREATE \"%s\"", m));
 	TRY(r = response_generic(ssn, t));
@@ -671,7 +681,7 @@ request_delete(session *ssn, const char *mbox)
 	if (opts.dryrun)
 		return STATUS_DRYRUN;
 
-	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
+	m = apply_namespace(mbox, ssn);
 
 	TRY(t = send_request(ssn, "DELETE \"%s\"", m));
 	TRY(r = response_generic(ssn, t));
@@ -692,8 +702,8 @@ request_rename(session *ssn, const char *oldmbox, const char *newmbox)
 	if (opts.dryrun)
 		return STATUS_DRYRUN;
 
-	o = xstrdup(apply_namespace(oldmbox, ssn->ns.prefix, ssn->ns.delim));
-	n = xstrdup(apply_namespace(newmbox, ssn->ns.prefix, ssn->ns.delim));
+	o = xstrdup(apply_namespace(oldmbox, ssn));
+	n = xstrdup(apply_namespace(newmbox, ssn));
 
 	TRY(t = send_request(ssn, "RENAME \"%s\" \"%s\"", o, n));
 	TRY(r = response_generic(ssn, t));
@@ -714,7 +724,7 @@ request_subscribe(session *ssn, const char *mbox)
 	if (opts.dryrun)
 		return STATUS_DRYRUN;
 
-	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
+	m = apply_namespace(mbox, ssn);
 
 	TRY(t = send_request(ssn, "SUBSCRIBE \"%s\"", m));
 	TRY(r = response_generic(ssn, t));
@@ -735,7 +745,7 @@ request_unsubscribe(session *ssn, const char *mbox)
 	if (opts.dryrun)
 		return STATUS_DRYRUN;
 
-	m = apply_namespace(mbox, ssn->ns.prefix, ssn->ns.delim);
+	m = apply_namespace(mbox, ssn);
 
 	TRY(t = send_request(ssn, "UNSUBSCRIBE \"%s\"", m));
 	TRY(r = response_generic(ssn, t));
