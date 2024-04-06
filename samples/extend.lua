@@ -122,6 +122,7 @@ end
 -- password vault. Here's an example using pass.
 
 status, password = pipe_from('pass Email/imap1.mail.server')
+password = password:gsub('[\r\n]', '')
 account1 = IMAP {
     server = 'imap1.mail.server',
     username = 'user1',
