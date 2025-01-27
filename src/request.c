@@ -8,6 +8,7 @@
 #include "session.h"
 #include "buffer.h"
 
+const char *apply_conversion(const char *);
 
 extern options opts;
 
@@ -374,12 +375,15 @@ request_search(session *ssn, const char *criteria, const char *charset, char
 {
 	int t, r;
 
-	if (charset != NULL && *charset != '\0' && !ssn->utf8) {
-		TRY(t = send_request(ssn, "UID SEARCH CHARSET \"%s\" %s",
-		    charset, criteria));
-	} else {
-		TRY(t = send_request(ssn, "UID SEARCH %s", criteria));
-	}
+  if (charset == NULL || *charset == '\0' || !ssn->utf8) {
+  	TRY(t = send_request(ssn, "UID SEARCH %s", apply_conversion(criteria)));
+  } else if (charset != NULL &&
+      strcasecmp(get_option_string("charset"), "UTF-8")) {
+		TRY(t = send_request(ssn, "UID SEARCH CHARSET \"%s\" %s", charset,
+          criteria));
+  } else {
+    TRY(t = send_request(ssn, "UID SEARCH %s", criteria));
+  }
 	TRY(r = response_search(ssn, t, mesgs));
 
 	return r;
