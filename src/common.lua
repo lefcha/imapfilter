@@ -222,7 +222,7 @@ function _parse_basic(b)
     _parse_space(b)
     local e = _parse_string(b)
     if e then
-	    bp['transfer_encoding'] = e:lower()
+	    bp['encoding'] = e:lower()
     end
     _parse_space(b)
     bp['size'] = _parse_number(b)
