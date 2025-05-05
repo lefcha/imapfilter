@@ -1,45 +1,55 @@
 # Shared layer with dependencies
-FROM alpine:3.20.1 AS shared
+FROM alpine:3.21.3 AS shared
 
-## Install shared dependencies
-RUN apk update
-RUN apk add --no-cache openssl
-RUN apk add --no-cache make
-RUN apk add --no-cache lua5.1
-RUN apk add --no-cache pcre2
-
+RUN apk add --no-cache \
+    lua5.4 \
+    make \
+    openssl \
+    pcre2
 
 
-# Build layer with dev-dependencies
-FROM shared AS build
 
-## Install build dependencies
-RUN apk add --no-cache openssl-dev
-RUN apk add --no-cache alpine-sdk
-RUN apk add --no-cache lua5.1-dev
-RUN apk add --no-cache pcre2-dev
+# Build dependencies
+FROM shared AS build-deps
+
+RUN apk add --no-cache \
+    alpine-sdk \
+    lua5.4-dev \
+    openssl-dev \
+    pcre2-dev
 
 
-## Build imapfilter
+
+# Build layer
+FROM build-deps AS build
+
+RUN git clone https://github.com/lefcha/imapfilter.git /dist
 WORKDIR /dist
-COPY ./ /dist/
-RUN make all
+RUN make \
+    INCDIRS=-I/usr/include/lua5.4 \
+    LDFLAGS='-L/usr/lib/lua5.4' \
+    LIBLUA=-llua \
+    LUA_CFLAGS=-I/usr/include/lua5.4
 
 
 
 # Final layer with installed imapfilter
 FROM shared AS final
 
-## Install imapfilter
 COPY --from=build /dist /dist
 WORKDIR /dist
-RUN make install
+RUN make install \
+    && rm -rf /dist
 
+RUN addgroup abc \
+    && adduser \
+        --home /home/imapfilter \
+        --shell /sbin/nologin \
+        --disabled-password \
+        --ingroup abc \
+        abc
 
-# Clean-up dist
-RUN rm -rf /dist
+USER abc:abc
 
-
-WORKDIR /
-
-ENTRYPOINT [ "imapfilter" ]
+ENTRYPOINT [ "/usr/local/bin/imapfilter" ]
+CMD ["-c", "/config.lua"]
