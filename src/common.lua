@@ -220,7 +220,10 @@ function _parse_basic(b)
     _parse_space(b)
     _parse_nstring(b)
     _parse_space(b)
-    _parse_string(b)
+    local e = _parse_string(b)
+    if e then
+	    bp['encoding'] = e:lower()
+    end
     _parse_space(b)
     bp['size'] = _parse_number(b)
     if bp['type']:sub(1, 5):lower() == 'text/' then

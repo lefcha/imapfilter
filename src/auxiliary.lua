@@ -81,7 +81,7 @@ function recover(commands, retries)
         end
         collectgarbage()
         count = count + 1
-        ifsys.sleep(math.min(math.pow(2, count), 60))
+        ifsys.sleep(math.min(2 ^ count, 60))
     end
 end
 
