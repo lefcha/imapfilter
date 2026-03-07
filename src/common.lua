@@ -37,7 +37,7 @@ end
 function _extract_mailboxes(messages)
     local t = {}
     for _, v in ipairs(messages) do
-        b, _ = table.unpack(v)
+        b = table.unpack(v)
         t[b] = true
     end
     return t
