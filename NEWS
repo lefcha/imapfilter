@@ -1,3 +1,6 @@
+IMAPFilter 2.8.4 - Mar 7, 2026
+  - Bug fix; minor incompatibility with Lua 5.5
+
 IMAPFilter 2.8.3 - Apr 27, 2025
   - Include body transfer encoding in fetch_structure() return value.
   - Bug fix; minor incompatibility with Lua 5.3 and 5.4
