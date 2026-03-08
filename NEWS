@@ -1,3 +1,6 @@
+IMAPFilter 2.8.5 - Mar 8, 2026
+  - Re-added OAuth2 example in the sample extend file
+
 IMAPFilter 2.8.4 - Mar 7, 2026
   - Bug fix; minor incompatibility with Lua 5.5
 
