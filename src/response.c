@@ -354,6 +354,8 @@ response_capability(session *ssn, int tag)
 			ssn->capabilities |= CAPABILITY_ENABLE;
 		if (xstrcasestr(s, "UTF8=ACCEPT"))
 			ssn->capabilities |= CAPABILITY_UTF8;
+		if (xstrcasestr(s, "NOTIFY"))
+			ssn->capabilities |= CAPABILITY_NOTIFY;
 
 		xfree(s);
 	}
@@ -884,6 +886,56 @@ response_idle(session *ssn, int tag, char **event)
 			break;
 		if (!strncasecmp(ibuf.data + re->pmatch[1].rm_so,
 		    "EXISTS", strlen("EXISTS")))
+			break;
+	}
+
+	*event = xstrndup(ibuf.data + re->pmatch[1].rm_so,
+	    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
+
+	return STATUS_UNTAGGED;
+}
+
+
+/*
+ * Process the data that server sent due to IMAP NOTIFY client request.
+ */
+int
+response_notify(session *ssn, char **event)
+{
+	regexp *re;
+	ssize_t n;
+	int eintr = 0;
+
+	re = &responses[RESPONSE_UNTAGGED];
+
+	for (;;) {
+		buffer_reset(&ibuf);
+
+		do {
+			buffer_check(&ibuf, ibuf.len + INPUT_BUF);
+			n = receive_response(ssn, ibuf.data + ibuf.len,
+			    get_option_number("keepalive") * 60, 0, &eintr);
+			if (n < 0) {
+				if (eintr)
+					return STATUS_INTERRUPT;
+				else
+					return STATUS_ERROR;
+			}
+			if (n == 0)
+				return STATUS_TIMEOUT;
+			ibuf.len += n;
+
+			if (check_bye(ibuf.data))
+				return handle_bye(ssn);
+
+		} while (regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0));
+
+		verbose("S (%d): %s", ssn->socket, ibuf.data);
+
+		if (get_option_boolean("wakeonany"))
+			break;
+		if (!strncasecmp(ibuf.data + re->pmatch[1].rm_so,
+		    "STATUS", strlen("STATUS")))
 			break;
 	}
 

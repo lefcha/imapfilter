@@ -36,6 +36,7 @@ static int ifcore_rename(lua_State *lua);
 static int ifcore_subscribe(lua_State *lua);
 static int ifcore_unsubscribe(lua_State *lua);
 static int ifcore_idle(lua_State *lua);
+static int ifcore_notify(lua_State *lua);
 
 
 /* Lua imapfilter core library functions. */
@@ -77,6 +78,7 @@ static const luaL_Reg ifcorelib[] = {
 	{ "store", ifcore_store },
 	{ "copy", ifcore_copy },
 	{ "idle", ifcore_idle },
+	{ "notify", ifcore_notify },
 	{ NULL, NULL }
 };
 
@@ -992,11 +994,42 @@ ifcore_idle(lua_State *lua)
 		luaL_error(lua, "wrong number of arguments");
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 
-	if (get_option_boolean("reenter"))
-		r = request_idle((session *)(lua_topointer(lua, 1)),
-		    &event);
-	else
-		r = request_idle((session *)(lua_topointer(lua, 1)), &event);
+	r = request_idle((session *)(lua_topointer(lua, 1)), &event);
+
+	lua_pop(lua, 1);
+
+	if (r < 0)
+		return 0;
+
+	lua_pushboolean(lua, (r == STATUS_OK));
+
+	if (!event)
+		return 1;
+
+	lua_pushstring(lua, event);
+
+	xfree(event);
+
+	return 2;
+}
+
+
+/*
+ * Core function to go to idle state.
+ */
+static int
+ifcore_notify(lua_State *lua)
+{
+	int r;
+	char *event;
+
+	event = NULL;
+
+	if (lua_gettop(lua) != 1)
+		luaL_error(lua, "wrong number of arguments");
+	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
+
+	r = request_notify((session *)(lua_topointer(lua, 1)), &event);
 
 	lua_pop(lua, 1);
 

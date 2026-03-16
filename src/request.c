@@ -776,3 +776,37 @@ request_idle(session *ssn, char **event)
 
 	return r;
 }
+
+
+int
+request_notify(session *ssn, char **event)
+{
+	int t, r, ri;
+
+	debug("request_notify: capa:%x, status:%d\n\n",
+		ssn->capabilities & CAPABILITY_NOTIFY,
+		ssn->notify_active
+	);
+
+	if (!(ssn->capabilities & CAPABILITY_NOTIFY))
+		return STATUS_BAD;
+
+	if (!ssn->notify_active) {
+		TRY(t = send_request(ssn, "NOTIFY SET (Subscribed (MessageNew MessageExpunge))"));
+		TRY(r = response_generic(ssn, t));
+		if (r != STATUS_OK) {
+			return r;
+		}
+		ssn->notify_active = 1;
+	}
+
+	do {
+		ri = 0;
+
+		TRY(ri = response_notify(ssn, event));
+		if (ri == STATUS_TIMEOUT)
+			request_noop(ssn);
+	} while (ri == STATUS_TIMEOUT);
+
+	return r;
+}

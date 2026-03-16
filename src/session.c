@@ -42,6 +42,7 @@ session_init(session *ssn)
 	ssn->ns.prefix = NULL;
 	ssn->ns.delim = '\0';
 	ssn->utf8 = 0;
+	ssn->notify_active = 0;
 }
 
 
