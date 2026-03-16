@@ -35,6 +35,7 @@
 #define CAPABILITY_XOAUTH2		0x10
 #define CAPABILITY_ENABLE		0x20
 #define CAPABILITY_UTF8			0x40
+#define CAPABILITY_NOTIFY		0x80
 
 /* Status responses and response codes. */
 #define STATUS_BYE			-2
@@ -184,6 +185,7 @@ int request_rename(session *ssn, const char *oldmbox, const char *newmbox);
 int request_subscribe(session *ssn, const char *mbox);
 int request_unsubscribe(session *ssn, const char *mbox);
 int request_idle(session *ssn, char **event);
+int request_notify(session *ssn, char **event);
 
 /*	response.c	*/
 int response_generic(session *ssn, int tag);
@@ -207,6 +209,7 @@ int response_fetchsize(session *ssn, int tag, char **size);
 int response_fetchstructure(session *ssn, int tag, char **structure);
 int response_fetchbody(session *ssn, int tag, char **body, size_t *len);
 int response_idle(session *ssn, int tag, char **event);
+int response_notify(session *ssn, char **event);
 
 /*	signal.c	*/
 void catch_signals(void);

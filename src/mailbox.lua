@@ -1080,6 +1080,24 @@ function Mailbox.enter_idle(self)
 end
 
 
+function Mailbox.await_notification(self)
+    if self._cached_select(self) ~= true then return false end
+
+    self._check_connection(self)
+    local r, event = ifcore.notify(self._account._account.session)
+    self._check_result(self, 'notify', r)
+    if r == false then return false end
+
+    if options.close == true then self._cached_close(self) end
+
+    if type(event) == 'string' then
+        return true, string.upper(event)
+    else
+        return true
+    end
+end
+
+
 Mailbox.open = _cached_select
 Mailbox.close = _cached_close
 
