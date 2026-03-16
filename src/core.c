@@ -992,11 +992,7 @@ ifcore_idle(lua_State *lua)
 		luaL_error(lua, "wrong number of arguments");
 	luaL_checktype(lua, 1, LUA_TLIGHTUSERDATA);
 
-	if (get_option_boolean("reenter"))
-		r = request_idle((session *)(lua_topointer(lua, 1)),
-		    &event);
-	else
-		r = request_idle((session *)(lua_topointer(lua, 1)), &event);
+	r = request_idle((session *)(lua_topointer(lua, 1)), &event);
 
 	lua_pop(lua, 1);
 
