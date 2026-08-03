@@ -186,21 +186,21 @@ get_serial(X509 *cert)
 	serial = X509_get_serialNumber(cert);
 	buf = xmalloc(LINE_MAX);
 	*buf = '\0';
-	if (serial->length <= (int)sizeof(long)) {
+	if (ASN1_STRING_length(serial) <= (int)sizeof(long)) {
 		num = ASN1_INTEGER_get(serial);
-		if (serial->type == V_ASN1_NEG_INTEGER) {
+		if (ASN1_STRING_type(serial) == V_ASN1_NEG_INTEGER) {
 			snprintf(buf, LINE_MAX, "-%lX", -num);
 		} else {
 			snprintf(buf, LINE_MAX, "%lX", num);
 		}
 	} else {
-		if (serial->type == V_ASN1_NEG_INTEGER) {
+		if (ASN1_STRING_type(serial) == V_ASN1_NEG_INTEGER) {
 			snprintf(buf, LINE_MAX, "-");
 		}
-		for (i = 0; i < serial->length; i++) {
+		for (i = 0; i < ASN1_STRING_length(serial); i++) {
 			len = strlen(buf);
 			snprintf(buf + len, LINE_MAX - len, "%02X",
-			    serial->data[i]);
+			    ASN1_STRING_get0_data(serial)[i]);
 		}
 	}
 	return buf;
