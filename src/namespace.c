@@ -47,10 +47,12 @@ apply_namespace(const char *mbox, session *ssn)
 	    (ssn->ns.prefix ? ssn->ns.prefix : ""), m);
 	if (n > (int)nbuf.size) {
 		buffer_check(&nbuf, n);
-		snprintf(nbuf.data, nbuf.size + 0, "%s%s",
+		snprintf(nbuf.data, nbuf.size + 1, "%s%s",
 		    (ssn->ns.prefix ? ssn->ns.prefix : ""), m);
 	}
-	for (c = nbuf.data; (c = strchr(c, '/')) != NULL; *(c++) = ssn->ns.delim);
+
+	if (ssn->ns.delim != '\0')
+		for (c = nbuf.data; (c = strchr(c, '/')) != NULL; *(c++) = ssn->ns.delim);
 
 	debug("namespace: '%s' -> '%s'\n", m, nbuf.data);
 
@@ -89,11 +91,16 @@ reverse_namespace(const char *mbox, session *ssn)
 		buffer_check(&nbuf, n);
 		snprintf(nbuf.data, nbuf.size + 1, "%s", mbox + o);
 	}
-	for (c = nbuf.data; (c = strchr(c, ssn->ns.delim)) != NULL; *(c++) = '/');
+
+	if (!ssn->utf8)
+		reverse_conversion(nbuf.data);
+
+	if (ssn->ns.delim != '\0')
+		for (c = nbuf.data; (c = strchr(c, ssn->ns.delim)) != NULL; *(c++) = '/');
 
 	debug("namespace: '%s' <- '%s'\n", mbox, nbuf.data);
 
-	return reverse_conversion(nbuf.data);
+	return nbuf.data;
 }
 
 
@@ -321,7 +328,7 @@ reverse_conversion(const char *mbox)
 			} else if ((ucp[0] >= 0x08 && ucp[0] <= 0xD7) ||
 			    ucp[0] >= 0xE0) {
 				*out++ = 0xE0 | (ucp[0] >> 4 & 0x0F);
-				*out++ = 0x80 | (ucp[0] << 2 & 0x1C) |
+				*out++ = 0x80 | (ucp[0] << 2 & 0x3C) |
 				    (ucp[1] >> 6 & 0x03);
 				*out++ = 0x80 | (ucp[1] & 0x3F);
 			} else if (ucp[0] >= 0xD8 && ucp[0] <= 0xDF) {
@@ -357,12 +364,12 @@ reverse_conversion(const char *mbox)
 					padding = 0;
 				}
 
-				ucp[0] &= 0xFF - 0xDF;
+				ucp[0] &= 0x03;
 				ucptemp = ((ucp[0] << 2 & 0x0C) |
 				    (ucp[1] >> 6 & 0x03)) + 0x1;
 				ucp[2] &= 0xFF - 0xDC;
 
-				*out++ = 0xF0 | (ucptemp >> 2 & 0x03);
+				*out++ = 0xF0 | (ucptemp >> 2 & 0x07);
 				*out++ = 0x80 | (ucptemp << 4 & 0x30) |
 				    (ucp[1] >> 2 & 0x0F);
 				*out++ = 0x80 | (ucp[1] << 4 & 0x30) |
