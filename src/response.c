@@ -153,12 +153,17 @@ check_tag(char *buf, session *ssn, int tag)
 int
 check_bye(char *buf)
 {
+	const char *c;
 
-	if (xstrcasestr(buf, "* BYE") &&
-	    !xstrcasestr(buf, " LOGOUT "))
-		return 1;
-	else
-		return 0;
+	c = buf;
+	while (c != NULL) {
+		if (!strncasecmp(c, "* BYE", strlen("* BYE")))
+			return (xstrcasestr(buf, " LOGOUT ") == NULL);
+		if ((c = strchr(c, '\n')) != NULL)
+			c++;
+	}
+
+	return 0;
 }
 
 
