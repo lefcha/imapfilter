@@ -113,7 +113,7 @@ apply_conversion(const char *mbox)
 {
 	unsigned char *c, *out;
 	unsigned char ucp[4], ucplast, ucptemp;
-	int padding, shift;
+	int padding, shift, len;
 
 	buffer_check(&nbuf, strlen(mbox));
 	buffer_reset(&nbuf);
@@ -130,7 +130,18 @@ apply_conversion(const char *mbox)
 	padding = shift = 0;
 
 	while (*c != '\0' || shift > 0) {
-		if (shift > 0 && *c <= 0x7F) {
+		/* Check for multi-byte UTF-8 character and get its length. */
+		len = 0;
+		if ((*c & 0xE0) == 0xC0 && (*(c + 1) & 0xC0) == 0x80)
+			len = 2;
+		else if ((*c & 0xF0) == 0xE0 && (*(c + 1) & 0xC0) == 0x80 &&
+		    (*(c + 2) & 0xC0) == 0x80)
+			len = 3;
+		else if ((*c & 0xF8) == 0xF0 && (*(c + 1) & 0xC0) == 0x80 &&
+		    (*(c + 2) & 0xC0) == 0x80 && (*(c + 3) & 0xC0) == 0x80)
+			len = 4;
+
+		if (shift > 0 && len == 0) {
 			/* Last character so do Base64 padding. */
 			if (padding == 2) {
 				*out++ = base64[ucplast << 2 & 0x3C];
@@ -150,8 +161,8 @@ apply_conversion(const char *mbox)
 			c++;
 			continue;
 
-		/* Copy all ASCII printable characters. */
-		} else if ((*c >= 0x20 && *c <= 0x7e)) {
+		/* Copy all other characters. */
+		} else if (len == 0) {
 			*out++ = *c;
 			c++;
 			continue;
@@ -161,17 +172,15 @@ apply_conversion(const char *mbox)
 		if (shift == 0)
 			*out++ = '&';
 		/* Convert UTF-8 characters to Unicode code point. */
-		if ((*c & 0xE0) == 0xC0) {
+		if (len == 2) {
 			shift = 2;
 			ucp[0] = 0x07 & *c >> 2;
 			ucp[1] = (*c << 6 & 0xC0) | (*(c + 1) & 0x3F);
-			c += 2;
-		} else if ((*c & 0xF0) == 0xE0) {
+		} else if (len == 3) {
 			shift = 3;
 			ucp[0] = (*c << 4 & 0xF0) | (*(c + 1) >> 2 & 0x0F);
 			ucp[1] = (*(c + 1) << 6 & 0xC0) | (*(c + 2) & 0x3F);
-			c += 3;
-		} else if ((*c & 0xF8) == 0xF0) {
+		} else if (len == 4) {
 			shift = 4;
 			ucptemp = ((*c << 2 & 0x1C) | (*(c + 1) >> 4 & 0x03)) -
 			    0x01;
@@ -180,8 +189,8 @@ apply_conversion(const char *mbox)
 			    (*(c + 1) << 2 & 0x3C) | (*(c + 2) >> 4 & 0x03);
 			ucp[2] = (*(c + 2) >> 2 & 0x03) | 0xDC;
 			ucp[3] = (*(c + 2) << 6 & 0xC0) | (*(c + 3) & 0x3F);
-			c += 4;
 		}
+		c += len;
 
 		/* Convert Unicode characters to UTF-7. */
 		if (padding == 0) {
@@ -349,7 +358,8 @@ reverse_conversion(const char *mbox)
 				b64[4] = p - base64;
 				if (padding == 0 || padding == 2) {
 					if (*(c + 2) == '\0' ||
-					    (p = strchr(base64, *(c + 2))) == NULL)
+					    (p = strchr(base64,
+					    *(c + 2))) == NULL)
 						break;
 					b64[5] = p - base64;
 					c += 3;
