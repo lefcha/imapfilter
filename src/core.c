@@ -363,6 +363,7 @@ ifcore_lsub(lua_State *lua)
 	lua_pushstring(lua, folders);
 
 	xfree(mboxs);
+	xfree(folders);
 
 	return 3;
 }
@@ -588,6 +589,8 @@ ifcore_fetchstructure(lua_State *lua)
 		return 1;
 
 	lua_pushstring(lua, structure);
+
+	xfree(structure);
 
 	return 2;
 }
