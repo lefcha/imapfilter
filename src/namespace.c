@@ -36,6 +36,12 @@ apply_namespace(const char *mbox, session *ssn)
 	m = mbox;
 	if (!ssn->utf8)
 		m = apply_conversion(mbox);
+	else
+		for (c = (char *)mbox; *c != '\0'; c++)
+			if ((*c >= 0x01 && *c <= 0x1F) || *c == 0x7F) {
+				error("invalid character in mailbox name\n");
+				return NULL;
+			}
 
 	if ((ssn->ns.prefix == NULL && ssn->ns.delim == '\0') ||
 	    (ssn->ns.prefix == NULL && ssn->ns.delim == '/'))
