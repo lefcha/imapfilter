@@ -190,6 +190,7 @@ int response_generic(session *ssn, int tag);
 int response_continuation(session *ssn, int tag);
 int response_greeting(session *ssn);
 int response_capability(session *ssn, int tag);
+int response_enable(session *ssn, int tag, char **enabled);
 int response_authenticate(session *ssn, int tag, unsigned char **cont);
 int response_namespace(session *ssn, int tag);
 int response_status(session *ssn, int tag, unsigned int *exist,

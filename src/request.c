@@ -140,6 +140,7 @@ request_login(session **ssnptr, const char *server, const char *port, const char
     const char *username, const char *password, const char *oauth2)
 {
 	int t, r, rg = -1, rl = -1;
+	char *e = NULL;
 	session *ssn = *ssnptr;
 
 	if (ssn && ssn->socket != -1)
@@ -215,9 +216,12 @@ request_login(session **ssnptr, const char *server, const char *port, const char
 		if (ssn->capabilities & CAPABILITY_ENABLE &&
 			ssn->capabilities & CAPABILITY_UTF8) {
 			TRY(t = send_request(ssn, "ENABLE UTF8=ACCEPT"));
-			TRY(r = response_generic(ssn, t));
-			if (r == STATUS_OK)
-				ssn->utf8 = 1;
+			TRY(response_enable(ssn, t, &e));
+			if (e != NULL) {
+				if (xstrcasestr(e, "UTF8=ACCEPT"))
+					ssn->utf8 = 1;
+				xfree(e);
+			}
 		}
 	}
 

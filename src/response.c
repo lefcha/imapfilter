@@ -36,6 +36,7 @@ enum {				/* Server data responses to be parsed;
 	RESPONSE_FETCH_SIZE,
 	RESPONSE_FETCH_STRUCTURE,
 	RESPONSE_FETCH_BODY,
+	RESPONSE_ENABLED,
 };
 regexp responses[] = {		/* Server data responses to be parsed;
 				 * regular expressions patterns. */
@@ -67,6 +68,7 @@ regexp responses[] = {		/* Server data responses to be parsed;
 	{ "BODYSTRUCTURE (\\([^[:cntrl:]]+\\))", NULL, 0, NULL },
 	{ "\\* [[:digit:]]+ FETCH \\([^[:cntrl:]]*BODY\\[[^[:cntrl:]]*\\] "
 	  "(\\{([[:digit:]]+)\\} *\r+\n+|\"([^[:cntrl:]]*)\")", NULL, 0, NULL },
+	{ "\\* ENABLED ([^[:cntrl:]]*)\r+\n+", NULL, 0, NULL },
 	{ NULL, NULL, 0, NULL }
 };
 
@@ -330,8 +332,7 @@ response_capability(session *ssn, int tag)
 	char *s;
 	regexp *re;
 
-	r = response_generic(ssn, tag);
-	if (r < 0)
+	if ((r = response_generic(ssn, tag)) < 0)
 		return r;
 
 	ssn->protocol = PROTOCOL_NONE;
@@ -371,6 +372,28 @@ response_capability(session *ssn, int tag)
 
 		xfree(s);
 	}
+
+	return r;
+}
+
+
+/*
+ * Process the data that server sent due to IMAP ENABLE client request.
+ */
+int
+response_enable(session *ssn, int tag, char **enabled)
+{
+	int r;
+	regexp *re;
+
+	if ((r = response_generic(ssn, tag)) < 0)
+		return r;
+
+	re = &responses[RESPONSE_ENABLED];
+
+	if (!regexec(re->preg, ibuf.data, re->nmatch, re->pmatch, 0))
+		*enabled = xstrndup(ibuf.data + re->pmatch[1].rm_so,
+		    re->pmatch[1].rm_eo - re->pmatch[1].rm_so);
 
 	return r;
 }
