@@ -55,7 +55,7 @@ regexp responses[] = {		/* Server data responses to be parsed;
 	{ "UIDNEXT ([[:digit:]]+)", NULL, 0, NULL },
 	{ "\\* ([[:digit:]]+) EXISTS *\r+\n+", NULL, 0, NULL },
 	{ "\\* ([[:digit:]]+) RECENT *\r+\n+", NULL, 0, NULL },
-	{ "\\* (LIST|LSUB) \\(([^[:cntrl:]]*)\\) (\"[^[:cntrl:]]\"|NIL) "
+	{ "\\* (LIST|LSUB) \\(([^[:cntrl:]]*)\\) (\"\\\\?[^[:cntrl:]]\"|NIL) "
 	  "(\"([^[:cntrl:]]+)\"|([^[:cntrl:]]+)|\\{([[:digit:]]+)\\} *\r+\n+"
 	  "([^[:cntrl:]]*))\r+\n+", NULL, 0, NULL },
 	{ "\\* SEARCH ?([[:digit:] ]*)\r+\n+", NULL, 0, NULL },
