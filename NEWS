@@ -1,3 +1,13 @@
+IMAPFilter 2.8.7 - Nov 16, 2026
+  - Improvements in handling of control characters in mailbox names in both
+    UTF-7 and UTF-8 modes.
+  - Add note in man page that double quotes and backslashes in mailbox names
+    must be escaped.
+  - Bug fix; other minor problems in UTF-7 and UTF-8 modes.
+  - Bug fix; buffer overflows and out-of-bounds reads when parsing malicious or
+    malformed server responses.
+  - Bug fix; other minor parsing problems and memory leaks.
+
 IMAPFilter 2.8.6 - Nov 1, 2026
   - Support building with OpenSSL 4.0.0 and later.
   - Bug fix; UTF-7 encoding mailbox conversion problems.
