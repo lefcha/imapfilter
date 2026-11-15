@@ -119,7 +119,7 @@ apply_conversion(const char *mbox)
 	buffer_reset(&nbuf);
 	xstrncpy(nbuf.data, mbox, nbuf.size);
 	nbuf.len = strlen(nbuf.data);
-	buffer_check(&cbuf, nbuf.len * 4);
+	buffer_check(&cbuf, nbuf.len * 5);
 	buffer_reset(&cbuf);
 
 	c = (unsigned char *)nbuf.data;
@@ -132,7 +132,9 @@ apply_conversion(const char *mbox)
 	while (*c != '\0' || shift > 0) {
 		/* Check for multi-byte UTF-8 character and get its length. */
 		len = 0;
-		if ((*c & 0xE0) == 0xC0 && (*(c + 1) & 0xC0) == 0x80)
+		if ((*c >= 0x01 && *c <= 0x1F) || *c == 0x7F)
+			len = 1;
+		else if ((*c & 0xE0) == 0xC0 && (*(c + 1) & 0xC0) == 0x80)
 			len = 2;
 		else if ((*c & 0xF0) == 0xE0 && (*(c + 1) & 0xC0) == 0x80 &&
 		    (*(c + 2) & 0xC0) == 0x80)
@@ -172,7 +174,11 @@ apply_conversion(const char *mbox)
 		if (shift == 0)
 			*out++ = '&';
 		/* Convert UTF-8 characters to Unicode code point. */
-		if (len == 2) {
+		if (len == 1) {
+			shift = 1;
+			ucp[0] = 0x00;
+			ucp[1] = *c;
+		} else if (len == 2) {
 			shift = 2;
 			ucp[0] = 0x07 & *c >> 2;
 			ucp[1] = (*c << 6 & 0xC0) | (*(c + 1) & 0x3F);
