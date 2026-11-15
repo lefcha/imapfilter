@@ -251,12 +251,14 @@ reverse_conversion(const char *mbox)
 	unsigned char ucp[4], ucptemp;
 	unsigned char b64[6], b64last;
 	int padding;
+	const char *p;
 	
 	buffer_check(&cbuf, strlen(mbox));
 	buffer_reset(&cbuf);
 	xstrncpy(cbuf.data, mbox, cbuf.size);
 	cbuf.len = strlen(cbuf.data);
-	buffer_check(&nbuf, cbuf.len);
+	/* That should not more than x1.5 times than the encoded. */
+	buffer_check(&nbuf, cbuf.len * 2);
 	buffer_reset(&nbuf);
 
 	c = (unsigned char *)cbuf.data;
@@ -268,15 +270,12 @@ reverse_conversion(const char *mbox)
 	padding = 0;
 
 	while (*c != '\0') {
-		/* Copy all ASCII printable characters. */
-		if (*c >= 0x20 && *c <= 0x7e) {
-			if (*c != '&') {
-				*out++ = *c++;
-				continue;
-			} else {
-				c++;
-			}
+		/* Copy all characters, except the shift character. */
+		if (*c != '&') {
+			*out++ = *c++;
+			continue;
 		}
+		c++;
 
 		/* Write shift character for modified UTF-7. */
 		if (*c == '-') {
@@ -289,10 +288,18 @@ reverse_conversion(const char *mbox)
 		padding = 0;
 		do {
 			/* Read Base64 characters. */
-			b64[0] = strchr(base64, *c) - base64;
-			b64[1] = strchr(base64, *(c + 1)) - base64;
+			if (*c == '\0' || (p = strchr(base64, *c)) == NULL)
+				break;
+			b64[0] = p - base64;
+			if (*(c + 1) == '\0' ||
+			    (p = strchr(base64, *(c + 1))) == NULL)
+				break;
+			b64[1] = p - base64;
 			if (padding == 0 || padding == 2) {
-				b64[2] = strchr(base64, *(c + 2)) - base64;
+				if (*(c + 2) == '\0' ||
+				    (p = strchr(base64, *(c + 2))) == NULL)
+					break;
+				b64[2] = p - base64;
 				c += 3;
 			} else {
 				c += 2;
@@ -332,11 +339,19 @@ reverse_conversion(const char *mbox)
 				    (ucp[1] >> 6 & 0x03);
 				*out++ = 0x80 | (ucp[1] & 0x3F);
 			} else if (ucp[0] >= 0xD8 && ucp[0] <= 0xDF) {
-				b64[3] = strchr(base64, *c) - base64;
-				b64[4] = strchr(base64, *(c + 1)) - base64;
+				if (*c == '\0' ||
+				    (p = strchr(base64, *c)) == NULL)
+					break;
+				b64[3] = p - base64;
+				if (*(c + 1) == '\0' ||
+				    (p = strchr(base64, *(c + 1))) == NULL)
+					break;
+				b64[4] = p - base64;
 				if (padding == 0 || padding == 2) {
-					b64[5] = strchr(base64, *(c + 2)) -
-					    base64;
+					if (*(c + 2) == '\0' ||
+					    (p = strchr(base64, *(c + 2))) == NULL)
+						break;
+					b64[5] = p - base64;
 					c += 3;
 				} else {
 					c += 2;
