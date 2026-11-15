@@ -1,4 +1,4 @@
-.Dd Apr 27, 2025
+.Dd Nov 15, 2026
 .Dt IMAPFILTER_CONFIG 5
 .Os
 .Sh NAME
@@ -467,6 +467,20 @@ myaccount['mymailbox']
 A mailbox inside a folder can be only accessed by using the alternative form:
 .Bd -literal -offset 4n
 myaccount['myfolder/mymailbox']
+.Ed
+.Pp
+The double quote
+.Sq \(dq
+and the backslash
+.Sq \e
+characters inside a mailbox must be escaped with a backslash.  Note that due to
+Lua using backslash
+.Sq \e
+as an escape character for its strings, one has to use double backslashes in
+order to insert a single backslash:
+.Bd -literal -offset 4n
+myaccount['my\e\e"mailbox']
+myaccount['my\e\e\e\emailbox']
 .Ed
 .Pp
 The methods that are available for an account (e.g.
