@@ -34,7 +34,7 @@ int handle_error(session *ssn);
 int
 send_request(session *ssn, const char *fmt,...)
 {
-	int n;
+	int n, o;
 	va_list args;
 	int t = tag;
 
@@ -43,16 +43,15 @@ send_request(session *ssn, const char *fmt,...)
 
 	buffer_reset(&obuf);
 	obuf.len = snprintf(obuf.data, obuf.size + 1, "%04X ", tag);
+	o = obuf.len + strlen("\r\n");
 
 	va_start(args, fmt);
-	n = vsnprintf(obuf.data + obuf.len, obuf.size - obuf.len -
-	    strlen("\r\n") + 1, fmt, args);
+	n = vsnprintf(obuf.data + obuf.len, obuf.size - o + 1, fmt, args);
 	va_end(args);
-	if (n > (int)obuf.size) {
-		buffer_check(&obuf, n);
+	if (n > (int)obuf.size - o) {
+		buffer_check(&obuf, n + o);
 		va_start(args, fmt);
-		vsnprintf(obuf.data + obuf.len, obuf.size - obuf.len -
-		    strlen("\r\n") + 1, fmt, args);
+		vsnprintf(obuf.data + obuf.len, obuf.size - o + 1, fmt, args);
 		va_end(args);
 	}
 	obuf.len = strlen(obuf.data);
