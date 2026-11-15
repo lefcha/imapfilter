@@ -114,6 +114,7 @@ check_tag(char *buf, session *ssn, int tag)
 {
 	int r;
 	char t[4 + 1];
+	char *b, *m;
 	regexp *re;
 
 	r = STATUS_NONE;
@@ -122,26 +123,31 @@ check_tag(char *buf, session *ssn, int tag)
 
 	re = &responses[RESPONSE_TAGGED];
 
-	if (!regexec(re->preg, buf, re->nmatch, re->pmatch, 0)) {
-		if (!strncasecmp(buf + re->pmatch[1].rm_so, t,
-		    strlen(t))) {
-			if (!strncasecmp(buf + re->pmatch[2].rm_so,
+	b = buf;
+	while (!regexec(re->preg, b, re->nmatch, re->pmatch, 0)) {
+		m = b + re->pmatch[0].rm_so;
+		/* Match only in the beginning of a line. */
+		if ((m == buf || *(m - 1) == '\n') &&
+		    !strncasecmp(m, t, strlen(t))) {
+			if (!strncasecmp(b + re->pmatch[2].rm_so,
 			    "OK", strlen("OK")))
 				r = STATUS_OK;
-			else if (!strncasecmp(buf + re->pmatch[2].rm_so,
+			else if (!strncasecmp(b + re->pmatch[2].rm_so,
 			    "NO", strlen("NO")))
 				r = STATUS_NO;
-			else if (!strncasecmp(buf + re->pmatch[2].rm_so,
+			else if (!strncasecmp(b + re->pmatch[2].rm_so,
 			    "BAD", strlen("BAD")))
 				r = STATUS_BAD;
+			break;
 		}
+		b += re->pmatch[0].rm_eo;
 	}
 
 	if (r != STATUS_NONE)
-		verbose("S (%d): %s", ssn->socket, buf + re->pmatch[0].rm_so);
+		verbose("S (%d): %s", ssn->socket, m);
 
 	if (r == STATUS_NO || r == STATUS_BAD)
-		error("IMAP (%d): %s", ssn->socket, buf + re->pmatch[0].rm_so);
+		error("IMAP (%d): %s", ssn->socket, m);
 
 	return r;
 }
