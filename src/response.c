@@ -407,7 +407,8 @@ response_namespace(session *ssn, int tag)
 		if (n > 0)
 			ssn->ns.prefix = xstrndup(ibuf.data +
 			    re->pmatch[2].rm_so, n);
-		ssn->ns.delim = *(ibuf.data + re->pmatch[3].rm_so);
+		if (re->pmatch[3].rm_so != -1)
+			ssn->ns.delim = *(ibuf.data + re->pmatch[3].rm_so);
 	}
 	debug("namespace (%d): '%s' '%c'\n", ssn->socket,
 	    (ssn->ns.prefix ? ssn->ns.prefix : ""), ssn->ns.delim);
