@@ -509,7 +509,8 @@ response_select(session *ssn, int tag)
 int
 response_list(session *ssn, int tag, char **mboxs, char **folders)
 {
-	int r, n;
+	int r;
+	size_t n, l;
 	char *b, *a, *s, *m, *f;
 	const char *v;
 	regexp *re;
@@ -517,8 +518,10 @@ response_list(session *ssn, int tag, char **mboxs, char **folders)
 	if ((r = response_generic(ssn, tag)) < 0)
 		return r;
 
-	m = *mboxs = (char *)xmalloc((ibuf.len + 1) * sizeof(char));
-	f = *folders = (char *)xmalloc((ibuf.len + 1) * sizeof(char));
+	/* Converted names can be longer than those in the response. */
+	n = ibuf.len * 2;
+	m = *mboxs = (char *)xmalloc((n + 1) * sizeof(char));
+	f = *folders = (char *)xmalloc((n + 1) * sizeof(char));
 	*m = *f = '\0';
 
 	re = &responses[RESPONSE_LIST];
@@ -535,18 +538,21 @@ response_list(session *ssn, int tag, char **mboxs, char **folders)
 		    re->pmatch[6].rm_eo != -1)
 			s = xstrndup(b + re->pmatch[6].rm_so,
 			    re->pmatch[6].rm_eo - re->pmatch[6].rm_so);
-		else
-			s = xstrndup(b + re->pmatch[8].rm_so, strtoul(b +
-			    re->pmatch[7].rm_so, NULL, 10));
+		else {
+			l = strtoul(b + re->pmatch[7].rm_so, NULL, 10);
+			if (l > (size_t)(re->pmatch[8].rm_eo -
+			    re->pmatch[8].rm_so))
+				l = re->pmatch[8].rm_eo - re->pmatch[8].rm_so;
+			s = xstrndup(b + re->pmatch[8].rm_so, l);
+		}
 
 		v = reverse_namespace(s, ssn);
-		n = strlen(v);
 
 		if (!xstrcasestr(a, "\\NoSelect")) {
-			xstrncpy(m, v, ibuf.len - (m - *mboxs));
-			m += n;
-			xstrncpy(m, "\n", ibuf.len - (m - *mboxs));
-			m += strlen("\n");
+			xstrncpy(m, v, n - (m - *mboxs));
+			m += strlen(m);
+			xstrncpy(m, "\n", n - (m - *mboxs));
+			m += strlen(m);
 		}
 
 		if (!xstrcasestr(a, "\\NoInferiors") &&
@@ -554,10 +560,10 @@ response_list(session *ssn, int tag, char **mboxs, char **folders)
 		    ((ssn->capabilities & CAPABILITY_CHILDREN) &&
 		    (xstrcasestr(a, "\\HasChildren")) &&
 		    !xstrcasestr(a, "\\HasNoChildren")))) {
-			xstrncpy(f, v, ibuf.len - (f - *folders));
-			f += n;
-			xstrncpy(f, "\n", ibuf.len - (f - *folders));
-			f += strlen("\n");
+			xstrncpy(f, v, n - (f - *folders));
+			f += strlen(f);
+			xstrncpy(f, "\n", n - (f - *folders));
+			f += strlen(f);
 		}
 
 		b += re->pmatch[0].rm_eo;
